@@ -1,0 +1,33 @@
+<div class="content-body">
+
+    <!-- Sidebar toggle button (visible on mobile) -->
+    <button class="btn btn-outline-secondary custom-btn" (click)="toggleSidebar()">
+        &#9776;
+    </button>
+
+    <!-- Sidebar -->
+    <nav [ngClass]="{'d-none': !sidebarVisible}" #sidebar class="sidebar flex-column p-3">
+        <h2 class="sidebar-title text-center text-white mb-4">
+            <span>Menu</span>
+        </h2>
+
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a routerLink="/dashboard" routerLinkActive="active" class="nav-link text-white">Dashboard</a>
+            </li>
+            <li class="nav-item">
+                <a routerLink="/user-details" routerLinkActive="active" class="nav-link text-white">User Details</a>
+            </li>
+        
+        </ul>
+
+        <!-- Refresh button (mobile only, right corner) -->
+
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content flex-grow-1">
+        <router-outlet></router-outlet>
+    </main>
+
+</div>
