@@ -1,3 +1,4 @@
+import { LogsComponent } from './components/logs/logs.component';
 import { Routes } from '@angular/router';
 import { LoginComponent } from './components/login/login.component';
 import { ApplayoutComponent } from './components/applayout/applayout.component';
@@ -10,6 +11,7 @@ import { AuthGuard } from './shared/auth.guard';
 import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
 import { BillCreatorComponent } from './components/bill-creator/bill-creator.component';
 import { UsersCollectionsComponent } from './components/users-collections/users-collections.component';
+import { DefaulterUsersComponent } from './components/defaulter-users/defaulter-users.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -26,7 +28,9 @@ export const routes: Routes = [
       { path: 'recovery-officer', data: { roles: ['admin'] }, component: RecoveryOfficerComponent },
       { path: 'package-details', data: { roles: ['admin'] }, component: PackageDetailsComponent },
       { path: 'bill-creator', data: { roles: ['admin'] }, component: BillCreatorComponent },
-      { path: 'user-collections', data: { roles: ['admin'] }, component: UsersCollectionsComponent },
+      { path: 'user-collections', data: { roles: ['admin', 'operator'] }, component: UsersCollectionsComponent },
+      { path: 'logs', data: { roles: ['admin'] }, component: LogsComponent },
+      { path: 'defaulter-users', data: { roles: ['admin'] }, component: DefaulterUsersComponent },
     ],
   },
   { path: 'not-found', component: PageNotFoundComponent }, // 👈 create a 404 component

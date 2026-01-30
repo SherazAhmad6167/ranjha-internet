@@ -112,7 +112,7 @@
                             <th>Users</th>
                             <th>Connection Type</th>
                             <th>Sublocality</th>
-                            <th>Status</th>
+                            <!-- <th>Status</th> -->
                             <th>Date</th>
                             <th>Created By</th>
                             <th>Action</th>
@@ -128,7 +128,7 @@
                             <td>{{ user.users }}</td>
                             <td>{{ user.connection_type | titlecase }}</td>
                             <td>{{ user.sublocality | titlecase}}</td>
-                            <td>{{ user.status | titlecase}}</td>
+                            <!-- <td>{{ user.status | titlecase}}</td> -->
                             <td>
                                 {{ user.createdAt?.toDate() | date:'dd MMM yyyy, hh:mm a' }}
                             </td>

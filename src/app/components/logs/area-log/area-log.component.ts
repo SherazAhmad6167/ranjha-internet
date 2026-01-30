@@ -8,20 +8,21 @@ import {
   Firestore,
   getDoc,
   getDocs,
+  query,
   updateDoc,
+  where,
 } from '@angular/fire/firestore';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
-import { AreaModalComponent } from '../area-modal/area-modal.component';
 
 @Component({
-  selector: 'app-area-details',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, ToastrModule],
-  templateUrl: './area-details.component.html',
-  styleUrl: './area-details.component.scss',
+  selector: 'app-area-log',
+  imports: [CommonModule, FormsModule],
+  templateUrl: './area-log.component.html',
+  styleUrl: './area-log.component.scss',
 })
-export class AreaDetailsComponent {
+export class AreaLogComponent {
   isLoading = false;
   isDeleting = false;
   searchTerm = '';
@@ -52,8 +53,9 @@ export class AreaDetailsComponent {
     this.isLoading = true;
 
     try {
-      const usersRef = collection(this.firestore, 'area');
-      const snapshot = await getDocs(usersRef);
+      const usersRef = collection(this.firestore, 'logs');
+      const q = query(usersRef, where('type', '==', 'area'));
+      const snapshot = await getDocs(q);
 
       this.users = snapshot.docs.map((docSnap) => ({
         id: docSnap.id,
@@ -95,97 +97,6 @@ export class AreaDetailsComponent {
 
     this.currentPage = 1; // reset to first page after search
     this.updateTotalPages();
-  }
-
-  openUserModal(userData?: any) {
-    const modalRef = this.modalService.open(AreaModalComponent, {
-      size: 'lg',
-      backdrop: 'static',
-    });
-
-    if (userData) {
-      modalRef.componentInstance.editMode = true;
-      modalRef.componentInstance.userData = userData;
-    }
-
-    modalRef.closed.subscribe((result) => {
-      if (result) {
-        this.loadUsers();
-      }
-    });
-  }
-
-  editUser(user: any) {
-    this.openUserModal(user);
-  }
-
-  openDeleteModal(id: string, modal: any) {
-    this.selectedDeleteId = id;
-    this.modalService.open(modal, { centered: true });
-  }
-
-  async confirmDelete(modal: any) {
-    if (!this.selectedDeleteId) return;
-
-    this.isDeleting = true;
-
-    try {
-      const areaDocRef = doc(this.firestore, 'area', this.selectedDeleteId);
-      const snap = await getDoc(areaDocRef);
-
-      const sublocality = snap.exists() ? snap.data()?.['sublocality'] : null;
-
-      if (!snap.exists()) {
-        this.toastr.error('User not found');
-        return;
-      }
-
-      const logData = {
-        ...snap.data(),
-        type: 'area',
-        action: 'delete',
-        originalId: this.selectedDeleteId,
-        deletedAt: new Date(),
-      };
-
-      await addDoc(collection(this.firestore, 'logs'), logData);
-
-      await deleteDoc(areaDocRef);
-
-      if (sublocality) {
-        await this.deleteInternetArea(sublocality);
-      }
-
-      this.toastr.success('Area deleted');
-      this.loadUsers();
-      modal.close();
-    } catch (err) {
-      this.toastr.error('Delete failed');
-    } finally {
-      this.isDeleting = false;
-      this.selectedDeleteId = null;
-    }
-  }
-
-  async deleteInternetArea(sublocality: string) {
-    const internetDocRef = doc(
-      this.firestore,
-      'internetArea',
-      'internetAreaDoc',
-    );
-    const snap = await getDoc(internetDocRef);
-
-    if (!snap.exists()) return;
-
-    const internetAreas = snap.data()?.['internetAreas'] || [];
-
-    const updatedAreas = internetAreas.filter(
-      (item: any) => item.sublocality !== sublocality,
-    );
-
-    await updateDoc(internetDocRef, {
-      internetAreas: updatedAreas,
-    });
   }
 
   updateTotalPages() {

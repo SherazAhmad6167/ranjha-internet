@@ -79,6 +79,17 @@ export class BillCreatorComponent {
         ...docSnap.data(),
       }));
 
+      this.bills.sort((a, b) => {
+        // Firestore Timestamp
+        const timeA = a.createdAt?.toDate
+          ? a.createdAt.toDate().getTime()
+          : new Date(a.createdAt).getTime();
+        const timeB = b.createdAt?.toDate
+          ? b.createdAt.toDate().getTime()
+          : new Date(b.createdAt).getTime();
+        return timeB - timeA; // descending
+      });
+
       this.filteredBills = this.bills;
       this.updateTotalPages();
 
@@ -96,9 +107,9 @@ export class BillCreatorComponent {
 
     this.filteredBills = this.bills.filter(
       (bill) =>
-        bill.name?.toLowerCase().includes(term) ||
-        bill.cnic?.toLowerCase().includes(term) ||
-        bill.phone?.includes(term),
+        bill.month?.toLowerCase().includes(term) ||
+        bill.year?.toLowerCase().includes(term) ||
+        bill.sublocality?.toLowerCase().includes(term),
     );
 
     this.currentPage = 1; // reset to first page after search
@@ -285,6 +296,21 @@ export class BillCreatorComponent {
       const billRef = doc(this.firestore, 'billCreator', this.selectedDeleteId);
       const billSnap = await getDoc(billRef);
       const bill = billSnap.data();
+
+       if (!billSnap.exists()) {
+        this.toastr.error('Bill not found');
+        return;
+      }
+
+      const logData = {
+        ...billSnap.data(),
+        type: 'bill',
+        action: 'delete',
+        originalId: this.selectedDeleteId,
+        deletedAt: new Date(),
+      };
+
+      await addDoc(collection(this.firestore, 'logs'), logData);
 
       await deleteDoc(billRef);
       await this.removeBillFromUsers(bill);

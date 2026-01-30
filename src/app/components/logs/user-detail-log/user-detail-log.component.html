@@ -1,10 +1,6 @@
-<div class="container-fluid pt-5">
+<div class="container-fluid pt-2">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="m-0">Users</h2>
-    <button class="btn btn-primary d-flex align-items-center" (click)="openUserModal()">
-      <i class="bi bi-person-plus me-2"></i>
-      Add User
-    </button>
+    <h2 class="m-0">Deleted Users</h2>
   </div>
 
   <div *ngIf="isLoading" class="loading-overlay">
@@ -46,7 +42,7 @@
               <th>Connection</th>
               <th>Install Date</th>
               <th>Static IP</th>
-              <th>Action</th>
+              <th>Deleted At</th>
             </tr>
           </thead>
 
@@ -69,40 +65,13 @@
               <td>{{ user.installation_date }}</td>
               <td>{{ user.static_ip }}</td>
               <td>
-                <button class="btn btn-primary btn-sm" (click)="editUser(user)">
-                  <i class="ri-pencil-line"></i>
-                </button>
-                <button class="btn btn-danger btn-sm ms-2" (click)="openDeleteModal(user.id, deleteModal)">
-                  <i class="ri-delete-bin-7-line"></i>
-                </button>
+                {{ user.deletedAt?.toDate() | date:'dd MMM yyyy, hh:mm a' }}
               </td>
             </tr>
           </tbody>
 
         </table>
       </div>
-
-      <ng-template #deleteModal let-modal>
-        <div class="modal-header">
-          <h5 class="modal-title">Confirm Deletion</h5>
-          <button type="button" class="btn-close" (click)="modal.dismiss()" [disabled]="isDeleting"></button>
-        </div>
-        <div class="modal-body">
-          <p>Are you sure you want to delete this user?</p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="modal.dismiss()" [disabled]="isDeleting">
-            Cancel
-          </button>
-          <button type="button" class="btn btn-danger" (click)="confirmDelete(modal)" [disabled]="isDeleting">
-            <span *ngIf="!isDeleting">Delete</span>
-            <span *ngIf="isDeleting">
-              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-              Deleting...
-            </span>
-          </button>
-        </div>
-      </ng-template>
 
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
         <!-- Entries Info -->

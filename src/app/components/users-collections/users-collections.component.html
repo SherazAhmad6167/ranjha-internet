@@ -15,10 +15,20 @@
 
     <div class="card">
         <div class="card-body">
-            <div class="d-flex justify-content-end mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="col-md-3">
+                    <label >Sublocality</label>
+                        <select class="form-control" [(ngModel)]="sublocality" (change)="onFilterChange()">
+                            <option value="" disabled>Select Sublocality</option>
+                            <option value="">All</option>
+                            <option *ngFor="let area of internetAreas" [value]="area.sublocality">
+                                {{ area.sublocality | titlecase }}
+                            </option>
+                        </select>
+                </div>
                 <div class="col-md-3">
                     <input type="text" class="form-control" placeholder="Search Here" [(ngModel)]="searchTerm"
-                        (input)="onSearch()" />
+                        (input)="onFilterChange()" />
                 </div>
             </div>
 
@@ -30,6 +40,7 @@
                             <th>Name</th>
                             <th>InternetId</th>
                             <th>Address</th>
+                            <th>Sublocality</th>
                             <th>Month/Year</th>
                             <th>Connection Type</th>
                             <th>Amount</th>
@@ -45,6 +56,7 @@
                             <td>{{ row.user_name }}</td>
                             <td>{{ row.internet_id }}</td>
                             <td>{{ row.address }}</td>
+                            <td>{{ row.sublocality }}</td>
                             <td>{{ row.month | titlecase }} / {{ row.year }}</td>
                             <td>{{ row.connection_type | titlecase }}</td>
                             <td>Rs. {{ row.amount }}</td>
@@ -53,11 +65,18 @@
                                 <span class="badge bg-success" *ngIf="row.status === 'paid'">Paid</span>
                             </td>
                             <td>{{ row.createdAt?.toDate() | date:'dd MMM yyyy, hh:mm a' }}</td>
-                            <td><button class="btn btn-success btn-sm" [disabled]="row.status === 'paid'"
+                            <td>
+                                <button class="btn btn-primary btn-sm" *ngIf="row.status === 'unpaid'"
                                     (click)="openCollectModal(row)">
-                                    <i class="ri-currency-line me-1"></i> Collect
+                                    <i class="ri-currency-line"></i>
+                                </button>
+
+                                <button class="btn btn-success btn-sm" *ngIf="row.status === 'paid'"
+                                    (click)="openReceiptModal(row)">
+                                    <i class="ri-download-line"></i>
                                 </button>
                             </td>
+
                         </tr>
                     </tbody>
 
@@ -202,13 +221,13 @@
 
 <div class="modal fade show d-block" *ngIf="showReceiptModal">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content shadow border-0 rounded-4">
+        <div class="modal-content shadow border-0">
 
             <!-- RECEIPT -->
             <div class="modal-body p-0" id="receipt">
 
                 <!-- Header -->
-                <div class="bg-success text-white text-center py-3 rounded-top-4">
+                <div class="bg-success text-white text-center py-3">
                     <h5 class="mb-0">Payment Receipt</h5>
                     <small>Thank you for your payment</small>
                 </div>
@@ -236,7 +255,7 @@
 
                         <div class="d-flex justify-content-between mb-1" *ngIf="receiptData.method === 'bank'">
                             <span>Bank</span>
-                            <span class="fw-semibold">{{ collectionForm.bank_name }}</span>
+                            <span class="fw-semibold">{{ receiptData.bank }}</span>
                         </div>
 
                         <div class="d-flex justify-content-between mb-1">

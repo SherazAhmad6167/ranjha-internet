@@ -7,20 +7,21 @@ import {
   Firestore,
   getDoc,
   getDocs,
+  query,
+  where,
 } from '@angular/fire/firestore';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
-import { RecoveryOfficerModalComponent } from '../recovery-officer-modal/recovery-officer-modal.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-recovery-officer',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, ToastrModule],
-  templateUrl: './recovery-officer.component.html',
-  styleUrl: './recovery-officer.component.scss',
+  selector: 'app-recovery-officer-log',
+  imports: [CommonModule, FormsModule],
+  templateUrl: './recovery-officer-log.component.html',
+  styleUrl: './recovery-officer-log.component.scss',
 })
-export class RecoveryOfficerComponent {
+export class RecoveryOfficerLogComponent {
   isLoading = false;
   isDeleting = false;
   searchTerm = '';
@@ -52,7 +53,8 @@ export class RecoveryOfficerComponent {
 
     try {
       const usersRef = collection(this.firestore, 'recoveryOfficer');
-      const snapshot = await getDocs(usersRef);
+      const q = query(usersRef, where('type', '==', 'recovery'));
+      const snapshot = await getDocs(q);
 
       this.users = snapshot.docs.map((docSnap) => ({
         id: docSnap.id,
@@ -94,75 +96,6 @@ export class RecoveryOfficerComponent {
 
     this.currentPage = 1; // reset to first page after search
     this.updateTotalPages();
-  }
-
-  openUserModal(userData?: any) {
-    const modalRef = this.modalService.open(RecoveryOfficerModalComponent, {
-      size: 'xl',
-      backdrop: 'static',
-    });
-
-    if (userData) {
-      modalRef.componentInstance.editMode = true;
-      modalRef.componentInstance.userData = userData;
-    }
-
-    modalRef.closed.subscribe((result) => {
-      if (result) {
-        this.loadUsers();
-      }
-    });
-  }
-
-  editUser(user: any) {
-    this.openUserModal(user);
-  }
-
-  openDeleteModal(id: string, modal: any) {
-    this.selectedDeleteId = id;
-    this.modalService.open(modal, { centered: true });
-  }
-
-  async confirmDelete(modal: any) {
-    if (!this.selectedDeleteId) return;
-
-    this.isDeleting = true;
-    const userRef = doc(
-      this.firestore,
-      'recoveryOfficer',
-      this.selectedDeleteId,
-    );
-
-    try {
-      const userSnap = await getDoc(userRef);
-
-      if (!userSnap.exists()) {
-        this.toastr.error('User not found');
-        return;
-      }
-
-      const logData = {
-        ...userSnap.data(),
-        type: 'recovery',
-        action: 'delete',
-        originalId: this.selectedDeleteId,
-        deletedAt: new Date(),
-      };
-
-      await addDoc(collection(this.firestore, 'logs'), logData);
-
-      await deleteDoc(
-        doc(this.firestore, 'recoveryOfficer', this.selectedDeleteId),
-      );
-      this.toastr.success('Recovery Officer deleted');
-      this.loadUsers();
-      modal.close();
-    } catch (err) {
-      this.toastr.error('Delete Recovery Officer failed');
-    } finally {
-      this.isDeleting = false;
-      this.selectedDeleteId = null;
-    }
   }
 
   updateTotalPages() {

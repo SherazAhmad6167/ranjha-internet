@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CableDetailsComponent } from './cable-details.component';
+import { AreaLogComponent } from './area-log.component';
 
-describe('CableDetailsComponent', () => {
-  let component: CableDetailsComponent;
-  let fixture: ComponentFixture<CableDetailsComponent>;
+describe('AreaLogComponent', () => {
+  let component: AreaLogComponent;
+  let fixture: ComponentFixture<AreaLogComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CableDetailsComponent]
+      imports: [AreaLogComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(CableDetailsComponent);
+    fixture = TestBed.createComponent(AreaLogComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

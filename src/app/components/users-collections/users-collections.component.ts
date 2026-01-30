@@ -5,6 +5,7 @@ import {
   deleteDoc,
   doc,
   Firestore,
+  getDoc,
   getDocs,
   updateDoc,
 } from '@angular/fire/firestore';
@@ -32,7 +33,8 @@ export class UsersCollectionsComponent {
   showCollectModal = false;
   showReceiptModal = false;
   userName: string = '';
-
+  sublocality: string = '';
+  internetAreas: any[] = [];
   collectionForm = {
     method: '',
     collected_id: '',
@@ -49,7 +51,21 @@ export class UsersCollectionsComponent {
 
   ngOnInit(): void {
     this.userName = localStorage.getItem('username') || '';
+    this.loadInternetAreas();
     this.loadUsers();
+  }
+
+  async loadInternetAreas() {
+    try {
+      const ref = doc(this.firestore, 'internetArea', 'internetAreaDoc');
+      const snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        this.internetAreas = snap.data()?.['internetAreas'] || [];
+      }
+    } catch (error) {
+      console.error('Error loading internet areas', error);
+    }
   }
 
   get pagedUsers() {
@@ -76,17 +92,33 @@ export class UsersCollectionsComponent {
             user_name: user['user_name'],
             internet_id: user['internet_id'],
             address: user['address'],
+            sublocality: user['sublocality'] || '',
             connection_type: bill.type,
             month: bill.month,
             year: bill.year,
             amount: bill.amount,
             status: bill.status,
             createdAt: bill.createdAt,
+            collected_amount: bill.collected_amount || null,
+            collected_method: bill.collected_method || null,
+            collected_by: bill.collected_by || null,
+            collected_date: bill.collected_date || null,
+            collected_bank: bill.collected_bank || null,
           });
         });
       });
 
       this.users = rows;
+      this.users.sort((a, b) => {
+        // Firestore Timestamp
+        const timeA = a.createdAt?.toDate
+          ? a.createdAt.toDate().getTime()
+          : new Date(a.createdAt).getTime();
+        const timeB = b.createdAt?.toDate
+          ? b.createdAt.toDate().getTime()
+          : new Date(b.createdAt).getTime();
+        return timeB - timeA; // descending
+      });
       this.filteredUsers = rows;
       this.updateTotalPages();
     } catch (error) {
@@ -106,6 +138,25 @@ export class UsersCollectionsComponent {
         user.internet_id?.toLowerCase().includes(term) ||
         user.address?.toLowerCase().includes(term),
     );
+
+    this.currentPage = 1;
+    this.updateTotalPages();
+  }
+
+  onFilterChange() {
+    const term = this.searchTerm.toLowerCase();
+
+    this.filteredUsers = this.users.filter((user) => {
+      const matchesSearch =
+        user.user_name?.toLowerCase().includes(term) ||
+        user.internet_id?.toLowerCase().includes(term) ||
+        user.address?.toLowerCase().includes(term);
+
+      const matchesSublocality =
+        !this.sublocality || user.sublocality === this.sublocality;
+
+      return matchesSearch && matchesSublocality;
+    });
 
     this.currentPage = 1;
     this.updateTotalPages();
@@ -166,6 +217,25 @@ export class UsersCollectionsComponent {
     }
   }
 
+  openReceiptModal(bill: any) {
+    this.selectedBill = bill;
+
+    this.receiptData = {
+      name: bill.user_name,
+      month: bill.month,
+      year: bill.year,
+      amount: bill.collected_amount ?? bill.amount,
+      method: bill.collected_method ?? 'cash',
+      date: bill.collected_date
+        ? bill.collected_date.toDate?.() || bill.collected_date
+        : new Date(),
+      collectedBy: bill.collected_by ?? '—',
+      bank: bill.collected_bank ?? '',
+    };
+
+    this.showReceiptModal = true;
+  }
+
   prepareReceipt() {
     this.receiptData = {
       name: this.selectedBill.user_name,
@@ -179,43 +249,42 @@ export class UsersCollectionsComponent {
   }
 
   saveReceiptImage() {
-  const receipt = document.getElementById('receipt');
+    const receipt = document.getElementById('receipt');
 
-  if (!receipt) return;
+    if (!receipt) return;
 
-  html2canvas(receipt, { scale: 2 }).then(canvas => {
-    const link = document.createElement('a');
-    link.href = canvas.toDataURL('image/png');
-    link.download = `receipt_${Date.now()}.png`;
-    link.click();
-  });
-}
+    html2canvas(receipt, { scale: 2 }).then((canvas) => {
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = `receipt_${Date.now()}.png`;
+      link.click();
+    });
+  }
 
   shareReceiptImage() {
-  const receipt = document.getElementById('receipt');
+    const receipt = document.getElementById('receipt');
 
-  if (!receipt) return;
+    if (!receipt) return;
 
-  html2canvas(receipt, { scale: 2 }).then(canvas => {
-    canvas.toBlob(blob => {
-      if (!blob) return;
+    html2canvas(receipt, { scale: 2 }).then((canvas) => {
+      canvas.toBlob((blob) => {
+        if (!blob) return;
 
-      const file = new File([blob], 'receipt.png', { type: 'image/png' });
+        const file = new File([blob], 'receipt.png', { type: 'image/png' });
 
-      if ((navigator as any).share) {
-        (navigator as any).share({
-          files: [file],
-          title: 'Payment Receipt'
-        });
-      } else {
-        const url = URL.createObjectURL(blob);
-        window.open(`https://wa.me/?text=Payment Receipt`, '_blank');
-        URL.revokeObjectURL(url);
-      }
+        if ((navigator as any).share) {
+          (navigator as any).share({
+            files: [file],
+            title: 'Payment Receipt',
+          });
+        } else {
+          const url = URL.createObjectURL(blob);
+          window.open(`https://wa.me/?text=Payment Receipt`, '_blank');
+          URL.revokeObjectURL(url);
+        }
+      });
     });
-  });
-}
-
+  }
 
   updateTotalPages() {
     this.totalPages = Math.ceil(this.filteredUsers.length / this.pageSize) || 1;

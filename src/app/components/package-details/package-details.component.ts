@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import {
+  addDoc,
   collection,
   deleteDoc,
   doc,
@@ -13,8 +14,6 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
 import { PackageModalComponent } from '../package-modal/package-modal.component';
 import { FormsModule } from '@angular/forms';
-import { CableDetailsComponent } from '../cable-details/cable-details.component';
-import { CompanyDetailsComponent } from '../company-details/company-details.component';
 
 @Component({
   selector: 'app-package-details',
@@ -43,7 +42,6 @@ export class PackageDetailsComponent {
     this.loadUsers();
   }
 
- 
   get pagedUsers() {
     const start = (this.currentPage - 1) * this.pageSize;
     const end = start + this.pageSize;
@@ -62,6 +60,17 @@ export class PackageDetailsComponent {
         ...docSnap.data(),
       }));
 
+      this.users.sort((a, b) => {
+        // Firestore Timestamp
+        const timeA = a.createdAt?.toDate
+          ? a.createdAt.toDate().getTime()
+          : new Date(a.createdAt).getTime();
+        const timeB = b.createdAt?.toDate
+          ? b.createdAt.toDate().getTime()
+          : new Date(b.createdAt).getTime();
+        return timeB - timeA; // descending
+      });
+
       this.filteredUsers = this.users;
       this.updateTotalPages();
 
@@ -79,12 +88,11 @@ export class PackageDetailsComponent {
 
     this.filteredUsers = this.users.filter(
       (user) =>
-        user.city?.toLowerCase().includes(term) ||
-        user.country?.toLowerCase().includes(term) ||
-        user.sublocality?.includes(term),
+        user.company_name?.toLowerCase().includes(term) ||
+        user.package_name?.toLowerCase().includes(term),
     );
 
-    this.currentPage = 1; // reset to first page after search
+    this.currentPage = 1;
     this.updateTotalPages();
   }
 
@@ -127,15 +135,28 @@ export class PackageDetailsComponent {
       const packageName = snap.exists() ? snap.data()?.['package_name'] : null;
       const type = snap.exists() ? snap.data()?.['package_type'] : null;
 
-      
-
       if (type === 'internet' && packageName) {
         await this.deleteInternetArea(packageName);
       }
 
       if (type === 'tv_cable' && packageName) {
-         await this.deleteCableArea(packageName);
+        await this.deleteCableArea(packageName);
       }
+
+      if (!snap.exists()) {
+        this.toastr.error('User not found');
+        return;
+      }
+
+      const logData = {
+        ...snap.data(),
+        type: 'packages',
+        action: 'delete',
+        originalId: this.selectedDeleteId,
+        deletedAt: new Date(),
+      };
+
+      await addDoc(collection(this.firestore, 'logs'), logData);
 
       await deleteDoc(areaDocRef);
 
@@ -172,11 +193,7 @@ export class PackageDetailsComponent {
   }
 
   async deleteCableArea(package_name: string) {
-    const CableDocRef = doc(
-      this.firestore,
-      'cablePackage',
-      'cablePackageDoc',
-    );
+    const CableDocRef = doc(this.firestore, 'cablePackage', 'cablePackageDoc');
     const snap = await getDoc(CableDocRef);
 
     if (!snap.exists()) return;

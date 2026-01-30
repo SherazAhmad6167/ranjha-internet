@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CableModalComponent } from './cable-modal.component';
+import { UserDetailLogComponent } from './user-detail-log.component';
 
-describe('CableModalComponent', () => {
-  let component: CableModalComponent;
-  let fixture: ComponentFixture<CableModalComponent>;
+describe('UserDetailLogComponent', () => {
+  let component: UserDetailLogComponent;
+  let fixture: ComponentFixture<UserDetailLogComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CableModalComponent]
+      imports: [UserDetailLogComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(CableModalComponent);
+    fixture = TestBed.createComponent(UserDetailLogComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -1,0 +1,77 @@
+<div class="card shadow-sm">
+  <div class="card-body">
+
+    <!-- Tabs -->
+    <ul class="nav nav-pills gap-2" role="tablist">
+      <li class="nav-item">
+        <button
+          class="nav-link"
+          [class.active]="activeTab === 'user'"
+          (click)="activeTab = 'user'">
+          <i class="ri-settings-3-line me-1"></i> User Logs
+        </button>
+      </li>
+
+      <li class="nav-item">
+        <button
+          class="nav-link"
+          [class.active]="activeTab === 'area'"
+          (click)="activeTab = 'area'">
+          <i class="ri-user-3-line me-1"></i> Area Logs
+        </button>
+      </li>
+
+      <li class="nav-item">
+        <button
+          class="nav-link"
+          [class.active]="activeTab === 'package'"
+          (click)="activeTab = 'package'">
+          <i class="ri-bug-line me-1"></i> Package Logs
+        </button>
+      </li>
+
+       <li class="nav-item">
+        <button
+          class="nav-link"
+          [class.active]="activeTab === 'recovery'"
+          (click)="activeTab = 'recovery'">
+          <i class="ri-bug-line me-1"></i> Recovery Officer Logs
+        </button>
+      </li>
+
+
+       <li class="nav-item">
+        <button
+          class="nav-link"
+          [class.active]="activeTab === 'bill'"
+          (click)="activeTab = 'bill'">
+          <i class="ri-bug-line me-1"></i> Bill Logs
+        </button>
+      </li>
+    </ul>
+
+    <!-- Tab Content -->
+  
+
+  </div>
+</div>
+
+  <div class="tab-content">
+
+        <div *ngIf="activeTab === 'user'">
+            <app-user-detail-log></app-user-detail-log>
+        </div>
+        <div *ngIf="activeTab === 'area'">
+            <app-area-log></app-area-log>
+        </div>
+        <div *ngIf="activeTab === 'package'">
+            <app-package-log></app-package-log>
+        </div>
+        <div *ngIf="activeTab === 'recovery'">
+            <app-recovery-officer-log></app-recovery-officer-log>
+        </div>
+        <div *ngIf="activeTab === 'bill'">
+            <app-bill-creator-log></app-bill-creator-log>
+        </div>
+
+    </div>

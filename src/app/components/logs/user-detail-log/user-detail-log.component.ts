@@ -8,6 +8,8 @@ import {
   Firestore,
   getDoc,
   getDocs,
+  query,
+  where,
 } from '@angular/fire/firestore';
 import { FormsModule } from '@angular/forms';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
@@ -16,15 +18,13 @@ import {
   NgbModal,
   NgbModule,
 } from '@ng-bootstrap/ng-bootstrap';
-import { UserModalComponent } from '../user-modal/user-modal.component';
-
 @Component({
-  selector: 'app-user-details',
-  imports: [CommonModule, FormsModule, ToastrModule],
-  templateUrl: './user-details.component.html',
-  styleUrl: './user-details.component.scss',
+  selector: 'app-user-detail-log',
+  imports: [CommonModule, FormsModule],
+  templateUrl: './user-detail-log.component.html',
+  styleUrl: './user-detail-log.component.scss',
 })
-export class UserDetailsComponent {
+export class UserDetailLogComponent {
   isLoading = false;
   isDeleting = false;
   searchTerm = '';
@@ -72,7 +72,8 @@ export class UserDetailsComponent {
 
     try {
       const usersRef = collection(this.firestore, 'users');
-      const snapshot = await getDocs(usersRef);
+      const q = query(usersRef, where('type', '==', 'users'));
+      const snapshot = await getDocs(q);
 
       this.users = snapshot.docs.map((docSnap) => ({
         id: docSnap.id,
@@ -136,75 +137,6 @@ export class UserDetailsComponent {
 
     this.currentPage = 1;
     this.updateTotalPages();
-  }
-
-  openUserModal(userData?: any) {
-    const modalRef = this.modalService.open(UserModalComponent, {
-      size: 'xl',
-      backdrop: 'static',
-    });
-
-    if (userData) {
-      modalRef.componentInstance.editMode = true;
-      modalRef.componentInstance.userData = userData;
-    }
-
-    modalRef.closed.subscribe((result) => {
-      if (result) {
-        this.loadUsers();
-      }
-    });
-  }
-
-  editUser(user: any) {
-    this.openUserModal(user);
-  }
-
-  openDeleteModal(id: string, modal: any) {
-    this.selectedDeleteId = id;
-    this.modalService.open(modal, { centered: true });
-  }
-
-  async confirmDelete(modal: any) {
-    if (!this.selectedDeleteId) return;
-
-    this.isDeleting = true;
-
-    const userRef = doc(this.firestore, 'users', this.selectedDeleteId);
-
-    try {
-      const userSnap = await getDoc(userRef);
-
-      if (!userSnap.exists()) {
-        this.toastr.error('User not found');
-        return;
-      }
-
-      const logData = {
-        ...userSnap.data(),
-        type: 'users',
-        action: 'delete',
-        originalId: this.selectedDeleteId,
-        deletedAt: new Date(),
-      };
-
-      await addDoc(collection(this.firestore, 'logs'), logData);
-      await addDoc(collection(this.firestore, 'logs'), {
-        type: 'users',
-        action: 'delete',
-        targetId: this.selectedDeleteId,
-        deletedAt: new Date(),
-      });
-      await deleteDoc(doc(this.firestore, 'users', this.selectedDeleteId));
-      this.toastr.success('User deleted');
-      this.loadUsers();
-      modal.close();
-    } catch (err) {
-      this.toastr.error('Delete failed');
-    } finally {
-      this.isDeleting = false;
-      this.selectedDeleteId = null;
-    }
   }
 
   updateTotalPages() {

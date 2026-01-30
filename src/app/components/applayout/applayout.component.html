@@ -1,7 +1,7 @@
 <div class="content-body">
 
     <!-- Sidebar toggle button (visible on mobile) -->
-    <button class="btn btn-outline-secondary custom-btn" (click)="toggleSidebar()">
+    <button #toggleBtn class="btn btn-outline-secondary custom-btn" (click)="toggleSidebar()">
         &#9776;
     </button>
 
@@ -36,9 +36,17 @@
                 <a routerLink="/bill-creator" routerLinkActive="active" class="nav-link text-white"
                     (click)="onMenuClick()">Bill Creator</a>
             </li>
-            <li class="nav-item" *ngIf="role === 'admin'">
+            <li class="nav-item" *ngIf="role === 'admin' || role === 'operator'">
                 <a routerLink="/user-collections" routerLinkActive="active" class="nav-link text-white"
                     (click)="onMenuClick()">User Collections</a>
+            </li>
+            <li class="nav-item" *ngIf="role === 'admin'">
+                <a routerLink="/defaulter-users" routerLinkActive="active" class="nav-link text-white"
+                    (click)="onMenuClick()">Defaulter Users</a>
+            </li>
+            <li class="nav-item" *ngIf="role === 'admin'">
+                <a routerLink="/logs" routerLinkActive="active" class="nav-link text-white"
+                    (click)="onMenuClick()">Logs</a>
             </li>
 
         </ul>
