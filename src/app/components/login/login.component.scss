@@ -1,0 +1,23 @@
+.login-card {
+  width: 100%;
+  max-width: 420px;
+
+  @media (max-width: 576px) {
+    max-width: 95%;
+  }
+
+  @media (min-width: 577px) and (max-width: 992px) {
+    max-width: 75%;
+  }
+
+  @media (min-width: 993px) {
+    max-width: 420px;
+  }
+}
+button.btn {
+  cursor: pointer;
+}
+
+button.btn:hover {
+  color: #000;
+}

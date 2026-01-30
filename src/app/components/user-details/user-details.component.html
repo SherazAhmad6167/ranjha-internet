@@ -35,7 +35,7 @@
               <th>Package</th>
               <th>Connection</th>
               <th>Install Date</th>
-              <th>Recharge Date</th>
+              <th>Static IP</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -52,12 +52,12 @@
                 {{ user.select_package
                 ?.replace('_', '-')
                 .replace('mbps', 'Mbps')
-                .toUpperCase()
+                .toUpperCase() || user.pkg_cable
                 }}
               </td>
               <td>{{ user.connection_type | titlecase}}</td>
               <td>{{ user.installation_date }}</td>
-              <td>{{ user.recharge_date }}</td>
+              <td>{{ user.static_ip }}</td>
               <td>
                 <button class="btn btn-primary btn-sm" (click)="editUser(user)">
                   <i class="ri-pencil-line"></i>

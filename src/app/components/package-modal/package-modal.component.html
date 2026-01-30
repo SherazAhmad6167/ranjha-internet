@@ -1,0 +1,120 @@
+<div class="modal-header d-flex justify-content-between align-items-center">
+    <h4 class="modal-title">{{ editMode ? 'Update' : 'Add' }} Package</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+</div>
+
+<div *ngIf="isLoading" class="loading-overlay">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+
+<div class="mx-5">
+    <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+        <div class="row align-items-center gy-3 mt-4 mx-7">
+
+
+
+            <div class="col-md-6 m-0">
+                <label for="validationDefault01" class="form-label">Package Name</label>
+                <input type="text" class="form-control"
+                    [ngClass]="{'is-invalid': userForm.get('package_name')?.invalid && userForm.get('package_name')?.touched, 'blink-border': userForm.get('package_name')?.invalid && userForm.get('package_name')?.touched}"
+                    formControlName="package_name" id="validationDefault01" placeholder="Enter Package Name">
+                <div class="extra-space">
+                    <ng-container
+                        *ngIf="userForm.get('package_name')?.hasError('required') && userForm.get('package_name')?.touched;">
+                        <span class="text-danger">Package Name is required</span>
+                    </ng-container>
+                </div>
+            </div>
+
+            <div class="col-md-6 m-0">
+                <div class="card-title">Package Type</div>
+                <div class="card-body">
+                    <select
+                        [ngClass]="{'is-invalid': userForm.get('package_type')?.invalid && userForm.get('package_type')?.touched, 'blink-border': userForm.get('package_type')?.invalid && userForm.get('package_type')?.touched}"
+                        class="form-control" formControlName="package_type">
+                        <option value="" disabled>Select Package Type</option>
+                        <option value="tv_cable">TV Cable</option>
+                        <option value="internet">Internet</option>
+
+                    </select>
+                </div>
+                <div class="extra-space">
+                    <ng-container
+                        *ngIf="userForm.get('package_type')?.hasError('required') && userForm.get('package_type')?.touched">
+                        <span class="text-danger">Select Package Type</span>
+                    </ng-container>
+                </div>
+            </div>
+
+
+              <div class="col-md-6 m-0">
+                <label for="validationDefault01" class="form-label">Company Name</label>
+                <input type="text" class="form-control"
+                    [ngClass]="{'is-invalid': userForm.get('company_name')?.invalid && userForm.get('company_name')?.touched, 'blink-border': userForm.get('company_name')?.invalid && userForm.get('company_name')?.touched}"
+                    formControlName="company_name" id="validationDefault01" placeholder="Enter Company Name">
+                <div class="extra-space">
+                    <ng-container
+                        *ngIf="userForm.get('company_name')?.hasError('required') && userForm.get('company_name')?.touched;">
+                        <span class="text-danger">Company Name is required</span>
+                    </ng-container>
+                </div>
+            </div>
+
+
+
+
+            <div class="col-md-6 m-0">
+                <label for="validationDefault01" class="form-label">Sales Price</label>
+                <input type="text" class="form-control"
+                    [ngClass]="{'is-invalid': userForm.get('sales_price')?.invalid && userForm.get('sales_price')?.touched, 'blink-border': userForm.get('sales_price')?.invalid && userForm.get('sales_price')?.touched}"
+                    formControlName="sales_price" id="validationDefault01" placeholder="Enter Sales Price">
+                <div class="extra-space">
+                    <ng-container
+                        *ngIf="userForm.get('sales_price')?.hasError('required') && userForm.get('sales_price')?.touched;">
+                        <span class="text-danger">Sales Price is required</span>
+                    </ng-container>
+                </div>
+            </div>
+
+
+
+            <div class="col-md-6 m-0">
+                <label for="validationDefault01" class="form-label">Purchase Price</label>
+                <input type="text" class="form-control"
+                    [ngClass]="{'is-invalid': userForm.get('purchase_price')?.invalid && userForm.get('purchase_price')?.touched, 'blink-border': userForm.get('purchase_price')?.invalid && userForm.get('purchase_price')?.touched}"
+                    formControlName="purchase_price" id="validationDefault01" placeholder="Enter Sublocality">
+                <div class="extra-space">
+                    <ng-container
+                        *ngIf="userForm.get('purchase_price')?.hasError('required') && userForm.get('purchase_price')?.touched;">
+                        <span class="text-danger">Purchase Price is required</span>
+                    </ng-container>
+                </div>
+            </div>
+
+
+
+
+
+
+
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary-light" (click)="activeModal.close()">
+                    Close
+                </button>
+
+                <button class="btn btn-primary" type="submit" [disabled]="isLoading || isSaving">
+                    <span *ngIf="!isSaving"> {{ editMode ? 'Update' : 'Save' }}</span>
+                    <span *ngIf="isSaving" class="d-flex align-items-center">
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        {{ editMode ? 'Updating...' : 'Saving...' }}
+                    </span>
+                </button>
+
+            </div>
+        </div>
+    </form>
+
+</div>

@@ -122,6 +122,7 @@ export class UserDetailsComponent {
     try {
       await deleteDoc(doc(this.firestore, 'users', this.selectedDeleteId));
       this.toastr.success('User deleted');
+      this.loadUsers();
       modal.close();
     } catch (err) {
       this.toastr.error('Delete failed');

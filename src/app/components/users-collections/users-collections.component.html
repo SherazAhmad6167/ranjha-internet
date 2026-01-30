@@ -1,0 +1,280 @@
+<div class="container-fluid pt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="m-0">Users Collections</h2>
+        <!-- <button class="btn btn-primary d-flex align-items-center" (click)="openUserModal()">
+      <i class="bi bi-person-plus me-2"></i>
+      Add Recovery Officer
+    </button> -->
+    </div>
+
+    <div *ngIf="isLoading" class="loading-overlay">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-end mb-3">
+                <div class="col-md-3">
+                    <input type="text" class="form-control" placeholder="Search Here" [(ngModel)]="searchTerm"
+                        (input)="onSearch()" />
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered">
+                    <thead>
+                        <tr>
+                            <th>S.No</th>
+                            <th>Name</th>
+                            <th>InternetId</th>
+                            <th>Address</th>
+                            <th>Month/Year</th>
+                            <th>Connection Type</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr *ngFor="let row of pagedUsers; let i = index">
+                            <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+                            <td>{{ row.user_name }}</td>
+                            <td>{{ row.internet_id }}</td>
+                            <td>{{ row.address }}</td>
+                            <td>{{ row.month | titlecase }} / {{ row.year }}</td>
+                            <td>{{ row.connection_type | titlecase }}</td>
+                            <td>Rs. {{ row.amount }}</td>
+                            <td>
+                                <span class="badge bg-warning" *ngIf="row.status === 'unpaid'">Unpaid</span>
+                                <span class="badge bg-success" *ngIf="row.status === 'paid'">Paid</span>
+                            </td>
+                            <td>{{ row.createdAt?.toDate() | date:'dd MMM yyyy, hh:mm a' }}</td>
+                            <td><button class="btn btn-success btn-sm" [disabled]="row.status === 'paid'"
+                                    (click)="openCollectModal(row)">
+                                    <i class="ri-currency-line me-1"></i> Collect
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+
+                </table>
+            </div>
+
+
+
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
+                <!-- Entries Info -->
+                <div class="mb-2 mb-md-0">
+                    Showing {{ pagedUsers.length }} of {{ filteredUsers.length }} Entries
+                </div>
+
+                <!-- Pagination Buttons -->
+                <div>
+                    <ul class="pagination mb-0">
+                        <!-- Previous -->
+                        <li class="page-item" [class.disabled]="currentPage === 1">
+                            <button class="page-link" (click)="prevPage()">Previous</button>
+                        </li>
+
+                        <!-- Page Numbers -->
+                        <li class="page-item" *ngFor="let page of [].constructor(totalPages); let i = index"
+                            [class.active]="currentPage === i + 1">
+                            <button class="page-link" (click)="goToPage(i + 1)">{{ i + 1 }}</button>
+                        </li>
+
+                        <!-- Next -->
+                        <li class="page-item" [class.disabled]="currentPage === totalPages">
+                            <button class="page-link" (click)="nextPage()">Next</button>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+<div class="modal fade show d-block" *ngIf="showCollectModal">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content shadow-lg">
+
+            <!-- Header -->
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="ri-bill-line me-2"></i> Bill Collection
+                </h5>
+                <button class="btn-close btn-close-white" (click)="showCollectModal=false"></button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body">
+
+                <!-- Friendly text -->
+                <p class="fs-6">
+                    <strong>{{ selectedBill.user_name }}</strong>, your bill for
+                    <strong>{{ selectedBill.month | titlecase }} {{ selectedBill.year }}</strong>
+                    is <strong>Rs. {{ selectedBill.amount }}</strong>
+                </p>
+
+                <hr>
+
+                <!-- Collection Method -->
+                <div class="mb-3">
+                    <label class="form-label">Collection Method</label>
+                    <select class="form-select" [(ngModel)]="collectionForm.method">
+                        <option value="">Select method</option>
+                        <option value="cash">Cash</option>
+                        <option value="easypaisa">EasyPaisa</option>
+                        <option value="jazzcash">JazzCash</option>
+                        <option value="bank">Bank Transfer</option>
+                    </select>
+                </div>
+
+                <!-- Bank Name (Only if Bank selected) -->
+                <div class="mb-3" *ngIf="collectionForm.method === 'bank'">
+                    <label class="form-label">Bank Name</label>
+                    <input type="text" class="form-control" [(ngModel)]="collectionForm.bank_name"
+                        placeholder="e.g. HBL, Meezan, UBL">
+                </div>
+
+
+                <!-- Transaction ID -->
+                <!-- Transaction ID -->
+                <div class="mb-3">
+                    <label class="form-label">
+                        Transaction / Reference ID
+                        <span class="text-danger"
+                            *ngIf="collectionForm.method && collectionForm.method !== 'cash'">*</span>
+                    </label>
+
+                    <input type="text" class="form-control" [(ngModel)]="collectionForm.collected_id"
+                        [required]="collectionForm.method && collectionForm.method !== 'cash'"
+                        placeholder="Required for EasyPaisa, JazzCash & Bank">
+
+                    <!-- Error -->
+                    <small class="text-danger"
+                        *ngIf="collectionForm.method && collectionForm.method !== 'cash' && !collectionForm.collected_id">
+                        Transaction ID is required for this payment method
+                    </small>
+                </div>
+
+
+                <!-- Amount -->
+                <div class="mb-3">
+                    <label class="form-label">Collected Amount</label>
+                    <input type="number" class="form-control" [(ngModel)]="collectionForm.collected_amount">
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer">
+                <button class="btn btn-secondary" (click)="showCollectModal=false">Cancel</button>
+                <button class="btn btn-success" [disabled]="
+    !collectionForm.method ||
+    (collectionForm.method !== 'cash' && !collectionForm.collected_id) ||
+    (collectionForm.method === 'bank' && !collectionForm.bank_name)
+  " (click)="submitCollection()">
+                    <i class="ri-check-line me-1"></i> Submit
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Backdrop -->
+<div class="modal-backdrop fade show" *ngIf="showCollectModal"></div>
+
+
+
+
+<div class="modal fade show d-block" *ngIf="showReceiptModal">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content shadow border-0 rounded-4">
+
+            <!-- RECEIPT -->
+            <div class="modal-body p-0" id="receipt">
+
+                <!-- Header -->
+                <div class="bg-success text-white text-center py-3 rounded-top-4">
+                    <h5 class="mb-0">Payment Receipt</h5>
+                    <small>Thank you for your payment</small>
+                </div>
+
+                <!-- Body -->
+                <div class="p-4 text-center">
+                    <h6 class="fw-bold mb-1">{{ receiptData.name }}</h6>
+                    <small class="text-muted">
+                        {{ receiptData.month | titlecase }} {{ receiptData.year }}
+                    </small>
+
+                    <div class="my-3">
+                        <span class="fs-1 fw-bold text-success">
+                            Rs. {{ receiptData.amount }}
+                        </span>
+                    </div>
+
+                    <hr>
+
+                    <div class="text-start small">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Payment Method</span>
+                            <span class="fw-semibold">{{ receiptData.method | titlecase }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-1" *ngIf="receiptData.method === 'bank'">
+                            <span>Bank</span>
+                            <span class="fw-semibold">{{ collectionForm.bank_name }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Collected By</span>
+                            <span class="fw-semibold">{{ receiptData.collectedBy }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <span>Date</span>
+                            <span class="fw-semibold">
+                                {{ receiptData.date | date:'dd MMM yyyy, hh:mm a' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="text-success fw-semibold">
+                        ✔ Payment Successful
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer justify-content-center border-0">
+                <button class="btn btn-outline-primary px-4" (click)="saveReceiptImage()">
+                    <i class="ri-download-line me-1"></i> Save
+                </button>
+                <button class="btn btn-success px-4" (click)="shareReceiptImage()">
+                    <i class="ri-share-line me-1"></i> Share
+                </button>
+                <button class="btn btn-secondary px-4" (click)="showReceiptModal=false">
+                    <i class="ri-close-line me-1"></i> Close
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal-backdrop fade show" *ngIf="showReceiptModal"></div>

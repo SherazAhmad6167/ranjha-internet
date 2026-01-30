@@ -15,6 +15,7 @@
 
 /* Sidebar */
 .sidebar {
+  position: fixed;
   width: 250px;
   background: linear-gradient(135deg, #003366, #336699);
   color: white;
@@ -56,8 +57,15 @@
 
 /* Main Content */
 .main-content {
-  flex-grow: 1;
-  transition: margin-left 0.3s;
+  margin-left: 250px;
+  flex: 1;
+  padding: 1rem;
+  overflow: hidden;
+  transition: margin-left 0.3s ease;
+}
+
+.full-width {
+  margin-left: 0 !important;
 }
 
 /* Mobile Responsiveness */
@@ -70,9 +78,11 @@
     transition: transform 0.3s ease-in-out;
   }
 
+
   
 
   .main-content {
-    margin-left: 0;
+    margin-left: 0 !important;
+    padding: 0 !important;
   }
 }

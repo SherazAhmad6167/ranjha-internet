@@ -12,21 +12,45 @@
         </h2>
 
         <ul class="nav flex-column">
-            <li class="nav-item">
-                <a routerLink="/dashboard" routerLinkActive="active" class="nav-link text-white">Dashboard</a>
+            <li class="nav-item" *ngIf="role === 'admin'">
+                <a routerLink="/dashboard" routerLinkActive="active" class="nav-link text-white"
+                    (click)="onMenuClick()">Dashboard</a>
             </li>
-            <li class="nav-item">
-                <a routerLink="/user-details" routerLinkActive="active" class="nav-link text-white">User Details</a>
+            <li class="nav-item" *ngIf="role === 'admin' || role === 'operator'">
+                <a routerLink="/user-details" routerLinkActive="active" class="nav-link text-white"
+                    (click)="onMenuClick()">User Details</a>
             </li>
-        
+            <li class="nav-item" *ngIf="role === 'admin'">
+                <a routerLink="/area-details" routerLinkActive="active" class="nav-link text-white"
+                    (click)="onMenuClick()">Area Details</a>
+            </li>
+             <li class="nav-item" *ngIf="role === 'admin'">
+                <a routerLink="/package-details" routerLinkActive="active" class="nav-link text-white"
+                    (click)="onMenuClick()">Package Details</a>
+            </li>
+            <li class="nav-item" *ngIf="role === 'admin'">
+                <a routerLink="/recovery-officer" routerLinkActive="active" class="nav-link text-white"
+                    (click)="onMenuClick()">Recovery Officer</a>
+            </li>
+            <li class="nav-item" *ngIf="role === 'admin'">
+                <a routerLink="/bill-creator" routerLinkActive="active" class="nav-link text-white"
+                    (click)="onMenuClick()">Bill Creator</a>
+            </li>
+            <li class="nav-item" *ngIf="role === 'admin'">
+                <a routerLink="/user-collections" routerLinkActive="active" class="nav-link text-white"
+                    (click)="onMenuClick()">User Collections</a>
+            </li>
+
         </ul>
 
-        <!-- Refresh button (mobile only, right corner) -->
+        <div class="d-flex justify-content-center align-items-center mt-auto">
+            <button class="btn btn-danger" (click)="logout()">Logout</button>
+        </div>
 
     </nav>
 
     <!-- Main Content -->
-    <main class="main-content flex-grow-1">
+    <main class="main-content flex-grow-1" [class.full-width]="!sidebarVisible">
         <router-outlet></router-outlet>
     </main>
 

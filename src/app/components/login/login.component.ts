@@ -1,34 +1,90 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
+import {
+  collection,
+  Firestore,
+  getDocs,
+  query,
+  where,
+} from '@angular/fire/firestore';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ToastrModule, ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, ToastrModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
 export class LoginComponent {
-  username: string = '';
-  password: string = '';
-  errorMessage: string = '';
+  username = '';
+  password = '';
+  loading = false;
+  errorMessage = '';
+  showPassword = false;
 
-  // Hardcoded credentials
-  private readonly validUsername = 'admin';
-  private readonly validPassword = '1234';
+  constructor(
+    private firestore: Firestore,
+    private router: Router,
+    private toastr: ToastrService,
+  ) {}
 
-  constructor(private router: Router) {}
+  togglePassword() {
+    this.showPassword = !this.showPassword;
+  }
 
-  login() {
-    if (
-      this.username === this.validUsername &&
-      this.password === this.validPassword
-    ) {
-      this.errorMessage = '';
-      this.router.navigate(['/dashboard']); 
-    } else {
-      this.errorMessage = 'Invalid username or password!';
+  async login() {
+    if (!this.username || !this.password) {
+      this.toastr.error('Username aur password required hai');
+      return;
+    }
+
+    this.loading = true;
+
+    try {
+      const ref = collection(this.firestore, 'recoveryOfficer');
+
+      const q = query(
+        ref,
+        where('user_name', '==', this.username),
+        where('password', '==', this.password),
+      );
+
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        this.toastr.error('Invalid username or password');
+        this.errorMessage = 'Invalid username or password';
+        this.loading = false;
+        return;
+      }
+
+      const user = snapshot.docs[0].data();
+
+      if (user['status'] !== 'activated') {
+        this.toastr.error('Account is not activated, please contact admin');
+        this.errorMessage = 'Account is not activated, please contact admin';
+        this.loading = false;
+        return;
+      }
+
+      localStorage.setItem('username', user['user_name']);
+      localStorage.setItem('role', user['role']);
+      localStorage.setItem('userId', snapshot.docs[0].id);
+
+      this.toastr.success('Login successful');
+      if (user['role'] === 'operator') {
+        this.router.navigate(['/user-details']);
+      } else {
+        this.router.navigate(['/dashboard']);
+      }
+    } catch (err) {
+      console.error(err);
+      this.toastr.error('Something went wrong');
+      this.errorMessage = 'Something went wrong';
+    } finally {
+      this.loading = false;
     }
   }
 }

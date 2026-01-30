@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-applayout',
@@ -10,6 +10,13 @@ import { RouterLink, RouterOutlet } from '@angular/router';
 })
 export class ApplayoutComponent {
  sidebarVisible = true;
+ role: string | null = '';
+
+ constructor(private route: Router){}
+
+ ngOnInit() {
+    this.role = localStorage.getItem('role');
+  }
 
    toggleSidebar() {
     this.sidebarVisible = !this.sidebarVisible;
@@ -17,5 +24,16 @@ export class ApplayoutComponent {
 
   refreshApp() {
     window.location.reload();
+  }
+
+  onMenuClick() {
+    if (window.innerWidth < 768) {
+      this.sidebarVisible = false;
+    }
+  }
+
+  logout(){
+    localStorage.clear();
+    this.route.navigate(['/login']);
   }
 }
