@@ -8,6 +8,8 @@ import {
   Firestore,
   getDoc,
   getDocs,
+  query,
+  where,
 } from '@angular/fire/firestore';
 import { FormsModule } from '@angular/forms';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
@@ -17,6 +19,7 @@ import {
   NgbModule,
 } from '@ng-bootstrap/ng-bootstrap';
 import { UserModalComponent } from '../user-modal/user-modal.component';
+import html2canvas from 'html2canvas';
 
 @Component({
   selector: 'app-user-details',
@@ -36,6 +39,8 @@ export class UserDetailsComponent {
   totalPages = 1;
   sublocality: string = '';
   internetAreas: any[] = [];
+  showReceiptModal = false;
+  companyDetail: any = {};
 
   constructor(
     private modalService: NgbModal,
@@ -46,6 +51,7 @@ export class UserDetailsComponent {
   ngOnInit(): void {
     this.loadUsers();
     this.loadInternetAreas();
+    this.loadCompanyDetails();
   }
 
   async loadInternetAreas() {
@@ -55,9 +61,27 @@ export class UserDetailsComponent {
 
       if (snap.exists()) {
         this.internetAreas = snap.data()?.['internetAreas'] || [];
+
+        this.internetAreas.sort((a: any, b: any) => {
+          return a.sublocality.localeCompare(b.sublocality);
+        });
       }
     } catch (error) {
       console.error('Error loading internet areas', error);
+    }
+  }
+
+  async loadCompanyDetails() {
+    try {
+      const ref = doc(this.firestore, 'companyDetail', 'companyDetail');
+      const snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        this.companyDetail = snap.data();
+      }
+    } catch (err) {
+      console.error(err);
+      this.toastr.error('Failed to load company details');
     }
   }
 
@@ -80,17 +104,20 @@ export class UserDetailsComponent {
       }));
 
       this.users.sort((a, b) => {
-        // Firestore Timestamp
-        const timeA = a.createdAt?.toDate
-          ? a.createdAt.toDate().getTime()
-          : new Date(a.createdAt).getTime();
-        const timeB = b.createdAt?.toDate
-          ? b.createdAt.toDate().getTime()
-          : new Date(b.createdAt).getTime();
-        return timeB - timeA; // descending
+        const getNumericPrefix = (id: string) => {
+          if (!id) return 0;
+          const match = id.match(/^0*(\d+)/);
+          return match ? parseInt(match[1], 10) : 0;
+        };
+
+        const numA = getNumericPrefix(a.internet_id);
+        const numB = getNumericPrefix(b.internet_id);
+
+        return numA - numB;
       });
 
-      this.filteredUsers = this.users;
+      // this.filteredUsers = this.users;
+      this.onFilterChange();
       this.updateTotalPages();
 
       console.log('Fetched users:', this.users);
@@ -151,7 +178,11 @@ export class UserDetailsComponent {
 
     modalRef.closed.subscribe((result) => {
       if (result) {
-        this.loadUsers();
+        const prevPage = this.currentPage;
+
+        this.loadUsers().then(() => {
+          this.currentPage = prevPage;
+        });
       }
     });
   }
@@ -222,5 +253,172 @@ export class UserDetailsComponent {
 
   goToPage(page: number) {
     this.currentPage = page;
+  }
+
+  get visiblePages(): number[] {
+    const pages: number[] = [];
+
+    const startPage = Math.floor((this.currentPage - 1) / 5) * 5 + 1;
+
+    const endPage = Math.min(startPage + 4, this.totalPages);
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  }
+
+  onPageSizeChange() {
+    this.currentPage = 1;
+    this.updateTotalPages();
+  }
+
+  async deleteMotaUsers() {
+    const confirmDelete = confirm(
+      'Are you sure you want to delete all Mota users?',
+    );
+    if (!confirmDelete) return;
+
+    try {
+      const usersRef = collection(this.firestore, 'users');
+      const q = query(usersRef, where('sublocality', '==', 'Lakhanwal'));
+
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        this.toastr.info('No users found with sublocality Mota');
+        return;
+      }
+
+      const deletePromises: Promise<any>[] = [];
+
+      querySnapshot.forEach((docSnap) => {
+        deletePromises.push(
+          deleteDoc(doc(this.firestore, 'users', docSnap.id)),
+        );
+      });
+
+      await Promise.all(deletePromises);
+
+      this.toastr.success(
+        `${deletePromises.length} Mota users deleted successfully`,
+      );
+      this.loadUsers();
+    } catch (error) {
+      console.error(error);
+      this.toastr.error('Failed to delete Mota users');
+    }
+  }
+
+  receiptData: any = null;
+
+  openReceiptModal(user: any) {
+    this.showReceiptModal = true;
+
+    this.receiptData = {
+      name: user.user_name,
+      month: user.month,
+      year: user.year,
+      address: user.address,
+      installationDate: user.installation_date,
+      totalAmount: user.amount,
+      internet_package_fee: user.internet_package_fee,
+      internetId: user.internet_id,
+      installation_amount: user.installation_amount,
+      select_package: user.select_package,
+    };
+  }
+
+  saveReceiptImage() {
+    const receipt = document.getElementById('receipt');
+
+    if (!receipt) return;
+
+    html2canvas(receipt, { scale: 2 }).then((canvas) => {
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = `receipt_${Date.now()}.png`;
+      link.click();
+    });
+  }
+
+  printReceipt() {
+    // Make sure modal is visible
+    if (!this.showReceiptModal) {
+      console.warn('Receipt modal is not visible');
+      return;
+    }
+
+    // Target the modal body
+    const receipt = document.getElementById('receipt');
+    if (!receipt) {
+      console.warn('Receipt element not found');
+      return;
+    }
+
+    // Use html2canvas with proper options
+    html2canvas(receipt, {
+      scale: 2, // Higher resolution
+      useCORS: true, // For external images, if any
+      backgroundColor: '#fff', // Force white background
+    })
+      .then((canvas) => {
+        const dataUrl = canvas.toDataURL('image/png');
+
+        const printWindow = window.open('', '', 'height=600,width=400');
+        if (!printWindow) return;
+
+        printWindow.document.write(`
+      <html>
+        <head>
+          <title>Receipt</title>
+          <style>
+            body { margin: 0; padding: 0; text-align: center; }
+            img { max-width: 100%; height: auto; }
+          </style>
+        </head>
+        <body>
+          <img src="${dataUrl}" />
+        </body>
+      </html>
+    `);
+
+        printWindow.document.close();
+        printWindow.focus();
+
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+        }, 200);
+      })
+      .catch((err) => {
+        console.error('Error printing receipt:', err);
+      });
+  }
+
+  shareReceiptImage() {
+    const receipt = document.getElementById('receipt');
+
+    if (!receipt) return;
+
+    html2canvas(receipt, { scale: 2 }).then((canvas) => {
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+
+        const file = new File([blob], 'receipt.png', { type: 'image/png' });
+
+        if ((navigator as any).share) {
+          (navigator as any).share({
+            files: [file],
+            title: 'Payment Receipt',
+          });
+        } else {
+          const url = URL.createObjectURL(blob);
+          window.open(`https://wa.me/?text=Payment Receipt`, '_blank');
+          URL.revokeObjectURL(url);
+        }
+      });
+    });
   }
 }

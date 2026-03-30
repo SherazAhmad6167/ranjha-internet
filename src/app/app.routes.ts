@@ -12,6 +12,12 @@ import { PageNotFoundComponent } from './components/page-not-found/page-not-foun
 import { BillCreatorComponent } from './components/bill-creator/bill-creator.component';
 import { UsersCollectionsComponent } from './components/users-collections/users-collections.component';
 import { DefaulterUsersComponent } from './components/defaulter-users/defaulter-users.component';
+import { CompanyDetailsComponent } from './components/company-details/company-details.component';
+import { RoReportComponent } from './components/ro-report/ro-report.component';
+import { SettingsComponent } from './components/settings/settings.component';
+import { ExpensesComponent } from './components/expenses/expenses.component';
+import { NewConnectionComponent } from './components/new-connection/new-connection.component';
+import { CityDetailsComponent } from './components/city-details/city-details.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -31,6 +37,12 @@ export const routes: Routes = [
       { path: 'user-collections', data: { roles: ['admin', 'operator'] }, component: UsersCollectionsComponent },
       { path: 'logs', data: { roles: ['admin'] }, component: LogsComponent },
       { path: 'defaulter-users', data: { roles: ['admin'] }, component: DefaulterUsersComponent },
+      { path: 'company-detail', data: { roles: ['admin'] }, component: CompanyDetailsComponent },
+      { path: 'ro-reports', data: { roles: ['admin'] }, component: RoReportComponent },
+      { path: 'settings', data: { roles: ['admin', 'operator'] }, component: SettingsComponent },
+      { path: 'expenses', data: { roles: ['admin'] }, component: ExpensesComponent },
+      { path: 'new-connection', data: { roles: ['admin'] }, component: NewConnectionComponent },
+      { path: 'city-details', data: { roles: ['admin'] }, component: CityDetailsComponent },
     ],
   },
   { path: 'not-found', component: PageNotFoundComponent }, // 👈 create a 404 component

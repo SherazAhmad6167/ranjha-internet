@@ -16,3 +16,17 @@
     justify-content: center;
     z-index: 1000;
   }
+
+.badge {
+  font-size: 0.9rem;
+  padding: 0.5rem 0.7rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-close {
+  padding: 0;
+  margin-left: 0.3rem;
+  width: 1rem;
+  height: 1rem;
+}

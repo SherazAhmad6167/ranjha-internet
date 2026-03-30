@@ -17,6 +17,7 @@ import {
 } from '@angular/forms';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
+import { whatsappConfig } from '../../../environment/environment';
 
 @Component({
   selector: 'app-user-modal',
@@ -42,6 +43,10 @@ export class UserModalComponent {
   showImageModal = false;
   internetOriginalPrice = 0;
   cableOriginalPrice = 0;
+  private accessToken!: string;
+  private phoneNumberId!: string;
+  private baseUrl!: string;
+  private version!: string;
 
   constructor(
     public activeModal: NgbActiveModal,
@@ -52,14 +57,14 @@ export class UserModalComponent {
   ) {
     this.userForm = this.fb.group({
       internet_id: ['', [Validators.required]],
-      user_name: ['', [Validators.required, Validators.maxLength(15)]],
+      user_name: ['', [Validators.required]],
       address: ['', Validators.required],
       phone_no: ['', [Validators.required]],
       sublocality: ['', [Validators.required]],
       installation_amount: ['', [Validators.required]],
       other_amount: ['', [Validators.required]],
       installation_date: ['', [Validators.required]],
-      recharge_date: ['', [Validators.required]],
+      // recharge_date: ['', [Validators.required]],
       connection_provider: ['', Validators.required],
       connection_type: ['', [Validators.required]],
       pkg_cable: [null, [Validators.required]],
@@ -68,17 +73,27 @@ export class UserModalComponent {
       select_package: [null, [Validators.required]],
       internet_package_fee: [null, [Validators.required]],
       cable_package_fee: [null, [Validators.required]],
-      photo: ['', [Validators.required]], // base64 string
-      photoName: ['', [Validators.required]],
-      latitude: ['', Validators.required],
-      longitude: ['', Validators.required],
+      photo: [''], // base64 string
+      photoName: [''],
+      latitude: [''],
+      longitude: [''],
       static_ip: ['', Validators.required],
       // isActive: [true],
       createdAt: [new Date()],
     });
+
+    this.accessToken = whatsappConfig.accessToken || '';
+    this.phoneNumberId = whatsappConfig.phoneNumberId || '';
+    this.version = whatsappConfig.version || '';
+    this.baseUrl = whatsappConfig.baseUrl || '';
+
+    if (!this.accessToken || !this.phoneNumberId) {
+      throw new Error('WhatsApp configuration missing');
+    }
   }
 
   ngOnInit() {
+    // this.verifyConfig();
     this.loadInternetAreas();
     this.loadCompanies();
     this.loadInternetPackages();
@@ -178,7 +193,7 @@ export class UserModalComponent {
         installation_amount: this.userData.installation_amount,
         other_amount: this.userData.other_amount,
         installation_date: this.userData.installation_date,
-        recharge_date: this.userData.recharge_date,
+        // recharge_date: this.userData.recharge_date,
         connection_provider: this.userData.connection_provider,
         connection_type: this.userData.connection_type,
         pkg_cable: this.userData.pkg_cable,
@@ -194,11 +209,18 @@ export class UserModalComponent {
         static_ip: this.userData.static_ip,
         createdAt: this.userData.createdAt ?? new Date(),
       });
+
+      this.updateValidators(this.userData.connection_type);
+
+    // OPTIONAL: force validation refresh
+    this.userForm.updateValueAndValidity();
       this.imagePreview = this.userData.photo;
       if (this.userData.latitude && this.userData.longitude) {
         this.locationText = `${this.userData.latitude}, ${this.userData.longitude}`;
       }
     }
+
+    console.log('edit mode', this.userForm.value);
   }
 
   updateValidators(type: string) {
@@ -251,18 +273,22 @@ export class UserModalComponent {
     return this.userForm.get('connection_type')?.value === 'both';
   }
 
-  async loadInternetAreas() {
-    try {
-      const ref = doc(this.firestore, 'internetArea', 'internetAreaDoc');
-      const snap = await getDoc(ref);
+   async loadInternetAreas() {
+  try {
+    const ref = doc(this.firestore, 'internetArea', 'internetAreaDoc');
+    const snap = await getDoc(ref);
 
-      if (snap.exists()) {
-        this.internetAreas = snap.data()?.['internetAreas'] || [];
-      }
-    } catch (error) {
-      console.error('Error loading internet areas', error);
+    if (snap.exists()) {
+      this.internetAreas = snap.data()?.['internetAreas'] || [];
+
+      this.internetAreas.sort((a: any, b: any) => {
+        return a.sublocality.localeCompare(b.sublocality);
+      });
     }
+  } catch (error) {
+    console.error('Error loading internet areas', error);
   }
+}
 
   async loadInternetPackages() {
     try {
@@ -321,32 +347,60 @@ export class UserModalComponent {
       if (this.editMode && this.userData?.id) {
         // 🔁 UPDATE EXISTING USER
         const userDocRef = doc(this.firestore, 'users', this.userData.id);
-        await updateDoc(userDocRef, payload);
-        this.toastr.success('User updated successfully');
+        const formattedPhone = this.formatPhoneNumber(
+          this.userForm.value.phone_no,
+        );
+        await this.sendWelcomeMessage(formattedPhone);
+
+        updateDoc(userDocRef, payload);
+        if (!navigator.onLine) {
+          this.toastr.info(
+            'Saved offline. Will sync when connection is restored.',
+          );
+        } else {
+          this.toastr.success('User saved successfully');
+        }
       } else {
         // ➕ ADD NEW USER
 
-        // if (!this.editMode) {
-        //   const formattedPhone = this.formatPhoneNumber(
-        //     this.userForm.value.phone_no,
-        //   );
-        //   const hasWhatsApp = await this.checkWhatsAppNumber(formattedPhone);
+        if (!this.editMode) {
+          const formattedPhone = this.formatPhoneNumber(
+            this.userForm.value.phone_no,
+          );
+          // const hasWhatsApp = await this.checkWhatsAppNumber(formattedPhone);
 
-        //   if (hasWhatsApp) {
-        //     await this.sendWelcomeMessage(formattedPhone);
-        //   }
-        // }
-        await addDoc(collection(this.firestore, 'users'), {
+          // if (hasWhatsApp) {
+          // }
+          await this.sendWelcomeMessage(formattedPhone);
+        }
+        addDoc(collection(this.firestore, 'users'), {
           ...payload,
           createdAt: new Date(),
         });
-        this.toastr.success('User added successfully');
+        if (!navigator.onLine) {
+          this.toastr.info(
+            'Saved offline. Will sync when connection is restored.',
+          );
+        } else {
+          this.toastr.success('User saved successfully');
+        }
       }
 
       this.activeModal.close(true);
     } catch (error) {
       console.error(error);
-      this.toastr.error('Failed to save user');
+      if (
+        (error as any).code === 'unavailable' ||
+        (error as any).code === 'failed-precondition'
+      ) {
+        this.toastr.info(
+          'Saved offline. Will sync when connection is restored.',
+        );
+        this.activeModal.close(true); // still close the modal
+      } else {
+        console.error(error);
+        this.toastr.error('Failed to save user');
+      }
     } finally {
       this.isSaving = false;
     }
@@ -470,14 +524,17 @@ export class UserModalComponent {
     // Example: send POST request to WhatsApp Cloud API (replace TOKEN and YOUR_PHONE_NUMBER_ID)
     try {
       const response = await fetch(
-        `https://graph.facebook.com/v17.0/YOUR_PHONE_NUMBER_ID/contacts`,
+        `${this.baseUrl}/${this.version}/${this.phoneNumberId}/contacts`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer YOUR_ACCESS_TOKEN`,
+            Authorization: `Bearer ${this.accessToken}`,
           },
-          body: JSON.stringify({ contacts: [formattedNumber] }),
+          body: JSON.stringify({
+            contacts: [formattedNumber],
+            messaging_product: 'whatsapp',
+          }),
         },
       );
 
@@ -492,26 +549,95 @@ export class UserModalComponent {
 
   async sendWelcomeMessage(phone: string) {
     const formattedNumber = this.formatPhoneNumber(phone);
+    console.log('Sending WhatsApp message to', formattedNumber);
 
     try {
-      await fetch(
-        `https://graph.facebook.com/v17.0/YOUR_PHONE_NUMBER_ID/messages`,
+      const response = await fetch(
+        `${this.baseUrl}/${this.version}/${this.phoneNumberId}/messages`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer YOUR_ACCESS_TOKEN`,
+            Authorization: `Bearer ${this.accessToken}`,
           },
           body: JSON.stringify({
             messaging_product: 'whatsapp',
+            recipient_type: 'individual',
             to: formattedNumber,
-            type: 'text',
-            text: { body: 'Welcome to our service! 🎉' },
+            // type: 'text',
+            // text: {
+            //   preview_url: true,
+            //   body: `Welcome to Ranjha7starCable&Internet! 👋\n\nWe're excited to have you on board. Thanks for choosing our Services\n• `
+            // }
+            type: 'template',
+            template: {
+              name: 'welcome_templates',
+              language: {
+                code: 'en_US',
+              },
+              components: [
+                {
+                  type: 'body',
+                  parameters: [
+                    {
+                      type: 'text',
+                      parameter_name: 'name',
+                      text: 'Sheraz',
+                    },
+                    {
+                      type: 'text',
+                      parameter_name: 'support_number',
+                      text: '+923001234567',
+                    },
+                  ],
+                }
+              ]
+            },
           }),
         },
       );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('WhatsApp API error:', data);
+        throw new Error(data.error?.message || 'Failed to send message');
+      }
+
+      console.log('WhatsApp response:', data);
+      return data;
     } catch (err) {
       console.error('Failed to send WhatsApp message', err);
+      throw err;
+    }
+  }
+
+  // Add this method to verify your configuration
+  async verifyConfig() {
+    try {
+      // Test your credentials
+      const response = await fetch(
+        `https://graph.facebook.com/v25.0/${this.phoneNumberId}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${this.accessToken}`,
+          },
+        },
+      );
+
+      const data = await response.json();
+      console.log('Phone Number ID verification:', data);
+
+      // Check if this is a test/sandbox number
+      console.log(
+        'Account Mode:',
+        data.is_test ? 'Test/Sandbox' : 'Production',
+      );
+
+      return data;
+    } catch (err) {
+      console.error('Verification failed:', err);
     }
   }
 }

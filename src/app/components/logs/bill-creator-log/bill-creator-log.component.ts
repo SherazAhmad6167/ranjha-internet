@@ -50,18 +50,22 @@ export class BillCreatorLogComponent {
     this.loadBills();
   }
 
-  async loadInternetAreas() {
-    try {
-      const ref = doc(this.firestore, 'internetArea', 'internetAreaDoc');
-      const snap = await getDoc(ref);
+   async loadInternetAreas() {
+  try {
+    const ref = doc(this.firestore, 'internetArea', 'internetAreaDoc');
+    const snap = await getDoc(ref);
 
-      if (snap.exists()) {
-        this.internetAreas = snap.data()?.['internetAreas'] || [];
-      }
-    } catch (error) {
-      console.error('Error loading internet areas', error);
+    if (snap.exists()) {
+      this.internetAreas = snap.data()?.['internetAreas'] || [];
+
+      this.internetAreas.sort((a: any, b: any) => {
+        return a.sublocality.localeCompare(b.sublocality);
+      });
     }
+  } catch (error) {
+    console.error('Error loading internet areas', error);
   }
+}
 
   get pagedUsers() {
     const start = (this.currentPage - 1) * this.pageSize;
@@ -73,7 +77,7 @@ export class BillCreatorLogComponent {
     this.isLoading = true;
 
     try {
-      const billsRef = collection(this.firestore, 'billCreator');
+      const billsRef = collection(this.firestore, 'logs');
       const q = query(billsRef, where('type', '==', 'bill'));
       const snapshot = await getDocs(q);
 

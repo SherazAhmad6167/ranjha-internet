@@ -72,6 +72,7 @@ export class LoginComponent {
       localStorage.setItem('username', user['user_name']);
       localStorage.setItem('role', user['role']);
       localStorage.setItem('userId', snapshot.docs[0].id);
+      localStorage.setItem('sublocality', JSON.stringify(user['sublocality'] || []));
 
       this.toastr.success('Login successful');
       if (user['role'] === 'operator') {

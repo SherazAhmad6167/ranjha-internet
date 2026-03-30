@@ -1,3 +1,170 @@
-<div class="d-flex justify-content-center align-items-center h-100">
-    <h1 class="text-primary">Dashboard</h1>
+<div *ngIf="!showDashboard" class="dashboard-wrapper d-flex justify-content-center align-items-center">
+    <div class="welcome-card text-center p-5">
+
+        <h1 class="welcome-title mb-3">
+            Welcome to
+        </h1>
+
+        <h2 class="brand-name mb-4">
+            Ranjha7Star Cable & Internet
+        </h2>
+
+        <p class="tagline mb-4">
+            Fast • Reliable • Unlimited Connectivity
+        </p>
+
+        <button (click)="goToDashboard()" class="btn btn-light px-4 py-2 explore-btn">
+            Explore Dashboard
+        </button>
+
+    </div>
 </div>
+
+
+<!-- DASHBOARD SECTION -->
+<section *ngIf="showDashboard" id="dashboards">
+
+
+    <h3 class="dashboard-title d-flex justify-content-center">
+        Ranjha7star Dashboard
+    </h3>
+
+    <div class="grid-container">
+        <div class="grid-item" id="area-details" [class.fullscreen]="expandedChartId === 'area-details'"
+            [hidden]="expandedChartId && expandedChartId !== 'area-details'">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4>Area Detail</h4>
+                <div class="d-flex align-items-center">
+                    <!-- <a class="expand-btn text-decoration-none" (click)="toggleExpand('area-details')">
+                        {{ expandedChartId === 'area-details' ? '&#8722;' : '&#9744;' }}
+                    </a> -->
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <div *ngIf="charts['areaUsers']">
+
+                    <apx-chart [series]="charts['areaUsers'].chartOptions.series"
+                        [chart]="charts['areaUsers'].chartOptions.chart"
+                        [plotOptions]="charts['areaUsers'].chartOptions.plotOptions"
+                        [xaxis]="charts['areaUsers'].chartOptions.xaxis"
+                        [dataLabels]="charts['areaUsers'].chartOptions.dataLabels"
+                        [title]="charts['areaUsers'].chartOptions.title">
+                    </apx-chart>
+
+                    <div class="d-flex justify-content-between mt-3">
+                        <button (click)="prevPage('areaUsers','Users by Area')"
+                            [disabled]="charts['areaUsers'].currentPage === 0">
+                            ◀ Prev
+                        </button>
+
+                        <!-- Center Info -->
+                        <div class="text-center fw-semibold">
+                            <div>Total Areas: {{ getTotalAreas('areaUsers') }}</div>
+                            <div>Total Users: {{ getTotalUsers('areaUsers') }}</div>
+                        </div>
+
+                        <button (click)="nextPage('areaUsers','Users by Area')"
+                            [disabled]="(charts['areaUsers'].currentPage + 1) * charts['areaUsers'].pageSize >= charts['areaUsers'].categories.length">
+                            Next ▶
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="grid-container">
+        <div class="grid-item" id="package-details" [class.fullscreen]="expandedChartId === 'packageUsers'"
+            [hidden]="expandedChartId && expandedChartId !== 'packageUsers'">
+
+            <div class="d-flex justify-content-between align-items-center">
+                <h4>Package Detail</h4>
+                <div class="d-flex align-items-center">
+                    <!-- <a class="expand-btn text-decoration-none" (click)="toggleExpand('packageUsers')">
+                        {{ expandedChartId === 'packageUsers' ? '&#8722;' : '&#9744;' }}
+                    </a> -->
+                </div>
+            </div>
+
+            <div class="chart-wrapper" *ngIf="charts['packageUsers']">
+
+                <apx-chart [series]="charts['packageUsers'].chartOptions.series"
+                    [chart]="charts['packageUsers'].chartOptions.chart"
+                    [plotOptions]="charts['packageUsers'].chartOptions.plotOptions"
+                    [xaxis]="charts['packageUsers'].chartOptions.xaxis"
+                    [dataLabels]="charts['packageUsers'].chartOptions.dataLabels"
+                    [title]="charts['packageUsers'].chartOptions.title">
+                </apx-chart>
+
+                <div class="d-flex justify-content-between mt-3">
+                    <button (click)="prevPage('packageUsers','Users by Package')"
+                        [disabled]="charts['packageUsers'].currentPage === 0">
+                        ◀ Prev
+                    </button>
+
+                    <!-- Center Info -->
+                    <div class="text-center fw-semibold">
+                        <div>Total Packages: {{ getTotalAreas('packageUsers') }}</div>
+                        <div>Total Users: {{ getTotalUsers('packageUsers') }}</div>
+                    </div>
+
+                    <button (click)="nextPage('packageUsers','Users by Package')"
+                        [disabled]="(charts['packageUsers'].currentPage + 1) * charts['packageUsers'].pageSize >= charts['packageUsers'].categories.length">
+                        Next ▶
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <div class="grid-container">
+        <div class="grid-item" id="bill-collection" [class.fullscreen]="expandedChartId === 'bill-collection'"
+            [hidden]="expandedChartId && expandedChartId !== 'bill-collection'">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <h4>Bill Collection</h4>
+                <div class="d-flex align-items-center">
+                </div>
+            </div>
+            <div class="chart-wrapper" *ngIf="charts['billCollection']">
+
+                <apx-chart *ngIf="charts['billCollection']" [series]="charts['billCollection'].chartOptions.series"
+                    [chart]="charts['billCollection'].chartOptions.chart"
+                    [xaxis]="charts['billCollection'].chartOptions.xaxis"
+                    [dataLabels]="charts['billCollection'].chartOptions.dataLabels"
+                    [title]="charts['billCollection'].chartOptions.title"
+                    [stroke]="charts['billCollection'].chartOptions.stroke"
+                    [tooltip]="charts['billCollection'].chartOptions.tooltip">
+                </apx-chart>
+
+            </div>
+        </div>
+    </div>
+
+
+    <div class="grid-container">
+        <div class="grid-item" id="bill-creator" [class.fullscreen]="expandedChartId === 'billCreator'"
+            [hidden]="expandedChartId && expandedChartId !== 'billCreator'">
+
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <h4>Monthly Users & Bills</h4>
+            </div>
+
+            <div *ngIf="charts['billCreatorPie']">
+                <apx-chart [series]="charts['billCreatorPie'].chartOptions.series"
+                    [chart]="charts['billCreatorPie'].chartOptions.chart"
+                    [labels]="charts['billCreatorPie'].chartOptions.labels"
+                    [dataLabels]="charts['billCreatorPie'].chartOptions.dataLabels"
+                    [tooltip]="charts['billCreatorPie'].chartOptions.tooltip"
+                    [title]="charts['billCreatorPie'].chartOptions.title">
+                </apx-chart>
+            </div>
+        </div>
+    </div>
+
+</section>

@@ -6,6 +6,7 @@ import {
   doc,
   Firestore,
   getDoc,
+  getDocs,
   setDoc,
   updateDoc,
 } from '@angular/fire/firestore';
@@ -32,6 +33,7 @@ export class AreaModalComponent {
   @Input() editMode = false;
   @Input() userData: any;
   userForm: FormGroup;
+  cities: any[] = [];
   constructor(
     public activeModal: NgbActiveModal,
     private fb: FormBuilder,
@@ -49,6 +51,7 @@ export class AreaModalComponent {
   }
 
   ngOnInit() {
+    this.loadCities();
     if (this.editMode && this.userData) {
       this.userForm.patchValue({
         country: this.userData.country,
@@ -59,6 +62,18 @@ export class AreaModalComponent {
       });
     }
   }
+
+  async loadCities() {
+  try {
+    const querySnapshot = await getDocs(collection(this.firestore, 'city'));
+    this.cities = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error('Error fetching cities:', error);
+  }
+}
 
   async onSubmit() {
     if (this.userForm.invalid) {

@@ -48,18 +48,22 @@ export class BillCreatorComponent {
     this.loadBills();
   }
 
-  async loadInternetAreas() {
-    try {
-      const ref = doc(this.firestore, 'internetArea', 'internetAreaDoc');
-      const snap = await getDoc(ref);
+   async loadInternetAreas() {
+  try {
+    const ref = doc(this.firestore, 'internetArea', 'internetAreaDoc');
+    const snap = await getDoc(ref);
 
-      if (snap.exists()) {
-        this.internetAreas = snap.data()?.['internetAreas'] || [];
-      }
-    } catch (error) {
-      console.error('Error loading internet areas', error);
+    if (snap.exists()) {
+      this.internetAreas = snap.data()?.['internetAreas'] || [];
+
+      this.internetAreas.sort((a: any, b: any) => {
+        return a.sublocality.localeCompare(b.sublocality);
+      });
     }
+  } catch (error) {
+    console.error('Error loading internet areas', error);
   }
+}
 
   get pagedUsers() {
     const start = (this.currentPage - 1) * this.pageSize;
@@ -214,6 +218,11 @@ export class BillCreatorComponent {
 
       const userData = snap.data();
       let bills = userData?.['bills'] || [];
+      const advancePayments = userData?.['advancePayments'] || [];
+      const installationAmount = Number(userData?.['installation_amount'] || 0);
+      const otherAmount = Number(userData?.['other_amount'] || 0);
+
+      const extraAmount = installationAmount + otherAmount;
 
       const exists = (type: string) =>
         bills.some(
@@ -223,21 +232,40 @@ export class BillCreatorComponent {
             b.type === type,
         );
 
+      const hasAdvanceForMonth = (type: string) =>
+        advancePayments.some((adv: any) =>
+          adv.months?.some(
+            (m: any) =>
+              m.month.toLowerCase() === this.selectedMonth.toLowerCase() &&
+              m.year === this.selectedYear,
+          ),
+        );
+
       // ================= CABLE =================
       if (
         (this.connection_type === 'tv_cable' ||
           this.connection_type === 'both') &&
         userData?.['cable_package_fee']
       ) {
-        if (!exists('cable')) {
-          const amount = Number(userData['cable_package_fee']);
+        if (!exists('cable') && !hasAdvanceForMonth('cable')) {
+          let amount = Number(userData['cable_package_fee']);
+          const prevRemaining = this.getPreviousMonthRemaining(
+            bills,
+            this.selectedMonth,
+            this.selectedYear,
+            'cable',
+          );
+          amount += prevRemaining;
+          amount += extraAmount;
 
           bills.push({
+            bill_id: crypto.randomUUID(),
             month: this.selectedMonth,
             year: this.selectedYear,
             type: 'cable',
             amount,
             status: 'unpaid',
+            remaining_amount: amount,
             createdAt: new Date(),
           });
 
@@ -251,15 +279,27 @@ export class BillCreatorComponent {
           this.connection_type === 'both') &&
         userData?.['internet_package_fee']
       ) {
-        if (!exists('internet')) {
-          const amount = Number(userData['internet_package_fee']);
+        if (!exists('internet') && !hasAdvanceForMonth('internet')) {
+          let amount = Number(userData['internet_package_fee']);
+
+          const prevRemaining = this.getPreviousMonthRemaining(
+            bills,
+            this.selectedMonth,
+            this.selectedYear,
+            'internet',
+          );
+          amount += prevRemaining;
+          amount += extraAmount;
 
           bills.push({
+            bill_id: crypto.randomUUID(),
             month: this.selectedMonth,
             year: this.selectedYear,
             type: 'internet',
             amount,
+            sublocality: this.sublocality,
             status: 'unpaid',
+            remaining_amount: amount,
             createdAt: new Date(),
           });
 
@@ -267,7 +307,7 @@ export class BillCreatorComponent {
         }
       }
 
-      await updateDoc(ref, { bills });
+      await updateDoc(ref, { bills, installation_amount: 0, other_amount: 0 });
     }
 
     return totalAmount;
@@ -281,10 +321,32 @@ export class BillCreatorComponent {
       sublocality: this.sublocality,
       amount: totalAmount,
       users: totalUsers,
+
       status: 'unpaid',
       createdAt: new Date(),
       created_by: this.userName || 'Unknown',
     });
+  }
+
+  getPreviousMonthRemaining(
+    bills: any[],
+    month: string,
+    year: string,
+    type: string,
+  ) {
+    const prevBill = bills.find(
+      (b: any) =>
+        b.type === type &&
+        // case 1: unpaid bill → amount = remaining
+        (b.status === 'unpaid' ||
+          // case 2: paid but partial remaining
+          (b.status === 'paid' && Number(b.remaining_amount) > 0)),
+    );
+
+    if (!prevBill) return 0;
+
+    // unpaid me remaining_amount nahi hota
+    return Number(prevBill.remaining_amount ?? prevBill.amount ?? 0);
   }
 
   async confirmDelete(modal: any) {
@@ -297,7 +359,7 @@ export class BillCreatorComponent {
       const billSnap = await getDoc(billRef);
       const bill = billSnap.data();
 
-       if (!billSnap.exists()) {
+      if (!billSnap.exists()) {
         this.toastr.error('Bill not found');
         return;
       }
@@ -337,6 +399,7 @@ export class BillCreatorComponent {
           !(
             b.month === bill.month &&
             b.year === bill.year &&
+            b.sublocality === bill.sublocality &&
             (bill.connection_type === 'both' || b.type === bill.connection_type)
           ),
       );
@@ -345,5 +408,24 @@ export class BillCreatorComponent {
         await updateDoc(ref, { bills: updatedBills });
       }
     }
+  }
+
+  get visiblePages(): number[] {
+    const pages: number[] = [];
+
+    const startPage = Math.floor((this.currentPage - 1) / 5) * 5 + 1;
+
+    const endPage = Math.min(startPage + 4, this.totalPages);
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  }
+
+  onPageSizeChange() {
+    this.currentPage = 1;
+    this.updateTotalPages();
   }
 }

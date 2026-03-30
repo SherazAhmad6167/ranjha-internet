@@ -1,0 +1,203 @@
+<div class="modal-content-wrapper">
+    <div class="modal-header d-flex justify-content-between align-items-center">
+        <h4 class="modal-title">{{ editMode ? 'Update' : 'Add' }} Expense</h4>
+        <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+    </div>
+
+    <div *ngIf="isLoading" class="loading-overlay">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <div class="mx-5">
+        <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()">
+            <div class="row align-items-center gy-3 mt-4 mx-7">
+
+
+                <div class="col-md-4 m-0">
+                    <label for="validationDefault03" class="form-label">Date</label>
+                    <input type="date" class="form-control" formControlName="date"
+                        [ngClass]="{'is-invalid': expenseForm.get('date')?.invalid && expenseForm.get('date')?.touched, 'blink-border': expenseForm.get('date')?.invalid && expenseForm.get('date')?.touched}"
+                        id="validationDefault03" placeholder="Enter Date">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="expenseForm.get('date')?.hasError('required') && expenseForm.get('date')?.touched; ">
+                            <span class="text-danger" id="date">Date is required</span>
+                        </ng-container>
+                    </div>
+                </div>
+
+
+                <div class="col-xl-4 m-0">
+                    <label for="validationDefault01" class="form-label">Name</label>
+                    <input type="text" class="form-control"
+                        [ngClass]="{'is-invalid': expenseForm.get('recovery_officer')?.invalid && expenseForm.get('recovery_officer')?.touched, 'blink-border': expenseForm.get('recovery_officer')?.invalid && expenseForm.get('recovery_officer')?.touched}"
+                        formControlName="recovery_officer" id="validationDefault01" placeholder="Enter Name">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="expenseForm.get('recovery_officer')?.hasError('required') && expenseForm.get('recovery_officer')?.touched;">
+                            <span class="text-danger">Name is required</span>
+                        </ng-container>
+                    </div>
+
+                </div>
+
+
+                <div class="col-xl-4 m-0">
+                    <label for="validationDefault01" class="form-label">MotorCycle</label>
+                    <input type="text" class="form-control"
+                        [ngClass]="{'is-invalid': expenseForm.get('motorcycle')?.invalid && expenseForm.get('motorcycle')?.touched, 'blink-border': expenseForm.get('motorcycle')?.invalid && expenseForm.get('motorcycle')?.touched}"
+                        formControlName="motorcycle" id="validationDefault01" placeholder="Enter MotorCycle">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="expenseForm.get('motorcycle')?.hasError('required') && expenseForm.get('motorcycle')?.touched;">
+                            <span class="text-danger">MotorCycle is required</span>
+                        </ng-container>
+                    </div>
+
+                </div>
+
+
+
+                <div class="col-xl-4 m-0">
+                    <label for="validationDefault01" class="form-label">Petrol</label>
+                    <input type="number" class="form-control"
+                        [ngClass]="{'is-invalid': expenseForm.get('petrol')?.invalid && expenseForm.get('petrol')?.touched, 'blink-border': expenseForm.get('petrol')?.invalid && expenseForm.get('petrol')?.touched}"
+                        formControlName="petrol" id="validationDefault01" placeholder="Enter Amount">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="expenseForm.get('petrol')?.hasError('required') && expenseForm.get('petrol')?.touched;">
+                            <span class="text-danger">Petrol is required</span>
+                        </ng-container>
+                    </div>
+
+                </div>
+
+
+
+                <div class="col-xl-4 m-0">
+                    <label for="validationDefault01" class="form-label">Food</label>
+                    <input type="number" class="form-control"
+                        [ngClass]="{'is-invalid': expenseForm.get('food')?.invalid && expenseForm.get('food')?.touched, 'blink-border': expenseForm.get('food')?.invalid && expenseForm.get('food')?.touched}"
+                        formControlName="food" id="validationDefault01" placeholder="Enter Amount">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="expenseForm.get('food')?.hasError('required') && expenseForm.get('food')?.touched;">
+                            <span class="text-danger">Food is required</span>
+                        </ng-container>
+                    </div>
+
+                </div>
+
+                <div class="col-xl-4 m-0">
+                    <label for="validationDefault01" class="form-label">Stationary</label>
+                    <input type="number" class="form-control"
+                        [ngClass]="{'is-invalid': expenseForm.get('stationary')?.invalid && expenseForm.get('stationary')?.touched, 'blink-border': expenseForm.get('stationary')?.invalid && expenseForm.get('stationary')?.touched}"
+                        formControlName="stationary" id="validationDefault01" placeholder="Enter Amount">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="expenseForm.get('stationary')?.hasError('required') && expenseForm.get('stationary')?.touched;">
+                            <span class="text-danger">Stationary is required</span>
+                        </ng-container>
+                    </div>
+
+                </div>
+
+
+
+                <div class="col-xl-4 m-0">
+                    <label for="validationDefault01" class="form-label">Other Reason</label>
+                    <input type="text" class="form-control"
+                        [ngClass]="{'is-invalid': expenseForm.get('other_reason')?.invalid && expenseForm.get('other_reason')?.touched, 'blink-border': expenseForm.get('other_reason')?.invalid && expenseForm.get('other_reason')?.touched}"
+                        formControlName="other_reason" id="validationDefault01" placeholder="Enter Reason">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="expenseForm.get('other_reason')?.hasError('required') && expenseForm.get('other_reason')?.touched;">
+                            <span class="text-danger">Other Reason is required</span>
+                        </ng-container>
+                    </div>
+
+                </div>
+
+
+                <div class="col-xl-4 m-0">
+                    <label for="validationDefault01" class="form-label">Other Amount</label>
+                    <input type="number" class="form-control"
+                        [ngClass]="{'is-invalid': expenseForm.get('other_amount')?.invalid && expenseForm.get('other_amount')?.touched, 'blink-border': expenseForm.get('other_amount')?.invalid && expenseForm.get('other_amount')?.touched}"
+                        formControlName="other_amount" id="validationDefault01" placeholder="Enter Amount">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="expenseForm.get('other_amount')?.hasError('required') && expenseForm.get('other_amount')?.touched;">
+                            <span class="text-danger">Other Amount is required</span>
+                        </ng-container>
+                    </div>
+
+                </div>
+
+
+                <div class="col-xl-4 m-0">
+                    <label for="validationDefault01" class="form-label">Total Recovery</label>
+                    <input type="number" class="form-control"
+                        [ngClass]="{'is-invalid': expenseForm.get('total_recovery')?.invalid && expenseForm.get('total_recovery')?.touched, 'blink-border': expenseForm.get('total_recovery')?.invalid && expenseForm.get('total_recovery')?.touched}"
+                        formControlName="total_recovery" id="validationDefault01" placeholder="Enter Amount">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="expenseForm.get('total_recovery')?.hasError('required') && expenseForm.get('total_recovery')?.touched;">
+                            <span class="text-danger">Total Recovery is required</span>
+                        </ng-container>
+                    </div>
+
+                </div>
+
+
+                <div class="col-xl-4 m-0">
+                    <label for="validationDefault01" class="form-label">Salary</label>
+                    <input type="number" class="form-control"
+                        [ngClass]="{'is-invalid': expenseForm.get('salary')?.invalid && expenseForm.get('salary')?.touched, 'blink-border': expenseForm.get('salary')?.invalid && expenseForm.get('salary')?.touched}"
+                        formControlName="salary" id="validationDefault01" placeholder="Enter Salary">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="expenseForm.get('salary')?.hasError('required') && expenseForm.get('salary')?.touched;">
+                            <span class="text-danger">Salary is required</span>
+                        </ng-container>
+                    </div>
+
+                </div>
+
+
+                 <div class="col-xl-4 m-0">
+                    <label for="validationDefault01" class="form-label">Electricity</label>
+                    <input type="number" class="form-control"
+                        [ngClass]="{'is-invalid': expenseForm.get('electricity')?.invalid && expenseForm.get('electricity')?.touched, 'blink-border': expenseForm.get('electricity')?.invalid && expenseForm.get('electricity')?.touched}"
+                        formControlName="electricity" id="validationDefault01" placeholder="Enter Electricity">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="expenseForm.get('electricity')?.hasError('required') && expenseForm.get('electricity')?.touched;">
+                            <span class="text-danger">Electricity is required</span>
+                        </ng-container>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary-light" (click)="activeModal.close()">
+                        Close
+                    </button>
+
+                    <button class="btn btn-primary" type="submit" [disabled]="isLoading || isSaving">
+                        <span *ngIf="!isSaving"> {{ editMode ? 'Update' : 'Save' }}</span>
+                        <span *ngIf="isSaving" class="d-flex align-items-center">
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            {{ editMode ? 'Updating...' : 'Saving...' }}
+                        </span>
+                    </button>
+
+                </div>
+            </div>
+        </form>
+
+    </div>
+
+
+</div>

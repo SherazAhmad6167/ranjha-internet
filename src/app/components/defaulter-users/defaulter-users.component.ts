@@ -48,18 +48,22 @@ export class DefaulterUsersComponent {
     this.loadInternetAreas();
   }
 
-  async loadInternetAreas() {
-    try {
-      const ref = doc(this.firestore, 'internetArea', 'internetAreaDoc');
-      const snap = await getDoc(ref);
+   async loadInternetAreas() {
+  try {
+    const ref = doc(this.firestore, 'internetArea', 'internetAreaDoc');
+    const snap = await getDoc(ref);
 
-      if (snap.exists()) {
-        this.internetAreas = snap.data()?.['internetAreas'] || [];
-      }
-    } catch (error) {
-      console.error('Error loading internet areas', error);
+    if (snap.exists()) {
+      this.internetAreas = snap.data()?.['internetAreas'] || [];
+
+      this.internetAreas.sort((a: any, b: any) => {
+        return a.sublocality.localeCompare(b.sublocality);
+      });
     }
+  } catch (error) {
+    console.error('Error loading internet areas', error);
   }
+}
 
   get pagedUsers() {
     const start = (this.currentPage - 1) * this.pageSize;
@@ -105,6 +109,24 @@ export class DefaulterUsersComponent {
     // AND previous month bill unpaid
     return !!currentBill && previousBill?.status === 'unpaid';
   }
+
+  getUnpaidMonths(user: any): string {
+  if (!user.bills || !Array.isArray(user.bills)) return '-';
+
+  const unpaidBills = user.bills.filter(
+    (b: any) => b.status === 'unpaid'
+  );
+
+  if (unpaidBills.length === 0) return '-';
+
+  return unpaidBills
+    .map((b: any) => `${b.month} ${b.year}`)
+    .map((m: string) =>
+      m.replace(/^\w/, (c) => c.toUpperCase())
+    )
+    .join(', ');
+}
+
 
   async loadUsers() {
     this.isLoading = true;
@@ -194,5 +216,25 @@ export class DefaulterUsersComponent {
 
   goToPage(page: number) {
     this.currentPage = page;
+  }
+
+
+  get visiblePages(): number[] {
+    const pages: number[] = [];
+
+    const startPage = Math.floor((this.currentPage - 1) / 5) * 5 + 1;
+
+    const endPage = Math.min(startPage + 4, this.totalPages);
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  }
+
+  onPageSizeChange() {
+    this.currentPage = 1;
+    this.updateTotalPages();
   }
 }

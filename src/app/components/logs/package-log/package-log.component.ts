@@ -53,7 +53,7 @@ export class PackageLogComponent {
     this.isLoading = true;
 
     try {
-      const usersRef = collection(this.firestore, 'packages');
+      const usersRef = collection(this.firestore, 'logs');
       const q = query(usersRef, where('type', '==', 'packages'));
       const snapshot = await getDocs(q);
 

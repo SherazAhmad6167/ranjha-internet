@@ -31,10 +31,26 @@
                     </div>
                     <div class="extra-space">
                         <ng-container
-                            *ngIf="userForm.get('photo')?.hasError('required') && userForm.get('photo')?.touched; else maxLengthError">
+                            *ngIf="userForm.get('photo')?.hasError('required') && userForm.get('photo')?.touched;">
                             <span class="text-danger">Photo is required</span>
                         </ng-container>
                     </div>
+                </div>
+
+
+
+                <div class="col-xl-4 m-0">
+                    <label for="validationDefault01" class="form-label">Customer Name</label>
+                    <input type="text" class="form-control"
+                        [ngClass]="{'is-invalid': userForm.get('user_name')?.invalid && userForm.get('user_name')?.touched, 'blink-border': userForm.get('user_name')?.invalid && userForm.get('user_name')?.touched}"
+                        formControlName="user_name" id="validationDefault01" placeholder="Enter User Name">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('user_name')?.hasError('required') && userForm.get('user_name')?.touched;">
+                            <span class="text-danger">User Name is required</span>
+                        </ng-container>
+                    </div>
+
                 </div>
 
 
@@ -45,7 +61,7 @@
                         formControlName="internet_id" id="validationDefault01" placeholder="Enter Internet ID">
                     <div class="extra-space">
                         <ng-container
-                            *ngIf="userForm.get('internet_id')?.hasError('required') && userForm.get('internet_id')?.touched; else maxLengthError">
+                            *ngIf="userForm.get('internet_id')?.hasError('required') && userForm.get('internet_id')?.touched;">
                             <span class="text-danger">Internet ID is required</span>
                         </ng-container>
                     </div>
@@ -75,24 +91,7 @@
 
 
 
-                <div class="col-xl-4 m-0">
-                    <label for="validationDefault01" class="form-label">User Name</label>
-                    <input type="text" class="form-control"
-                        [ngClass]="{'is-invalid': userForm.get('user_name')?.invalid && userForm.get('user_name')?.touched, 'blink-border': userForm.get('user_name')?.invalid && userForm.get('user_name')?.touched}"
-                        formControlName="user_name" id="validationDefault01" placeholder="Enter User Name">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="userForm.get('user_name')?.hasError('required') && userForm.get('user_name')?.touched; else maxLengthError">
-                            <span class="text-danger">User Name is required</span>
-                        </ng-container>
-                    </div>
-                    <ng-template #maxLengthError>
-                        <span *ngIf="userForm.get('user_name')?.hasError('maxlength')" class="text-danger"
-                            id="user_name">
-                            Not more than 15 characters.
-                        </span>
-                    </ng-template>
-                </div>
+
 
 
 
@@ -189,7 +188,7 @@
 
 
 
-                <div class="col-md-4 m-0">
+                <!-- <div class="col-md-4 m-0">
                     <label for="validationDefault03" class="form-label">Recharge Date</label>
                     <input type="date" class="form-control" formControlName="recharge_date"
                         [ngClass]="{'is-invalid': userForm.get('recharge_date')?.invalid && userForm.get('recharge_date')?.touched, 'blink-border': userForm.get('recharge_date')?.invalid && userForm.get('recharge_date')?.touched}"
@@ -200,7 +199,7 @@
                             <span class="text-danger" id="recharge_date">Recharge Date is required</span>
                         </ng-container>
                     </div>
-                </div>
+                </div> -->
 
                 <div class="col-md-4 m-0">
                     <div class="card-title">Connection Provider</div>

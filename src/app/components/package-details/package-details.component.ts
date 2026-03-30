@@ -225,4 +225,23 @@ export class PackageDetailsComponent {
   goToPage(page: number) {
     this.currentPage = page;
   }
+
+  get visiblePages(): number[] {
+    const pages: number[] = [];
+
+    const startPage = Math.floor((this.currentPage - 1) / 5) * 5 + 1;
+
+    const endPage = Math.min(startPage + 4, this.totalPages);
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  }
+
+  onPageSizeChange() {
+    this.currentPage = 1;
+    this.updateTotalPages();
+  }
 }

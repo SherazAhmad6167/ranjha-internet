@@ -35,7 +35,7 @@ export class ApplayoutComponent {
   }
 
   logout() {
-    localStorage.clear();
+    // localStorage.clear();
     this.route.navigate(['/login']);
   }
 

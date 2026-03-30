@@ -52,7 +52,7 @@ export class RecoveryOfficerLogComponent {
     this.isLoading = true;
 
     try {
-      const usersRef = collection(this.firestore, 'recoveryOfficer');
+      const usersRef = collection(this.firestore, 'logs');
       const q = query(usersRef, where('type', '==', 'recovery'));
       const snapshot = await getDocs(q);
 

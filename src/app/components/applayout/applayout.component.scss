@@ -11,7 +11,12 @@
   z-index: 1100;
 }
 
-
+.sidebar ul.nav {
+  flex-direction: column !important;
+  flex-wrap: nowrap !important;   // ✅ stop wrapping into 2 columns
+  overflow-y: auto;
+  max-height: 80vh;
+}
 
 /* Sidebar */
 .sidebar {

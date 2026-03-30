@@ -25,6 +25,10 @@
                     (click)="onMenuClick()">Area Details</a>
             </li>
              <li class="nav-item" *ngIf="role === 'admin'">
+                <a routerLink="/city-details" routerLinkActive="active" class="nav-link text-white"
+                    (click)="onMenuClick()">City Details</a>
+            </li>
+            <li class="nav-item" *ngIf="role === 'admin'">
                 <a routerLink="/package-details" routerLinkActive="active" class="nav-link text-white"
                     (click)="onMenuClick()">Package Details</a>
             </li>
@@ -43,6 +47,27 @@
             <li class="nav-item" *ngIf="role === 'admin'">
                 <a routerLink="/defaulter-users" routerLinkActive="active" class="nav-link text-white"
                     (click)="onMenuClick()">Defaulter Users</a>
+            </li>
+            <li class="nav-item" *ngIf="role === 'admin'">
+                <a routerLink="/ro-reports" routerLinkActive="active" class="nav-link text-white"
+                    (click)="onMenuClick()">RO Reports</a>
+            </li>
+            <li class="nav-item" *ngIf="role === 'admin'">
+                <a routerLink="/company-detail" routerLinkActive="active" class="nav-link text-white"
+                    (click)="onMenuClick()">Company Detail</a>
+            </li>
+
+            <li class="nav-item" *ngIf="role === 'admin'">
+                <a routerLink="/expenses" routerLinkActive="active" class="nav-link text-white"
+                    (click)="onMenuClick()">Expenses</a>
+            </li>
+            <li class="nav-item" *ngIf="role === 'admin'">
+                <a routerLink="/new-connection" routerLinkActive="active" class="nav-link text-white"
+                    (click)="onMenuClick()">New Connection</a>
+            </li>
+            <li class="nav-item" *ngIf="role === 'admin' || role === 'operator'">
+                <a routerLink="/settings" routerLinkActive="active" class="nav-link text-white"
+                    (click)="onMenuClick()">Settings</a>
             </li>
             <li class="nav-item" *ngIf="role === 'admin'">
                 <a routerLink="/logs" routerLinkActive="active" class="nav-link text-white"

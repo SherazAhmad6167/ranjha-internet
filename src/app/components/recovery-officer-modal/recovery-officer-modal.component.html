@@ -1,5 +1,7 @@
 <div class="modal-header d-flex justify-content-between align-items-center">
-    <h4 class="modal-title">{{ editMode ? 'Update' : 'Add' }} Recovery Officer</h4>
+    <h4 class="modal-title">
+        {{ editMode ? "Update" : "Add" }} Recovery Officer
+    </h4>
     <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
 
@@ -12,33 +14,37 @@
 <div class="mx-5">
     <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
         <div class="row align-items-center gy-3 mt-4 mx-7">
-
-
-
-
-
             <div class="col-md-6 m-0">
                 <label for="validationDefault01" class="form-label">Name</label>
-                <input type="text" class="form-control"
-                    [ngClass]="{'is-invalid': userForm.get('name')?.invalid && userForm.get('name')?.touched, 'blink-border': userForm.get('name')?.invalid && userForm.get('name')?.touched}"
-                    formControlName="name" id="validationDefault01" placeholder="Enter Name">
+                <input type="text" class="form-control" [ngClass]="{
+            'is-invalid':
+              userForm.get('name')?.invalid && userForm.get('name')?.touched,
+            'blink-border':
+              userForm.get('name')?.invalid && userForm.get('name')?.touched,
+          }" formControlName="name" id="validationDefault01" placeholder="Enter Name" />
                 <div class="extra-space">
-                    <ng-container
-                        *ngIf="userForm.get('name')?.hasError('required') && userForm.get('name')?.touched;">
+                    <ng-container *ngIf="
+              userForm.get('name')?.hasError('required') &&
+              userForm.get('name')?.touched
+            ">
                         <span class="text-danger">Name is required</span>
                     </ng-container>
                 </div>
             </div>
 
-
             <div class="col-md-6 m-0">
                 <label for="validationDefault01" class="form-label">CNIC</label>
-                <input type="text" class="form-control"
-                    [ngClass]="{'is-invalid': userForm.get('cnic')?.invalid && userForm.get('cnic')?.touched, 'blink-border': userForm.get('cnic')?.invalid && userForm.get('cnic')?.touched}"
-                    formControlName="cnic" id="validationDefault01" placeholder="Enter CNIC">
+                <input type="text" class="form-control" [ngClass]="{
+            'is-invalid':
+              userForm.get('cnic')?.invalid && userForm.get('cnic')?.touched,
+            'blink-border':
+              userForm.get('cnic')?.invalid && userForm.get('cnic')?.touched,
+          }" formControlName="cnic" id="validationDefault01" placeholder="Enter CNIC" />
                 <div class="extra-space">
-                    <ng-container
-                        *ngIf="userForm.get('cnic')?.hasError('required') && userForm.get('cnic')?.touched;">
+                    <ng-container *ngIf="
+              userForm.get('cnic')?.hasError('required') &&
+              userForm.get('cnic')?.touched
+            ">
                         <span class="text-danger">CNIC is required</span>
                     </ng-container>
                 </div>
@@ -46,54 +52,77 @@
 
             <div class="col-md-6 m-0">
                 <label for="validationDefault01" class="form-label">Phone No</label>
-                <input type="text" class="form-control"
-                    [ngClass]="{'is-invalid': userForm.get('phone')?.invalid && userForm.get('phone')?.touched, 'blink-border': userForm.get('phone')?.invalid && userForm.get('phone')?.touched}"
-                    formControlName="phone" id="validationDefault01" placeholder="Enter Phone">
+                <input type="text" class="form-control" [ngClass]="{
+            'is-invalid':
+              userForm.get('phone')?.invalid && userForm.get('phone')?.touched,
+            'blink-border':
+              userForm.get('phone')?.invalid && userForm.get('phone')?.touched,
+          }" formControlName="phone" id="validationDefault01" placeholder="Enter Phone" />
                 <div class="extra-space">
-                    <ng-container
-                        *ngIf="userForm.get('phone')?.hasError('required') && userForm.get('phone')?.touched;">
+                    <ng-container *ngIf="
+              userForm.get('phone')?.hasError('required') &&
+              userForm.get('phone')?.touched
+            ">
                         <span class="text-danger">Phone No is required</span>
                     </ng-container>
                 </div>
             </div>
 
-
             <div class="col-md-6 m-0">
                 <label for="validationDefault01" class="form-label">Address</label>
-                <input type="text" class="form-control"
-                    [ngClass]="{'is-invalid': userForm.get('address')?.invalid && userForm.get('address')?.touched, 'blink-border': userForm.get('address')?.invalid && userForm.get('address')?.touched}"
-                    formControlName="address" id="validationDefault01" placeholder="Enter Address">
+                <input type="text" class="form-control" [ngClass]="{
+            'is-invalid':
+              userForm.get('address')?.invalid &&
+              userForm.get('address')?.touched,
+            'blink-border':
+              userForm.get('address')?.invalid &&
+              userForm.get('address')?.touched,
+          }" formControlName="address" id="validationDefault01" placeholder="Enter Address" />
                 <div class="extra-space">
-                    <ng-container
-                        *ngIf="userForm.get('address')?.hasError('required') && userForm.get('address')?.touched;">
+                    <ng-container *ngIf="
+              userForm.get('address')?.hasError('required') &&
+              userForm.get('address')?.touched
+            ">
                         <span class="text-danger">Address is required</span>
                     </ng-container>
                 </div>
             </div>
 
-
             <div class="col-md-6 m-0">
                 <label for="validationDefault01" class="form-label">Joining Date</label>
-                <input type="date" class="form-control"
-                    [ngClass]="{'is-invalid': userForm.get('join_date')?.invalid && userForm.get('join_date')?.touched, 'blink-border': userForm.get('join_date')?.invalid && userForm.get('join_date')?.touched}"
-                    formControlName="join_date" id="validationDefault01" placeholder="Enter Joining Date">
+                <input type="date" class="form-control" [ngClass]="{
+            'is-invalid':
+              userForm.get('join_date')?.invalid &&
+              userForm.get('join_date')?.touched,
+            'blink-border':
+              userForm.get('join_date')?.invalid &&
+              userForm.get('join_date')?.touched,
+          }" formControlName="join_date" id="validationDefault01" placeholder="Enter Joining Date" />
                 <div class="extra-space">
-                    <ng-container
-                        *ngIf="userForm.get('join_date')?.hasError('required') && userForm.get('join_date')?.touched;">
+                    <ng-container *ngIf="
+              userForm.get('join_date')?.hasError('required') &&
+              userForm.get('join_date')?.touched
+            ">
                         <span class="text-danger">Join Date is required</span>
                     </ng-container>
                 </div>
             </div>
 
-
             <div class="col-md-6 m-0">
                 <label for="validationDefault01" class="form-label">Salary</label>
-                <input type="text" class="form-control"
-                    [ngClass]="{'is-invalid': userForm.get('salary')?.invalid && userForm.get('salary')?.touched, 'blink-border': userForm.get('salary')?.invalid && userForm.get('salary')?.touched}"
-                    formControlName="salary" id="validationDefault01" placeholder="Enter Salary">
+                <input type="text" class="form-control" [ngClass]="{
+            'is-invalid':
+              userForm.get('salary')?.invalid &&
+              userForm.get('salary')?.touched,
+            'blink-border':
+              userForm.get('salary')?.invalid &&
+              userForm.get('salary')?.touched,
+          }" formControlName="salary" id="validationDefault01" placeholder="Enter Salary" />
                 <div class="extra-space">
-                    <ng-container
-                        *ngIf="userForm.get('salary')?.hasError('required') && userForm.get('salary')?.touched;">
+                    <ng-container *ngIf="
+              userForm.get('salary')?.hasError('required') &&
+              userForm.get('salary')?.touched
+            ">
                         <span class="text-danger">Salary is required</span>
                     </ng-container>
                 </div>
@@ -101,69 +130,144 @@
 
             <div class="col-md-6 m-0">
                 <label for="validationDefault01" class="form-label">User Name</label>
-                <input type="text" class="form-control"
-                    [ngClass]="{'is-invalid': userForm.get('user_name')?.invalid && userForm.get('user_name')?.touched, 'blink-border': userForm.get('user_name')?.invalid && userForm.get('user_name')?.touched}"
-                    formControlName="user_name" id="validationDefault01" placeholder="Enter User Name">
+                <input type="text" class="form-control" [ngClass]="{
+            'is-invalid':
+              userForm.get('user_name')?.invalid &&
+              userForm.get('user_name')?.touched,
+            'blink-border':
+              userForm.get('user_name')?.invalid &&
+              userForm.get('user_name')?.touched,
+          }" formControlName="user_name" id="validationDefault01" placeholder="Enter User Name" />
                 <div class="extra-space">
-                    <ng-container
-                        *ngIf="userForm.get('user_name')?.hasError('required') && userForm.get('user_name')?.touched;">
+                    <ng-container *ngIf="
+              userForm.get('user_name')?.hasError('required') &&
+              userForm.get('user_name')?.touched
+            ">
                         <span class="text-danger">User Name is required</span>
                     </ng-container>
                 </div>
             </div>
 
-
             <div class="col-md-6 m-0">
                 <label for="validationDefault01" class="form-label">Password</label>
-                <input type="text" class="form-control"
-                    [ngClass]="{'is-invalid': userForm.get('password')?.invalid && userForm.get('password')?.touched, 'blink-border': userForm.get('password')?.invalid && userForm.get('password')?.touched}"
-                    formControlName="password" id="validationDefault01" placeholder="Enter Password">
+                <input type="text" class="form-control" [ngClass]="{
+            'is-invalid':
+              userForm.get('password')?.invalid &&
+              userForm.get('password')?.touched,
+            'blink-border':
+              userForm.get('password')?.invalid &&
+              userForm.get('password')?.touched,
+          }" formControlName="password" id="validationDefault01" placeholder="Enter Password" />
                 <div class="extra-space">
-                    <ng-container
-                        *ngIf="userForm.get('password')?.hasError('required') && userForm.get('password')?.touched;">
+                    <ng-container *ngIf="
+              userForm.get('password')?.hasError('required') &&
+              userForm.get('password')?.touched
+            ">
                         <span class="text-danger">Password is required</span>
                     </ng-container>
                 </div>
             </div>
 
-
             <div class="col-md-6 m-0">
                 <div class="card-title">Role</div>
                 <div class="card-body">
-                    <select [ngClass]="{'is-invalid': userForm.get('role')?.invalid && userForm.get('role')?.touched, 'blink-border': userForm.get('role')?.invalid && userForm.get('role')?.touched}"
-                     class="form-control" formControlName="role">
+                    <select [ngClass]="{
+              'is-invalid':
+                userForm.get('role')?.invalid && userForm.get('role')?.touched,
+              'blink-border':
+                userForm.get('role')?.invalid && userForm.get('role')?.touched,
+            }" class="form-control" formControlName="role">
                         <option value="" disabled>Select Role</option>
                         <option value="admin">Admin</option>
                         <option value="operator">Operator</option>
                     </select>
                 </div>
                 <div class="extra-space">
-                    <ng-container *ngIf="userForm.get('role')?.hasError('required') && userForm.get('role')?.touched">
+                    <ng-container *ngIf="
+              userForm.get('role')?.hasError('required') &&
+              userForm.get('role')?.touched
+            ">
                         <span class="text-danger">Select a Role</span>
                     </ng-container>
                 </div>
             </div>
 
-            
-             <div class="col-md-6 m-0">
+
+
+            <div class="col-md-6 m-0">
                 <div class="card-title">Status</div>
                 <div class="card-body">
-                    <select [ngClass]="{'is-invalid': userForm.get('status')?.invalid && userForm.get('status')?.touched, 'blink-border': userForm.get('status')?.invalid && userForm.get('status')?.touched}"
-                     class="form-control" formControlName="status">
+                    <select [ngClass]="{
+              'is-invalid':
+                userForm.get('status')?.invalid &&
+                userForm.get('status')?.touched,
+              'blink-border':
+                userForm.get('status')?.invalid &&
+                userForm.get('status')?.touched,
+            }" class="form-control" formControlName="status">
                         <option value="" disabled>Select a Status</option>
                         <option value="activated">Activated</option>
                         <option value="deactivated">Deactivated</option>
                     </select>
                 </div>
                 <div class="extra-space">
-                    <ng-container *ngIf="userForm.get('status')?.hasError('required') && userForm.get('status')?.touched">
+                    <ng-container *ngIf="
+              userForm.get('status')?.hasError('required') &&
+              userForm.get('status')?.touched
+            ">
                         <span class="text-danger">Select a Status</span>
                     </ng-container>
                 </div>
             </div>
 
 
+            <div class="col-md-6 m-0">
+                <label class="form-label">Sublocality</label>
 
+                <!-- Dropdown -->
+                <select class="form-control" (change)="addSublocality($event)" [ngClass]="{
+      'is-invalid':
+        userForm.get('sublocality')?.invalid &&
+        userForm.get('sublocality')?.touched,
+      'blink-border':
+        userForm.get('sublocality')?.invalid &&
+        userForm.get('sublocality')?.touched
+    }">
+                    <option value="" disabled selected>Select Sublocalities</option>
+                    <option value="all">All</option>
+                    <option *ngFor="let area of internetAreas" [value]="area.sublocality">
+                        {{ area.sublocality | titlecase }}
+                    </option>
+                </select>
+
+                <!-- Selected Tags -->
+                <div class="mt-2">
+                    <span class="badge bg-primary me-1 mb-1"
+                        *ngIf="userForm.get('sublocality')?.value?.length === internetAreas.length">
+                        All selected
+                    </span>
+
+                    <ng-container *ngFor="let sub of userForm.get('sublocality')?.value">
+                        <span class="badge bg-primary me-1 mb-1"
+                            *ngIf="userForm.get('sublocality')?.value?.length !== internetAreas.length">
+                            {{ sub }}
+                            <button type="button" class="btn btn-sm btn-close ms-2" aria-label="Remove"
+                                (click)="removeSublocality(sub)"></button>
+                        </span>
+                    </ng-container>
+                </div>
+
+
+
+                <div class="extra-space">
+                    <ng-container *ngIf="
+        userForm.get('sublocality')?.hasError('required') &&
+        userForm.get('sublocality')?.touched
+      ">
+                        <span class="text-danger">Select at least one Sublocality</span>
+                    </ng-container>
+                </div>
+            </div>
 
 
             <div class="modal-footer">
@@ -172,15 +276,13 @@
                 </button>
 
                 <button class="btn btn-primary" type="submit" [disabled]="isLoading || isSaving">
-                    <span *ngIf="!isSaving"> {{ editMode ? 'Update' : 'Save' }}</span>
+                    <span *ngIf="!isSaving"> {{ editMode ? "Update" : "Save" }}</span>
                     <span *ngIf="isSaving" class="d-flex align-items-center">
                         <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        {{ editMode ? 'Updating...' : 'Saving...' }}
+                        {{ editMode ? "Updating..." : "Saving..." }}
                     </span>
                 </button>
-
             </div>
         </div>
     </form>
-
 </div>

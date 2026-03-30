@@ -13,18 +13,20 @@
     <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
         <div class="row align-items-center gy-3 mt-4 mx-7">
 
-            
+
             <div class="col-md-6 m-0">
                 <div class="card-title">Country</div>
                 <div class="card-body">
-                    <select [ngClass]="{'is-invalid': userForm.get('country')?.invalid && userForm.get('country')?.touched, 'blink-border': userForm.get('country')?.invalid && userForm.get('country')?.touched}"
-                     class="form-control" formControlName="country">
+                    <select
+                        [ngClass]="{'is-invalid': userForm.get('country')?.invalid && userForm.get('country')?.touched, 'blink-border': userForm.get('country')?.invalid && userForm.get('country')?.touched}"
+                        class="form-control" formControlName="country">
                         <option value="" disabled>Select a Country</option>
                         <option value="pakistan">Pakistan</option>
                     </select>
                 </div>
                 <div class="extra-space">
-                    <ng-container *ngIf="userForm.get('country')?.hasError('required') && userForm.get('country')?.touched">
+                    <ng-container
+                        *ngIf="userForm.get('country')?.hasError('required') && userForm.get('country')?.touched">
                         <span class="text-danger">Select a Country</span>
                     </ng-container>
                 </div>
@@ -34,10 +36,14 @@
             <div class="col-md-6 m-0">
                 <div class="card-title">City</div>
                 <div class="card-body">
-                    <select [ngClass]="{'is-invalid': userForm.get('city')?.invalid && userForm.get('city')?.touched, 'blink-border': userForm.get('city')?.invalid && userForm.get('city')?.touched}"
-                     class="form-control" formControlName="city">
+                    <select
+                        [ngClass]="{'is-invalid': userForm.get('city')?.invalid && userForm.get('city')?.touched, 'blink-border': userForm.get('city')?.invalid && userForm.get('city')?.touched}"
+                        class="form-control" formControlName="city">
                         <option value="" disabled>Select a City</option>
-                        <option value="gujrat">Gujrat</option>
+
+                        <option *ngFor="let city of cities" [value]="city.city">
+                            {{ city.city | titlecase }}
+                        </option>
                     </select>
                 </div>
                 <div class="extra-space">
@@ -48,17 +54,19 @@
             </div>
 
 
-             <div class="col-md-6 m-0">
+            <div class="col-md-6 m-0">
                 <div class="card-title">Locality</div>
                 <div class="card-body">
-                    <select [ngClass]="{'is-invalid': userForm.get('locality')?.invalid && userForm.get('locality')?.touched, 'blink-border': userForm.get('locality')?.invalid && userForm.get('locality')?.touched}"
-                     class="form-control" formControlName="locality">
+                    <select
+                        [ngClass]="{'is-invalid': userForm.get('locality')?.invalid && userForm.get('locality')?.touched, 'blink-border': userForm.get('locality')?.invalid && userForm.get('locality')?.touched}"
+                        class="form-control" formControlName="locality">
                         <option value="" disabled>Select a Locality</option>
                         <option value="locality">Locality</option>
                     </select>
                 </div>
                 <div class="extra-space">
-                    <ng-container *ngIf="userForm.get('locality')?.hasError('required') && userForm.get('locality')?.touched">
+                    <ng-container
+                        *ngIf="userForm.get('locality')?.hasError('required') && userForm.get('locality')?.touched">
                         <span class="text-danger">Select a Locality</span>
                     </ng-container>
                 </div>

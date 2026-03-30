@@ -48,18 +48,22 @@ export class UserDetailLogComponent {
     this.loadInternetAreas();
   }
 
-  async loadInternetAreas() {
-    try {
-      const ref = doc(this.firestore, 'internetArea', 'internetAreaDoc');
-      const snap = await getDoc(ref);
+   async loadInternetAreas() {
+  try {
+    const ref = doc(this.firestore, 'internetArea', 'internetAreaDoc');
+    const snap = await getDoc(ref);
 
-      if (snap.exists()) {
-        this.internetAreas = snap.data()?.['internetAreas'] || [];
-      }
-    } catch (error) {
-      console.error('Error loading internet areas', error);
+    if (snap.exists()) {
+      this.internetAreas = snap.data()?.['internetAreas'] || [];
+
+      this.internetAreas.sort((a: any, b: any) => {
+        return a.sublocality.localeCompare(b.sublocality);
+      });
     }
+  } catch (error) {
+    console.error('Error loading internet areas', error);
   }
+}
 
   get pagedUsers() {
     const start = (this.currentPage - 1) * this.pageSize;
@@ -71,7 +75,7 @@ export class UserDetailLogComponent {
     this.isLoading = true;
 
     try {
-      const usersRef = collection(this.firestore, 'users');
+      const usersRef = collection(this.firestore, 'logs');
       const q = query(usersRef, where('type', '==', 'users'));
       const snapshot = await getDocs(q);
 
