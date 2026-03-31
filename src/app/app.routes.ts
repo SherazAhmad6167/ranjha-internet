@@ -18,6 +18,7 @@ import { SettingsComponent } from './components/settings/settings.component';
 import { ExpensesComponent } from './components/expenses/expenses.component';
 import { NewConnectionComponent } from './components/new-connection/new-connection.component';
 import { CityDetailsComponent } from './components/city-details/city-details.component';
+import { CustomerStatusComponent } from './components/customer-status/customer-status.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -42,6 +43,7 @@ export const routes: Routes = [
       { path: 'settings', data: { roles: ['admin', 'operator'] }, component: SettingsComponent },
       { path: 'expenses', data: { roles: ['admin'] }, component: ExpensesComponent },
       { path: 'new-connection', data: { roles: ['admin'] }, component: NewConnectionComponent },
+      { path: 'customer-status', data: { roles: ['admin'] }, component: CustomerStatusComponent },
       { path: 'city-details', data: { roles: ['admin'] }, component: CityDetailsComponent },
     ],
   },

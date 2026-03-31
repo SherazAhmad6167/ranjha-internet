@@ -4,6 +4,7 @@ import {
   addDoc,
   collection,
   deleteDoc,
+  deleteField,
   doc,
   Firestore,
   getDoc,
@@ -48,22 +49,22 @@ export class BillCreatorComponent {
     this.loadBills();
   }
 
-   async loadInternetAreas() {
-  try {
-    const ref = doc(this.firestore, 'internetArea', 'internetAreaDoc');
-    const snap = await getDoc(ref);
+  async loadInternetAreas() {
+    try {
+      const ref = doc(this.firestore, 'internetArea', 'internetAreaDoc');
+      const snap = await getDoc(ref);
 
-    if (snap.exists()) {
-      this.internetAreas = snap.data()?.['internetAreas'] || [];
+      if (snap.exists()) {
+        this.internetAreas = snap.data()?.['internetAreas'] || [];
 
-      this.internetAreas.sort((a: any, b: any) => {
-        return a.sublocality.localeCompare(b.sublocality);
-      });
+        this.internetAreas.sort((a: any, b: any) => {
+          return a.sublocality.localeCompare(b.sublocality);
+        });
+      }
+    } catch (error) {
+      console.error('Error loading internet areas', error);
     }
-  } catch (error) {
-    console.error('Error loading internet areas', error);
   }
-}
 
   get pagedUsers() {
     const start = (this.currentPage - 1) * this.pageSize;
@@ -209,6 +210,21 @@ export class BillCreatorComponent {
     }
   }
 
+  remainingExtraAdvance: any;
+  applyExtraAdvance(amount: number) {
+    if (!this.remainingExtraAdvance || this.remainingExtraAdvance <= 0)
+      return amount;
+
+    if (this.remainingExtraAdvance >= amount) {
+      this.remainingExtraAdvance -= amount;
+      return 0;
+    } else {
+      const finalAmount = amount - this.remainingExtraAdvance;
+      this.remainingExtraAdvance = 0;
+      return finalAmount;
+    }
+  }
+
   async updateUsersBills(users: any[]) {
     let totalAmount = 0;
 
@@ -221,6 +237,8 @@ export class BillCreatorComponent {
       const advancePayments = userData?.['advancePayments'] || [];
       const installationAmount = Number(userData?.['installation_amount'] || 0);
       const otherAmount = Number(userData?.['other_amount'] || 0);
+      const extraAdvance = Number(userData?.['extra_advance'] || 0);
+      let remainingExtraAdvance = extraAdvance;
 
       const extraAmount = installationAmount + otherAmount;
 
@@ -258,6 +276,16 @@ export class BillCreatorComponent {
           amount += prevRemaining;
           amount += extraAmount;
 
+          if (remainingExtraAdvance > 0) {
+            if (remainingExtraAdvance >= amount) {
+              remainingExtraAdvance -= amount;
+              amount = 0;
+            } else {
+              amount -= remainingExtraAdvance;
+              remainingExtraAdvance = 0;
+            }
+          }
+
           bills.push({
             bill_id: crypto.randomUUID(),
             month: this.selectedMonth,
@@ -291,6 +319,16 @@ export class BillCreatorComponent {
           amount += prevRemaining;
           amount += extraAmount;
 
+          if (remainingExtraAdvance > 0) {
+            if (remainingExtraAdvance >= amount) {
+              remainingExtraAdvance -= amount;
+              amount = 0;
+            } else {
+              amount -= remainingExtraAdvance;
+              remainingExtraAdvance = 0;
+            }
+          }
+
           bills.push({
             bill_id: crypto.randomUUID(),
             month: this.selectedMonth,
@@ -307,7 +345,20 @@ export class BillCreatorComponent {
         }
       }
 
-      await updateDoc(ref, { bills, installation_amount: 0, other_amount: 0 });
+      const updatePayload: any = {
+        bills,
+        installation_amount: 0,
+        other_amount: 0,
+      };
+
+      // ✅ remove or update extra advance
+      if (remainingExtraAdvance > 0) {
+        updatePayload.extra_advance = remainingExtraAdvance;
+      } else {
+        updatePayload.extra_advance = deleteField();
+      }
+
+      await updateDoc(ref, updatePayload);
     }
 
     return totalAmount;

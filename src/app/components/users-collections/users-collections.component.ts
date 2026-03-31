@@ -264,7 +264,8 @@ export class UsersCollectionsComponent {
 
             month: advanceMonthText,
             year: '',
-            amount: adv.advance_amount,
+            extra_advance: user['extra_advance'] || 0,
+            amount: adv.advance_amount + (user['extra_advance'] || 0),
             status: 'advance',
 
             advance_id: adv.advance_id,
@@ -697,6 +698,10 @@ export class UsersCollectionsComponent {
     } else {
       this.advanceForm.months.push(monthObj);
     }
+
+    this.advanceForm.amount = String(
+      this.advanceForm.months.length * this.packageFee,
+    );
   }
 
   getNextMonths(startMonth: string, startYear?: string, count: number = 12) {
@@ -787,8 +792,13 @@ export class UsersCollectionsComponent {
     this.currentPage = page;
   }
 
+  
+
+  packageFee: any;
   openAdvanceModal(row: any) {
     this.selectedBill = row;
+
+    this.packageFee = Number(row.internet_package_fee) || Number(row.cable_package_fee);
     console.log('Selected Bill MOnth:', row.month, row.year);
     this.nextMonths = this.getNextMonths(row.month, row.year, 12);
 
@@ -814,9 +824,27 @@ export class UsersCollectionsComponent {
       const userData = snap.data();
       const advancePayments = userData['advancePayments'] || [];
 
+        const totalBill =
+      this.advanceForm.months.length * this.packageFee;
+
+    const paidAmount = Number(this.advanceForm.amount);
+
+    // ✅ extra advance
+    let extraAdvance = 0;
+
+    if (paidAmount > totalBill) {
+      extraAdvance = paidAmount - totalBill;
+    }
+
+    const advanceAmountToSave =
+      paidAmount > totalBill ? totalBill : paidAmount;
+
+    const existingExtraAdvance =
+      Number(userData['extra_advance']) || 0;
+
       advancePayments.push({
         advance_id: crypto.randomUUID(),
-        advance_amount: Number(this.advanceForm.amount),
+        advance_amount: advanceAmountToSave,
         advance_months: this.advanceForm.months,
         collected_by: this.userName,
         collected_method: this.advanceForm.method,
@@ -829,7 +857,8 @@ export class UsersCollectionsComponent {
         isAdvance: true,
       });
 
-      updateDoc(ref, { advancePayments });
+      updateDoc(ref, { advancePayments,
+      extra_advance: existingExtraAdvance + extraAdvance, });
 
       this.showAdvanceModal = false;
       this.prepareAdvanceReceipt();

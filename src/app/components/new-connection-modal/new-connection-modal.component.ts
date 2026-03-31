@@ -42,6 +42,7 @@ export class NewConnectionModalComponent {
       installation_amount: [null],
       operator_name: [''],
       recieved_by: [''],
+      expenses: [null],
       recieved_amount: [null],
       isRecieved: [false],
       createdAt: [new Date()],
@@ -85,6 +86,7 @@ export class NewConnectionModalComponent {
         operator_name: this.userData.operator_name,
         recieved_by: this.userData.recieved_by,
         isRecieved: this.userData.isRecieved,
+        expenses: this.userData.expenses,
         recieved_amount: this.userData.recieved_amount,
       });
      

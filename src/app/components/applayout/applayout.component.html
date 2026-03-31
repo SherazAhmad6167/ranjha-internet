@@ -65,6 +65,10 @@
                 <a routerLink="/new-connection" routerLinkActive="active" class="nav-link text-white"
                     (click)="onMenuClick()">New Connection</a>
             </li>
+             <li class="nav-item" *ngIf="role === 'admin'">
+                <a routerLink="/customer-status" routerLinkActive="active" class="nav-link text-white"
+                    (click)="onMenuClick()">Customer Status</a>
+            </li>
             <li class="nav-item" *ngIf="role === 'admin' || role === 'operator'">
                 <a routerLink="/settings" routerLinkActive="active" class="nav-link text-white"
                     (click)="onMenuClick()">Settings</a>

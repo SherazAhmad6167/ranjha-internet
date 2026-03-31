@@ -350,7 +350,7 @@ export class UserModalComponent {
         const formattedPhone = this.formatPhoneNumber(
           this.userForm.value.phone_no,
         );
-        await this.sendWelcomeMessage(formattedPhone);
+        // await this.sendWelcomeMessage(formattedPhone);
 
         updateDoc(userDocRef, payload);
         if (!navigator.onLine) {
@@ -371,7 +371,7 @@ export class UserModalComponent {
 
           // if (hasWhatsApp) {
           // }
-          await this.sendWelcomeMessage(formattedPhone);
+          // await this.sendWelcomeMessage(formattedPhone);
         }
         addDoc(collection(this.firestore, 'users'), {
           ...payload,

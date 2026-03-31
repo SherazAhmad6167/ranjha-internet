@@ -29,6 +29,32 @@
         Ranjha7star Dashboard
     </h3>
 
+
+    <div class="dashboard-buttons">
+
+        <button class="dash-btn" (click)="openUserModal()">
+            <i class="fas fa-user-circle"></i>
+            <span>User Details</span>
+        </button>
+
+        <button class="dash-btn" (click)="openNewConnectionModal()">
+            <i class="fas fa-network-wired"></i>
+            <span>New Connection</span>
+        </button>
+
+        <button class="dash-btn" (click)="openExpensesModal()">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>Expenses</span>
+        </button>
+
+        <button class="dash-btn" (click)="openRecoveryOfficerModal()">
+            <i class="fas fa-user-shield"></i>
+            <span>Recovery Officer</span>
+        </button>
+
+    </div>
+
+
     <div class="grid-container">
         <div class="grid-item" id="area-details" [class.fullscreen]="expandedChartId === 'area-details'"
             [hidden]="expandedChartId && expandedChartId !== 'area-details'">

@@ -43,6 +43,8 @@ export class NewConnectionComponent {
   totalProfit: number = 0;
   selectedStatus: 'all' | 'recieved' | 'pending' = 'all';
   recievedByList: string[] = [];
+  operatorList: string[] = [];
+  selectOperator: string = '';
   selectedRecievedBy: string = '';
 
   constructor(
@@ -101,12 +103,20 @@ export class NewConnectionComponent {
       });
 
       this.recievedByList = [
-  ...new Set(
-    this.users
-      .map((u: any) => u.recieved_by)
-      .filter((name: string) => !!name) // remove null/undefined
-  ),
-];
+        ...new Set(
+          this.users
+            .map((u: any) => u.recieved_by)
+            .filter((name: string) => !!name), // remove null/undefined
+        ),
+      ];
+
+      this.operatorList = [
+        ...new Set(
+          this.users
+            .map((u: any) => u.operator_name)
+            .filter((name: string) => !!name), // remove null/undefined
+        ),
+      ];
 
       this.filteredUsers = this.users;
       this.updateTotalPages();
@@ -175,8 +185,12 @@ export class NewConnectionComponent {
       const matchesSublocality =
         !this.sublocality || user.sublocality === this.sublocality;
 
-         const matchesRecievedBy =
-      !this.selectedRecievedBy || user.recieved_by === this.selectedRecievedBy;
+      const matchesRecievedBy =
+        !this.selectedRecievedBy ||
+        user.recieved_by === this.selectedRecievedBy;
+
+      const matchesOperator =
+        !this.selectOperator || user.operator_name === this.selectOperator;
 
       let matchesStatus = true;
 
@@ -186,8 +200,13 @@ export class NewConnectionComponent {
         matchesStatus = user.isRecieved === false;
       }
 
-      return matchesSearch && matchesSublocality && matchesStatus &&
-      matchesRecievedBy;
+      return (
+        matchesSearch &&
+        matchesSublocality &&
+        matchesStatus &&
+        matchesRecievedBy &&
+        matchesOperator
+      );
     });
 
     this.currentPage = 1;
@@ -281,7 +300,7 @@ export class NewConnectionComponent {
   }
 
   calculateTotals(data: any[]) {
-     this.totalUsers = data.length;
+    this.totalUsers = data.length;
     this.totalRecovery = data.reduce(
       (sum, item) => sum + (Number(item.installation_amount) || 0),
       0,

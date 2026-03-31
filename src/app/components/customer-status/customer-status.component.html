@@ -1,9 +1,9 @@
 <div class="container-fluid pt-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="m-0">New Connection</h2>
+        <h2 class="m-0">Customer Status</h2>
         <button class="btn btn-primary d-flex align-items-center" (click)="openExpenseModal()">
             <i class="bi bi-person-plus me-2"></i>
-            Add New Con..
+            Add Status..
         </button>
         <!-- <button class="btn btn-danger" (click)="deleteMotaUsers()">
       Delete All Users
@@ -43,14 +43,13 @@
                         All
                     </button>
 
-                    <button class="btn"
-                        [ngClass]="selectedStatus === 'recieved' ? 'btn-success' : 'btn-outline-success'"
-                        (click)="selectedStatus='recieved'; onFilterChange()">
-                        Recieved
+                    <button class="btn" [ngClass]="selectedStatus === 'reopen' ? 'btn-success' : 'btn-outline-success'"
+                        (click)="selectedStatus='reopen'; onFilterChange()">
+                        Reopen
                     </button>
-                    <button class="btn" [ngClass]="selectedStatus === 'pending' ? 'btn-danger' : 'btn-outline-danger'"
-                        (click)="selectedStatus='pending'; onFilterChange()">
-                        Pending
+                    <button class="btn" [ngClass]="selectedStatus === 'close' ? 'btn-danger' : 'btn-outline-danger'"
+                        (click)="selectedStatus='close'; onFilterChange()">
+                        Close
                     </button>
                 </div>
 
@@ -64,31 +63,11 @@
                     </select>
                 </div>
 
-              
+
             </div>
 
 
-             <div class="d-flex gap-2 mb-3 row justify-content-between align-items-center">
-                 <div class="col-md-3">
-                    <label>Operator Name</label>
-                    <select class="form-control" [(ngModel)]="selectOperator" (change)="onFilterChange()">
-                        <option value="">All</option>
-                        <option *ngFor="let name of operatorList" [value]="name">
-                            {{ name | titlecase }}
-                        </option>
-                    </select>
-                </div>
-                  <div class="col-md-3">
-                    <label>Recieved By</label>
-                    <select class="form-control" [(ngModel)]="selectedRecievedBy" (change)="onFilterChange()">
-                        <option value="">All</option>
-                        <option *ngFor="let name of recievedByList" [value]="name">
-                            {{ name | titlecase }}
-                        </option>
-                    </select>
-                </div>
-                 
-             </div>
+
 
             <div class="table-responsive">
                 <table class="table table-hover table-bordered">
@@ -96,19 +75,16 @@
                         <tr>
                             <th>S.No</th>
                             <th>Internet Id</th>
-                            <th>Installation Date</th>
-
                             <th>Name</th>
                             <th>Sublocality</th>
                             <th>Package</th>
                             <th>Address</th>
-                            <th>IsRecieved</th>
-                            <th>Intsallation Amount</th>
-                            <th>Recieved Amount</th>
-                            <th>Remaining Amount</th>
-                            <th>Expenses</th>
-                            <th>Operator Name</th>
-                            <th>Recieved By</th>
+                            <th>Phone#</th>
+                            <th>Status</th>
+                            <th>Close Date</th>
+                            <th>Close By</th>
+                            <th>Reopen Date</th>
+                            <th>Reopen By</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -117,23 +93,23 @@
                         <tr *ngFor="let user of pagedUsers; let i = index">
                             <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
                             <td>{{ user.internet_id }}</td>
-                            <td>{{ user.installation_date | date: 'dd-MM-yyyy' }}</td>
-
                             <td>{{ user.user_name }}</td>
                             <td>{{ user.sublocality || '-' }}</td>
                             <td>{{ user.package_name || '-' }}</td>
                             <td>{{ user.address || '-' }}</td>
+                            <td>{{ user.phone_number || '-' }}</td>
                             <td>
-                                <span class="badge" [ngClass]="user.isRecieved ? 'bg-success' : 'bg-danger'">
-                                    {{ user.isRecieved ? 'Recieved' : 'Pending' }}
+                                <span class="badge"
+                                    [ngClass]="user.connection_status === 'reopen' ? 'bg-success' : 'bg-danger'">
+
+                                    {{ user.connection_status === 'reopen' ? 'Reopen' : 'Close' }}
+
                                 </span>
                             </td>
-                            <td>{{ user.installation_amount || '-' }}</td>
-                            <td>{{ user.recieved_amount || '-' }}</td>
-                            <td>{{ user.remaining_amount || '-' }}</td>
-                            <td>{{ user.expenses || '-' }}</td>
-                            <td>{{ user.operator_name || '-' }}</td>
-                            <td>{{ user.recieved_by | titlecase }}</td>
+                            <td>{{ user.close_date | date: 'dd-MM-yyyy' }}</td>
+                            <td>{{ user.closed_by || '-' }}</td>
+                            <td>{{ user.reopen_date | date: 'dd-MM-yyyy' }}</td>
+                            <td>{{ user.reopened_by || '-' }}</td>
                             <td>
                                 <button class="btn btn-primary btn-sm" (click)="editUser(user)">
                                     <i class="ri-pencil-line"></i>
@@ -202,7 +178,7 @@
     </div>
 </div>
 
-
+<!-- 
 <div class="container-fluid pt-5">
 
     <div class="row mb-3">
@@ -210,7 +186,6 @@
             <input type="date" class="form-control" [(ngModel)]="selectedDate" (change)="filterByDate()" />
         </div>
     </div>
-    <!-- Summary Section -->
     <div class="row mb-3">
         <div class="col-6 col-md-4 col-lg-2 mb-2">
             <div class="card text-center bg-secondary text-white">
@@ -248,4 +223,4 @@
             </div>
         </div>
     </div>
-</div>
+</div> -->
