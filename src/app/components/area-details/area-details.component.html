@@ -39,10 +39,11 @@
           <thead>
             <tr>
               <th>S.No</th>
-              <th>Country</th>
+              <!-- <th>Country</th>
               <th>City</th>
-              <th>Locality</th>
+              <th>Locality</th> -->
               <th>Sublocality</th>
+              <th>Sub Areas</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -50,10 +51,11 @@
           <tbody>
             <tr *ngFor="let user of pagedUsers; let i = index">
               <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
-              <td>{{ user.country | titlecase }}</td>
+              <!-- <td>{{ user.country | titlecase }}</td>
               <td>{{ user.city | titlecase }}</td>
-              <td>{{ user.locality | titlecase }}</td>
+              <td>{{ user.locality | titlecase }}</td> -->
               <td>{{ user.sublocality | titlecase }}</td>
+              <td>{{ user.subAreas?.join(', ') | titlecase }}</td>
               <td>
                 <button class="btn btn-primary btn-sm" (click)="editUser(user)">
                   <i class="ri-pencil-line"></i>

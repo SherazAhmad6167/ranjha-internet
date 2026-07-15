@@ -46,6 +46,8 @@
               <th>Address</th>
               <th>Joining Date</th>
               <th>Salary</th>
+              <th>Advance Salary</th>
+              <th>Pending Salary</th>
               <th>User Name</th>
               <th>Password</th>
               <th>Role</th>
@@ -63,6 +65,8 @@
               <td>{{ user.address }}</td>
               <td>{{ user.join_date | date: 'dd-MM-yyyy'}}</td>
               <td>{{ user.salary}}</td>
+              <td>{{ user.advance_salary}}</td>
+              <td>{{ user.pending_salary}}</td>
               <td>{{ user.user_name}}</td>
               <td>{{ user.password}}</td>
               <td>{{ user.role | titlecase}}</td>

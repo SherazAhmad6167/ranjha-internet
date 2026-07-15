@@ -1,5 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  ViewChild,
+} from '@angular/core';
 import {
   addDoc,
   collection,
@@ -20,6 +25,7 @@ import {
 } from '@ng-bootstrap/ng-bootstrap';
 import { UserModalComponent } from '../user-modal/user-modal.component';
 import html2canvas from 'html2canvas';
+import html2pdf from 'html2pdf.js';
 
 @Component({
   selector: 'app-user-details',
@@ -38,20 +44,32 @@ export class UserDetailsComponent {
   pageSize = 10;
   totalPages = 1;
   sublocality: string = '';
+  subArea: string = '';
+  subInternetArea: any[] = [];
   internetAreas: any[] = [];
   showReceiptModal = false;
   companyDetail: any = {};
+  welcomeTemplate: any;
+  upgradePlan: any;
+  maintanancesPlan: any;
+  servicesPlan: any;
 
   constructor(
     private modalService: NgbModal,
     private firestore: Firestore,
     private toastr: ToastrService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
-  ngOnInit(): void {
+  async ngOnInit() {
     this.loadUsers();
     this.loadInternetAreas();
+    this.loadSubInternetAreas();
     this.loadCompanyDetails();
+    this.welcomeTemplate = await this.getTemplate('welcome');
+    this.upgradePlan = await this.getTemplate('upgrade');
+    this.maintanancesPlan = await this.getTemplate('maintenance');
+    this.servicesPlan = await this.getTemplate('restoration');
   }
 
   async loadInternetAreas() {
@@ -66,6 +84,24 @@ export class UserDetailsComponent {
           return a.sublocality.localeCompare(b.sublocality);
         });
       }
+    } catch (error) {
+      console.error('Error loading internet areas', error);
+    }
+  }
+
+  async loadSubInternetAreas() {
+    try {
+      const ref = doc(this.firestore, 'internetSubArea', 'internetSubAreaDoc');
+      const snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        this.subInternetArea = snap.data()?.['internetSubAreas'] || [];
+
+        this.subInternetArea.sort((a: any, b: any) => {
+          return a.sub_area.localeCompare(b.sub_area);
+        });
+      }
+      console.log('Loaded sub internet areas:', this.subInternetArea);
     } catch (error) {
       console.error('Error loading internet areas', error);
     }
@@ -158,7 +194,9 @@ export class UserDetailsComponent {
       const matchesSublocality =
         !this.sublocality || user.sublocality === this.sublocality;
 
-      return matchesSearch && matchesSublocality;
+      const matchesSubArea = !this.subArea || user.sub_area === this.subArea;
+
+      return matchesSearch && matchesSublocality && matchesSubArea;
     });
 
     this.currentPage = 1;
@@ -324,6 +362,8 @@ export class UserDetailsComponent {
       installationDate: user.installation_date,
       totalAmount: user.amount,
       internet_package_fee: user.internet_package_fee,
+      pkg_cable: user.pkg_cable,
+      cable_package_fee: user.cable_package_fee,
       internetId: user.internet_id,
       installation_amount: user.installation_amount,
       select_package: user.select_package,
@@ -420,5 +460,201 @@ export class UserDetailsComponent {
         }
       });
     });
+  }
+
+  @ViewChild('pdfContent') pdfContent!: ElementRef;
+
+  showPdfModal = false;
+  pdfUser: any;
+
+  openPdfModal(user: any) {
+    this.pdfUser = user;
+    this.showPdfModal = true;
+  }
+
+  closePdfModal() {
+    this.showPdfModal = false;
+  }
+
+  
+  downloadPDF() {
+    const element = this.pdfContent.nativeElement;
+
+    const opt = {
+      margin: 5,
+      filename: `invoice_${this.pdfUser.user_name}.pdf`,
+      image: { type: 'jpeg' as 'jpeg', quality: 1 },
+      html2canvas: { scale: 2 },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait' as 'portrait',
+      },
+    };
+
+    html2pdf().set(opt).from(element).save();
+  }
+
+  async getTemplate(type: string): Promise<string> {
+    const ref = doc(this.firestore, `messageTemplates/${type}`);
+    const snap = await getDoc(ref);
+
+    if (snap.exists()) {
+      return snap.data()['message'] || '';
+    }
+
+    return '';
+  }
+
+  updratePlan(user: any) {
+    const formattedPhone = this.formatPhoneNumber(user.phone_no);
+    const message = this.mapUpgradeTemplate(this.upgradePlan, user);
+    if (!message) {
+      this.toastr.error('Message template not loaded');
+      return;
+    }
+    this.sendWelcomeMessage(formattedPhone, message);
+  }
+
+  maintanancePlan(user: any) {
+    const formattedPhone = this.formatPhoneNumber(user.phone_no);
+    const message = this.mapMaintananceTemplate(this.maintanancesPlan, user);
+    if (!message) {
+      this.toastr.error('Message template not loaded');
+      return;
+    }
+    this.sendWelcomeMessage(formattedPhone, message);
+  }
+
+  servicePlan(user: any) {
+    const formattedPhone = this.formatPhoneNumber(user.phone_no);
+    const message = this.mapServicesTemplate(this.servicesPlan, user);
+    if (!message) {
+      this.toastr.error('Message template not loaded');
+      return;
+    }
+    this.sendWelcomeMessage(formattedPhone, message);
+  }
+
+  async sendWhatsapp(user: any) {
+    const formattedPhone = this.formatPhoneNumber(user.phone_no);
+    // const hasWhatsApp = await this.checkWhatsAppNumber(formattedPhone);
+
+    // console.log('Has WhatsApp:', hasWhatsApp);
+
+    // if (!hasWhatsApp) {
+    //   this.toastr.error('This number is not available on WhatsApp');
+    // }
+    const message = this.mapTemplate(this.welcomeTemplate, user);
+    if (!message) {
+      this.toastr.error('Message template not loaded');
+      return;
+    }
+
+    // const message = this.generateWelcomeMessage(user);
+
+    this.sendWelcomeMessage(formattedPhone, message);
+  }
+
+  mapMaintananceTemplate(template: any, data: any): string {
+    if (!template || typeof template !== 'string') {
+      console.error('Invalid template:', template);
+      return '';
+    }
+
+    return template.replace(/\[Company Name\]/g, 'Ranjha7star');
+  }
+
+  mapServicesTemplate(template: any, data: any): string {
+    if (!template || typeof template !== 'string') {
+      console.error('Invalid template:', template);
+      return '';
+    }
+
+    return template
+      .replace(/\[Customer Name\]/g, data.user_name || '')
+      .replace(/\[Company Name\]/g, 'Ranjha7star')
+      .replace(/\[Number\]/g, this.companyDetail?.complain_no1 || '');
+  }
+
+  mapUpgradeTemplate(template: any, data: any): string {
+    if (!template || typeof template !== 'string') {
+      console.error('Invalid template:', template);
+      return '';
+    }
+
+    return template
+      .replace(/\[Customer Name\]/g, data.user_name || '')
+      .replace(/\[Company Name\]/g, 'Ranjha7star')
+      .replace(/\[Package Name\]/g, data.select_package || '')
+      .replace(/\[AMOUNT\]/g, data.internet_package_fee || '')
+      .replace(/\[Number\]/g, this.companyDetail?.complain_no1 || '');
+  }
+
+  mapTemplate(template: any, data: any): string {
+    if (!template || typeof template !== 'string') {
+      console.error('Invalid template:', template);
+      return '';
+    }
+
+    return template
+      .replace(/\[Customer Name\]/g, data.user_name || '')
+      .replace(/\[Company Name\]/g, 'Ranjha7star')
+      .replace(/\[XXXX\]/g, data.internet_id || '')
+      .replace(/\[Package Name\]/g, data.select_package || '')
+      // .replace(/\[Installation Date\]/g, data.installation_date || '')
+      .replace(/\[Number\]/g, this.companyDetail?.complain_no1 || '');
+  }
+
+  formatPhoneNumber(phone: string): string {
+    console.log('Phone Number:', phone);
+    phone = phone.replace(/\D/g, ''); // remove spaces/dashes
+
+    if (phone.startsWith('03')) {
+      return '92' + phone.substring(1);
+    }
+
+    if (phone.startsWith('3')) {
+      return '92' + phone;
+    }
+
+    if (phone.startsWith('92')) {
+      return phone;
+    }
+
+    if (phone.startsWith('+92')) {
+      return phone.substring(1);
+    }
+
+    return phone;
+  }
+
+  async checkWhatsAppNumber(phone: string): Promise<boolean> {
+    try {
+      const res = await fetch(`https://wa.me/${phone}`);
+      return res.status === 200;
+    } catch {
+      return false;
+    }
+  }
+
+  generateWelcomeMessage(data: any): string {
+    return `👋 Assalam-o-Alaikum ${data.user_name},
+
+🎉 Welcome to Ranjha7star!
+
+📶 Package: ${data.select_package}
+💰 Fee: ${data.internet_package_fee}
+📅 Installation Date: ${data.installation_date}
+
+If there is any complain please contact us ${this.companyDetail.complain_no1} 😊
+
+Thank you!`;
+  }
+
+  sendWelcomeMessage(phone: string, message: string) {
+    const encodedMessage = encodeURIComponent(message);
+    const url = `https://wa.me/${phone}?text=${encodedMessage}`;
+    window.open(url, '_blank');
   }
 }

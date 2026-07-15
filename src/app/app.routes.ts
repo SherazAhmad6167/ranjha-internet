@@ -19,6 +19,14 @@ import { ExpensesComponent } from './components/expenses/expenses.component';
 import { NewConnectionComponent } from './components/new-connection/new-connection.component';
 import { CityDetailsComponent } from './components/city-details/city-details.component';
 import { CustomerStatusComponent } from './components/customer-status/customer-status.component';
+import { DocsComponent } from './components/docs/docs.component';
+import { RecoveryDetailsComponent } from './components/recovery-details/recovery-details.component';
+import { SubAreaDetailsComponent } from './components/sub-area-details/sub-area-details.component';
+import { OperatorDetailsComponent } from './components/operator-details/operator-details.component';
+import { BorrowAmountComponent } from './components/borrow-amount/borrow-amount.component';
+import { PayableDetailsComponent } from './components/payable-details/payable-details.component';
+import { StockDetailsComponent } from './components/stock-details/stock-details.component';
+import { ComplainDetailsComponent } from './components/complain-details/complain-details.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -32,6 +40,7 @@ export const routes: Routes = [
       { path: 'dashboard', data: { roles: ['admin'] }, component: DashboardComponent },
       { path: 'user-details', data: { roles: ['operator', 'admin'] }, component: UserDetailsComponent },
       { path: 'area-details', data: { roles: ['admin'] }, component: AreaDetailsComponent },
+      { path: 'sub-area-details', data: { roles: ['admin'] }, component: SubAreaDetailsComponent },
       { path: 'recovery-officer', data: { roles: ['admin'] }, component: RecoveryOfficerComponent },
       { path: 'package-details', data: { roles: ['admin'] }, component: PackageDetailsComponent },
       { path: 'bill-creator', data: { roles: ['admin'] }, component: BillCreatorComponent },
@@ -45,8 +54,16 @@ export const routes: Routes = [
       { path: 'new-connection', data: { roles: ['admin'] }, component: NewConnectionComponent },
       { path: 'customer-status', data: { roles: ['admin'] }, component: CustomerStatusComponent },
       { path: 'city-details', data: { roles: ['admin'] }, component: CityDetailsComponent },
+      { path: 'upload-docs', data: { roles: ['admin']}, component: DocsComponent},
+      { path: 'recovery-details', data: { roles: ['admin']}, component: RecoveryDetailsComponent},
+      { path:'operator-details', data: { roles: ['admin']}, component: OperatorDetailsComponent},
+      { path: 'borrow-details', data: { roles: ['admin']}, component: BorrowAmountComponent},
+      { path: 'payable-details', data: { roles: ['admin']}, component: PayableDetailsComponent},
+      { path: 'stock-details', data: { roles: ['admin']}, component: StockDetailsComponent},
+      { path: 'complain-details', data: { roles: ['admin']}, component: ComplainDetailsComponent},
+
     ],
   },
-  { path: 'not-found', component: PageNotFoundComponent }, // 👈 create a 404 component
+  { path: 'not-found', component: PageNotFoundComponent },
 { path: '**', redirectTo: 'not-found' },
 ];

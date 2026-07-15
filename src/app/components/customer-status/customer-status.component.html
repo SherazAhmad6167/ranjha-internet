@@ -83,8 +83,10 @@
                             <th>Status</th>
                             <th>Close Date</th>
                             <th>Close By</th>
+                            <th>ClosedBy Operator Name</th>
                             <th>Reopen Date</th>
                             <th>Reopen By</th>
+                            <th>ReopenBy Operator Name</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -108,8 +110,10 @@
                             </td>
                             <td>{{ user.close_date | date: 'dd-MM-yyyy' }}</td>
                             <td>{{ user.closed_by || '-' }}</td>
+                            <td>{{ user.close_operator_name || '-' }}</td>
                             <td>{{ user.reopen_date | date: 'dd-MM-yyyy' }}</td>
                             <td>{{ user.reopened_by || '-' }}</td>
+                            <td>{{ user.reopen_operator_name || '-' }}</td>
                             <td>
                                 <button class="btn btn-primary btn-sm" (click)="editUser(user)">
                                     <i class="ri-pencil-line"></i>

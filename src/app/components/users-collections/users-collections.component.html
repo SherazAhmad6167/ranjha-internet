@@ -70,6 +70,24 @@
                     </select>
                 </div>
 
+                <div class="col-md-4">
+                    <label>Select Month</label>
+                    <select class="form-control" [(ngModel)]="selectedMonth" (change)="onFilterChange()">
+                        <option [ngValue]="null">All Months</option>
+                        <option value="january">January</option>
+                        <option value="february">February</option>
+                        <option value="march">March</option>
+                        <option value="april">April</option>
+                        <option value="may">May</option>
+                        <option value="june">June</option>
+                        <option value="july">July</option>
+                        <option value="august">August</option>
+                        <option value="september">September</option>
+                        <option value="october">October</option>
+                        <option value="november">November</option>
+                        <option value="december">December</option>
+                    </select>
+                </div>
             </div>
 
             <div class="d-flex justify-content-end align-items-center mb-3" *ngIf="selectedStatus === 'unpaid'">
@@ -121,7 +139,8 @@
                     </thead>
 
                     <tbody>
-                        <tr *ngFor="let row of pagedUsers; let i = index" [ngClass]="{ 'table-success': isSelected(row) }">
+                        <tr *ngFor="let row of pagedUsers; let i = index"
+                            [ngClass]="{ 'table-success': isSelected(row) }">
                             <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
                             <td>{{ row.user_name }}</td>
                             <td>{{ row.internet_id }}</td>
@@ -136,11 +155,17 @@
                             <td *ngIf="selectedStatus === 'paid' || selectedStatus === 'remaining'" [ngClass]="{
       'text-danger fw-bold': row.remaining_amount > 0
     }">
-                                Rs. {{ row.remaining_amount || 0 }}
+                                Rs. {{
+                                row.remaining_amount > 0
+                                ? row.remaining_amount
+                                : row.extra_advance > 0
+                                ? -row.extra_advance
+                                : 0
+                                }}
                             </td>
                             <td *ngIf="selectedStatus === 'paid' || selectedStatus === 'remaining'">{{
                                 row.collected_by}}</td>
-                                <td *ngIf="selectedStatus === 'paid' || selectedStatus === 'remaining'">{{
+                            <td *ngIf="selectedStatus === 'paid' || selectedStatus === 'remaining'">{{
                                 row.collected_date?.toDate() | date:'dd MMM yyyy, hh:mm a' }}</td>
 
                             <td>
@@ -202,7 +227,16 @@
                                         <i class="ri-eye-line"></i> Details
                                     </button>
 
-                                    <button class="btn btn-warning btn-sm ms-1" *ngIf="row.status === 'unpaid'" (click)="openUpdateModal(row)">
+                                    <button class="btn btn-success btn-sm ms-1" (click)="paymentRemainder(row)">
+                                        <i class="ri-whatsapp-line"></i> Whatsapp
+                                    </button>
+
+                                    <button *ngIf="row.status === 'unpaid'" class="btn btn-danger btn-sm ms-1" (click)="disconnectionWarning(row)">
+                                        <i class="ri-whatsapp-line"></i> Whatsapp
+                                    </button>
+
+                                    <button class="btn btn-warning btn-sm ms-1" *ngIf="row.status === 'unpaid'"
+                                        (click)="openUpdateModal(row)">
                                         <i class="ri-pencil-line"></i> Update
                                     </button>
 
@@ -570,6 +604,9 @@
                     <button class="btn btn-primary px-4 d-flex" (click)="printReceipt()">
                         <i class="ri-printer-line me-1"></i> Print
                     </button>
+                    <button class="btn btn-success btn-sm" (click)="sendWhatsapp(receiptData)">
+                        <i class="ri-whatsapp-line"></i>
+                    </button>
                 </div>
                 <div class="d-flex">
                     <button class="btn btn-success px-4 d-flex" (click)="shareReceiptImage()">
@@ -738,7 +775,8 @@
             <!-- Footer -->
             <div class="modal-footer">
                 <button class="btn btn-secondary" (click)="showUpdateModal=false">Cancel</button>
-                <button class="btn btn-primary d-flex align-items-center justify-content-center" (click)="updateBill()" [disabled]="isSubmitting">
+                <button class="btn btn-primary d-flex align-items-center justify-content-center" (click)="updateBill()"
+                    [disabled]="isSubmitting">
                     <span *ngIf="!isSubmitting">
                         <i class="ri-check-line me-1"></i> Submit
                     </span>

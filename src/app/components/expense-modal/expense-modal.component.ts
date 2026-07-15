@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
-import { addDoc, collection, doc, Firestore, updateDoc } from '@angular/fire/firestore';
+import { addDoc, collection, doc, Firestore, getDoc, updateDoc } from '@angular/fire/firestore';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
@@ -17,6 +17,7 @@ export class ExpenseModalComponent {
   @Input() userData: any;
   isLoading = false;
   isSaving = false;
+  internetOperators: any[] = [];
 
    constructor(
     public activeModal: NgbActiveModal,
@@ -46,6 +47,24 @@ export class ExpenseModalComponent {
 
   ngOnInit() {
     this.editForm();
+    this.loadOperatorName();
+  }
+
+  async loadOperatorName() {
+    try {
+      const ref = doc(this.firestore, 'operatorName', 'operatorNameDoc');
+      const snap = await getDoc(ref);
+  
+      if (snap.exists()) {
+        this.internetOperators = snap.data()?.['operatorNames'] || [];
+  
+        this.internetOperators.sort((a: any, b: any) => {
+          return a.operator_name.localeCompare(b.operator_name);
+        });
+      }
+    } catch (error) {
+      console.error('Error loading operators', error);
+    }
   }
 
     editForm() {

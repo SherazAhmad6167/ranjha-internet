@@ -6,6 +6,8 @@ import {
   Firestore,
   getDoc,
   getDocs,
+  orderBy,
+  query,
 } from '@angular/fire/firestore';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { UserModalComponent } from '../user-modal/user-modal.component';
@@ -13,6 +15,9 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { NewConnectionModalComponent } from '../new-connection-modal/new-connection-modal.component';
 import { ExpenseModalComponent } from '../expense-modal/expense-modal.component';
 import { RecoveryOfficerModalComponent } from '../recovery-officer-modal/recovery-officer-modal.component';
+import { AreaModalComponent } from '../area-modal/area-modal.component';
+import { CustomerStatusModalComponent } from '../customer-status-modal/customer-status-modal.component';
+import { RouterLink } from '@angular/router';
 
 interface ChartState {
   categories: string[];
@@ -24,7 +29,7 @@ interface ChartState {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, NgApexchartsModule],
+  imports: [CommonModule, NgApexchartsModule, RouterLink],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
@@ -39,6 +44,8 @@ export class DashboardComponent {
   ) {}
 
   async ngOnInit() {
+    this.loadRecoveryDetails();
+    this.loadNewConnections();
     await this.loadAreaUsersChart();
     await this.loadPackageUsersChart();
     await this.loadBillCollectionChart();
@@ -439,4 +446,179 @@ export class DashboardComponent {
       backdrop: 'static',
     });
   }
+
+  openAreaDetailsModal() {
+    const modalRef = this.modalService.open(AreaModalComponent, {
+      size: 'xl',
+      backdrop: 'static',
+    });
+  }
+
+  openCustomerStatusModal() {
+    const modalRef = this.modalService.open(CustomerStatusModalComponent, {
+      size: 'xl',
+      backdrop: 'static',
+    });
+  }
+
+  expenses: any[] = [];
+  filteredUsers: any[] = [];
+
+
+  async loadRecoveryDetails() {
+  try {
+    const usersRef = collection(this.firestore, 'recoveryDetails');
+    const q = query(usersRef, orderBy('createdAt', 'desc'));
+
+    const snapshot = await getDocs(q);
+
+    const now = new Date();
+    const currentMonth = now.getMonth(); // 0-11
+    const currentYear = now.getFullYear();
+
+    this.expenses = snapshot.docs
+      .map((docSnap) => {
+        const data: any = docSnap.data();
+
+        // 🔹 Convert Firestore timestamp to JS Date
+        const createdAtDate = data.createdAt?.toDate();
+
+        return {
+          id: docSnap.id,
+          ...data,
+          createdAtDate,
+        };
+      })
+      // ✅ FILTER CURRENT MONTH
+      .filter((item) => {
+        if (!item.createdAtDate) return false;
+
+        return (
+          item.createdAtDate.getMonth() === currentMonth &&
+          item.createdAtDate.getFullYear() === currentYear
+        );
+      })
+      // 🔥 AFTER FILTER → calculate values
+      .map((data) => {
+        const total_expenses =
+          (data.total_expenses || 0)
+
+        const profit = (data.total_recovery || 0) - (data.total_expenses || 0);
+
+        return {
+          ...data,
+          total_expenses,
+          profit,
+        };
+      });
+
+    this.filteredUsers = this.expenses;
+    this.calculateTotals(this.expenses);
+
+    console.log('Filtered Monthly Data:', this.expenses);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+  }
+}
+
+  totalRecovery: number = 0;
+  totalExpenses: number = 0;
+  totalProfit: number = 0;
+
+  calculateTotals(data: any[]) {
+    this.totalRecovery = data.reduce(
+      (sum, item) => sum + (item.total_recovery || 0),
+      0,
+    );
+
+    this.totalExpenses = data.reduce(
+      (sum, item) => sum + (item.total_expenses || 0),
+      0,
+    );
+
+    this.totalProfit = data.reduce((sum, item) => sum + (item.profit || 0), 0);
+  }
+
+  totalNewConnections: number = 0;
+
+ async loadNewConnections() {
+  try {
+    const usersRef = collection(this.firestore, 'newConnection');
+    const q = query(usersRef, orderBy('createdAt', 'desc'));
+
+    const snapshot = await getDocs(q);
+
+    const now = new Date();
+    const currentMonth = now.getMonth(); // 0-11
+    const currentYear = now.getFullYear();
+
+    const connections = snapshot.docs.map((docSnap) => {
+      const data: any = docSnap.data();
+
+      return {
+        id: docSnap.id,
+        ...data,
+        createdAtDate: data.createdAt?.toDate(),
+      };
+    });
+
+    // ✅ Filter current month
+    const currentMonthConnections = connections.filter((item) => {
+      if (!item.createdAtDate) return false;
+
+      return (
+        item.createdAtDate.getMonth() === currentMonth &&
+        item.createdAtDate.getFullYear() === currentYear
+      );
+    });
+
+    // 🔥 COUNT
+    this.totalNewConnections = currentMonthConnections.length;
+
+    console.log('Current Month Connections:', this.totalNewConnections);
+
+  } catch (error) {
+    console.error('Error fetching users:', error);
+  }
+}
+
+filteredBills: any[] = [];
+bills: any[] = [];        // ✅ array hona chahiye
+totalAmount: number = 0;  // ✅ total amount ke liye
+
+async loadBills() {
+  try {
+    const billsRef = collection(this.firestore, 'billCreator');
+    const snapshot = await getDocs(billsRef);
+
+    const now = new Date();
+    const currentMonth = now.toLocaleString('en-US', { month: 'long' }).toLowerCase();
+    const currentYear = now.getFullYear().toString();
+
+    // ✅ all bills
+    this.bills = snapshot.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data(),
+    }));
+
+    // ✅ filter current month (e.g. July)
+    this.filteredBills = this.bills.filter((bill: any) => {
+      return (
+        bill.month?.toLowerCase() === currentMonth &&
+        bill.year === currentYear
+      );
+    });
+
+    // ✅ total amount calculate
+    this.totalAmount = this.filteredBills.reduce((sum, bill: any) => {
+      return sum + (bill.amount || 0);
+    }, 0);
+
+    console.log('Current Month Bills:', this.filteredBills);
+    console.log('Total Amount:', this.totalAmount);
+
+  } catch (error) {
+    console.error('Error fetching bills:', error);
+  }
+}
 }

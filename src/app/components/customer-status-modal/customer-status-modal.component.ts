@@ -55,8 +55,10 @@ export class CustomerStatusModalComponent {
       connection_status: ['', [Validators.required]],
       close_date: [null],
       closed_by: [null],
+      close_operator_name: [''],
       reopened_by: [null],
       reopen_date: [null],
+      reopen_operator_name: [''],
       createdAt: [new Date()],
     });
   }
@@ -65,6 +67,8 @@ export class CustomerStatusModalComponent {
     if (this.editMode && this.userData) {
       this.userForm.patchValue({
         close_date: this.userData.close_date,
+        close_operator_name: this.userData.close_operator_name,
+        reopen_operator_name: this.userData.reopen_operator_name,
         address: this.userData.address,
         user_name: this.userData.user_name,
         sublocality: this.userData.sublocality,
@@ -122,6 +126,12 @@ export class CustomerStatusModalComponent {
       ...this.userForm.getRawValue(),
       updatedAt: new Date(),
     };
+
+    Object.entries(payload).forEach(([key, value]) => {
+  if (value === undefined) {
+    payload[key] = null;
+  }
+});
 
     // ✅ CONDITION BASED NULL VALUES
     // if (payload.connection_status === 'close') {

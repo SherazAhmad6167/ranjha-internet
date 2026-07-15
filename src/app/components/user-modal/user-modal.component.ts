@@ -36,6 +36,7 @@ export class UserModalComponent {
   locationText = '';
 
   internetAreas: any[] = [];
+  internetSubAreas: any[] = [];
   companies: any[] = [];
   internetPackages: any[] = [];
   cablePackages: any[] = [];
@@ -59,11 +60,13 @@ export class UserModalComponent {
       internet_id: ['', [Validators.required]],
       user_name: ['', [Validators.required]],
       address: ['', Validators.required],
-      phone_no: ['', [Validators.required]],
+      mobile_no: ['', [Validators.required]],
       sublocality: ['', [Validators.required]],
+      sub_area: ['', [Validators.required]],
       installation_amount: ['', [Validators.required]],
       other_amount: ['', [Validators.required]],
       installation_date: ['', [Validators.required]],
+      wire: [''],
       // recharge_date: ['', [Validators.required]],
       connection_provider: ['', Validators.required],
       connection_type: ['', [Validators.required]],
@@ -92,13 +95,34 @@ export class UserModalComponent {
     }
   }
 
+  companyDetail: any;
+  async loadCompanyDetails() {
+    try {
+      const ref = doc(this.firestore, 'companyDetail', 'companyDetail');
+      const snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        this.companyDetail = snap.data();
+      }
+    } catch (err) {
+      console.error(err);
+      this.toastr.error('Failed to load company details');
+    }
+  }
+
   ngOnInit() {
     // this.verifyConfig();
     this.loadInternetAreas();
+    // this.loadInternetSubAreas();
     this.loadCompanies();
     this.loadInternetPackages();
     this.loadCablePackages();
-    this.editForm();
+    // this.editForm();
+    this.loadCompanyDetails();
+
+    this.userForm.get('sublocality')?.valueChanges.subscribe((value) => {
+      this.onSublocalityChange(value);
+    });
     // INTERNET PACKAGE
     this.userForm.get('select_package')?.valueChanges.subscribe((pkgName) => {
       const pkg = this.internetPackages.find((p) => p.package_name === pkgName);
@@ -185,35 +209,42 @@ export class UserModalComponent {
   editForm() {
     if (this.editMode && this.userData) {
       this.userForm.patchValue({
-        internet_id: this.userData.internet_id,
-        user_name: this.userData.user_name,
-        address: this.userData.address,
-        phone_no: this.userData.phone_no,
-        sublocality: this.userData.sublocality,
-        installation_amount: this.userData.installation_amount,
-        other_amount: this.userData.other_amount,
+        internet_id: this.userData.internet_id ?? '',
+        user_name: this.userData.user_name ?? '',
+        address: this.userData.address ?? '',
+        mobile_no: this.userData?.mobile_no || this.userData?.phone_no,
+        sublocality: this.userData.sublocality ?? '',
+        sub_area: this.userData.sub_area ?? '',
+        installation_amount: this.userData.installation_amount ?? '',
+        other_amount: this.userData.other_amount ?? '',
         installation_date: this.userData.installation_date,
+        wire: this.userData.wire ?? '',
         // recharge_date: this.userData.recharge_date,
-        connection_provider: this.userData.connection_provider,
-        connection_type: this.userData.connection_type,
-        pkg_cable: this.userData.pkg_cable,
-        cable_discount: this.userData.cable_discount,
-        internet_discount: this.userData.internet_discount,
-        select_package: this.userData.select_package,
-        internet_package_fee: this.userData.internet_package_fee,
-        cable_package_fee: this.userData.cable_package_fee,
-        photo: this.userData.photo,
-        photoName: this.userData.photoName,
-        latitude: this.userData.latitude,
-        longitude: this.userData.longitude,
-        static_ip: this.userData.static_ip,
+        connection_provider: this.userData.connection_provider ?? '',
+        connection_type: this.userData.connection_type ?? '',
+        pkg_cable: this.userData.pkg_cable ?? '',
+        cable_discount: this.userData.cable_discount ?? '',
+        internet_discount: this.userData.internet_discount ?? '',
+        select_package: this.userData.select_package ?? '',
+        internet_package_fee: this.userData.internet_package_fee ?? '',
+        cable_package_fee: this.userData.cable_package_fee ?? '',
+        photo: this.userData.photo ?? '',
+        photoName: this.userData.photoName ?? '',
+        latitude: this.userData.latitude ?? '',
+        longitude: this.userData.longitude ?? '',
+        static_ip: this.userData.static_ip ?? '',
         createdAt: this.userData.createdAt ?? new Date(),
       });
 
       this.updateValidators(this.userData.connection_type);
+      this.onSublocalityChange(this.userData.sublocality);
 
-    // OPTIONAL: force validation refresh
-    this.userForm.updateValueAndValidity();
+      setTimeout(() => {
+        this.userForm.get('sub_area')?.setValue(this.userData.sub_area);
+      });
+
+      // OPTIONAL: force validation refresh
+      this.userForm.updateValueAndValidity();
       this.imagePreview = this.userData.photo;
       if (this.userData.latitude && this.userData.longitude) {
         this.locationText = `${this.userData.latitude}, ${this.userData.longitude}`;
@@ -273,22 +304,54 @@ export class UserModalComponent {
     return this.userForm.get('connection_type')?.value === 'both';
   }
 
-   async loadInternetAreas() {
-  try {
-    const ref = doc(this.firestore, 'internetArea', 'internetAreaDoc');
-    const snap = await getDoc(ref);
+  async loadInternetAreas() {
+    try {
+      const ref = doc(this.firestore, 'internetArea', 'internetAreaDoc');
+      const snap = await getDoc(ref);
 
-    if (snap.exists()) {
-      this.internetAreas = snap.data()?.['internetAreas'] || [];
+      if (snap.exists()) {
+        this.internetAreas = snap.data()?.['internetAreas'] || [];
 
-      this.internetAreas.sort((a: any, b: any) => {
-        return a.sublocality.localeCompare(b.sublocality);
-      });
+        this.internetAreas.sort((a: any, b: any) => {
+          return a.sublocality.localeCompare(b.sublocality);
+        });
+        this.editForm();
+      }
+    } catch (error) {
+      console.error('Error loading internet areas', error);
     }
-  } catch (error) {
-    console.error('Error loading internet areas', error);
   }
-}
+
+  onSublocalityChange(selectedSublocality: string) {
+    const selected = this.internetAreas.find(
+      (item) => item.sublocality === selectedSublocality,
+    );
+
+    this.internetSubAreas = (selected?.subAreas || []).map((sub: string) => ({
+      name: sub,
+    }));
+
+    if (!this.editMode) {
+      this.userForm.get('sub_area')?.reset();
+    }
+  }
+
+  // async loadInternetSubAreas() {
+  //   try {
+  //     const ref = doc(this.firestore, 'internetSubArea', 'internetSubAreaDoc');
+  //     const snap = await getDoc(ref);
+
+  //     if (snap.exists()) {
+  //       this.internetSubAreas = snap.data()?.['internetSubAreas'] || [];
+
+  //       this.internetSubAreas.sort((a: any, b: any) => {
+  //         return a.sub_area.localeCompare(b.sub_area);
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error('Error loading internet sub-areas', error);
+  //   }
+  // }
 
   async loadInternetPackages() {
     try {
@@ -340,7 +403,7 @@ export class UserModalComponent {
 
     try {
       const payload = {
-        ...this.userForm.getRawValue(), // 🔥 important for disabled fields
+        ...this.userForm.getRawValue(),
         updatedAt: new Date(),
       };
 
@@ -348,9 +411,8 @@ export class UserModalComponent {
         // 🔁 UPDATE EXISTING USER
         const userDocRef = doc(this.firestore, 'users', this.userData.id);
         const formattedPhone = this.formatPhoneNumber(
-          this.userForm.value.phone_no,
+          this.userForm.value.mobile_no,
         );
-        // await this.sendWelcomeMessage(formattedPhone);
 
         updateDoc(userDocRef, payload);
         if (!navigator.onLine) {
@@ -361,27 +423,30 @@ export class UserModalComponent {
           this.toastr.success('User saved successfully');
         }
       } else {
-        // ➕ ADD NEW USER
-
-        if (!this.editMode) {
-          const formattedPhone = this.formatPhoneNumber(
-            this.userForm.value.phone_no,
-          );
-          // const hasWhatsApp = await this.checkWhatsAppNumber(formattedPhone);
-
-          // if (hasWhatsApp) {
-          // }
-          // await this.sendWelcomeMessage(formattedPhone);
-        }
         addDoc(collection(this.firestore, 'users'), {
           ...payload,
           createdAt: new Date(),
         });
+
         if (!navigator.onLine) {
           this.toastr.info(
             'Saved offline. Will sync when connection is restored.',
           );
         } else {
+          if (!this.editMode) {
+            const formattedPhone = this.formatPhoneNumber(
+              this.userForm.value.mobile_no,
+            );
+            const hasWhatsApp = await this.checkWhatsAppNumber(formattedPhone);
+
+            if (!hasWhatsApp) {
+              this.toastr.error('This number is not available on WhatsApp');
+            }
+            const message = this.generateWelcomeMessage(this.userForm.value);
+
+            this.sendWelcomeMessage(formattedPhone, message);
+          }
+
           this.toastr.success('User saved successfully');
         }
       }
@@ -404,6 +469,57 @@ export class UserModalComponent {
     } finally {
       this.isSaving = false;
     }
+  }
+
+  formatPhoneNumber(phone: string): string {
+    phone = phone.replace(/\D/g, ''); // remove spaces/dashes
+
+    if (phone.startsWith('03')) {
+      return '92' + phone.substring(1);
+    }
+
+    if (phone.startsWith('3')) {
+      return '92' + phone;
+    }
+
+    if (phone.startsWith('92')) {
+      return phone;
+    }
+
+    if (phone.startsWith('+92')) {
+      return phone.substring(1);
+    }
+
+    return phone;
+  }
+
+  async checkWhatsAppNumber(phone: string): Promise<boolean> {
+    try {
+      const res = await fetch(`https://wa.me/${phone}`);
+      return res.status === 200;
+    } catch {
+      return false;
+    }
+  }
+
+  generateWelcomeMessage(data: any): string {
+    return `👋 Assalam-o-Alaikum ${data.user_name},
+
+🎉 Welcome to Ranjha7star!
+
+📶 Package: ${data.select_package}
+💰 Fee: ${data.internet_package_fee}
+📅 Installation Date: ${data.installation_date}
+
+If there is any complain please contact us ${this.companyDetail.complain_no1} 😊
+
+Thank you!`;
+  }
+
+  sendWelcomeMessage(phone: string, message: string) {
+    const encodedMessage = encodeURIComponent(message);
+    const url = `https://wa.me/${phone}?text=${encodedMessage}`;
+    window.open(url, '_blank');
   }
 
   onImageSelect(event: any) {
@@ -508,109 +624,109 @@ export class UserModalComponent {
     );
   }
 
-  private formatPhoneNumber(phone: string): string {
-    phone = phone.trim();
-    if (phone.startsWith('0')) {
-      return '+92' + phone.substring(1);
-    } else if (!phone.startsWith('+')) {
-      return '+92' + phone; // fallback if user entered without 0 or +
-    }
-    return phone;
-  }
+  // private formatPhoneNumber(phone: string): string {
+  //   phone = phone.trim();
+  //   if (phone.startsWith('0')) {
+  //     return '+92' + phone.substring(1);
+  //   } else if (!phone.startsWith('+')) {
+  //     return '+92' + phone; // fallback if user entered without 0 or +
+  //   }
+  //   return phone;
+  // }
 
-  async checkWhatsAppNumber(phone: string) {
-    const formattedNumber = this.formatPhoneNumber(phone);
+  // async checkWhatsAppNumber(phone: string) {
+  //   const formattedNumber = this.formatPhoneNumber(phone);
 
-    // Example: send POST request to WhatsApp Cloud API (replace TOKEN and YOUR_PHONE_NUMBER_ID)
-    try {
-      const response = await fetch(
-        `${this.baseUrl}/${this.version}/${this.phoneNumberId}/contacts`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-          body: JSON.stringify({
-            contacts: [formattedNumber],
-            messaging_product: 'whatsapp',
-          }),
-        },
-      );
+  //   // Example: send POST request to WhatsApp Cloud API (replace TOKEN and YOUR_PHONE_NUMBER_ID)
+  //   try {
+  //     const response = await fetch(
+  //       `${this.baseUrl}/${this.version}/${this.phoneNumberId}/contacts`,
+  //       {
+  //         method: 'POST',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //           Authorization: `Bearer ${this.accessToken}`,
+  //         },
+  //         body: JSON.stringify({
+  //           contacts: [formattedNumber],
+  //           messaging_product: 'whatsapp',
+  //         }),
+  //       },
+  //     );
 
-      const result = await response.json();
-      console.log(result);
-      return result.contacts?.[0]?.status === 'valid';
-    } catch (err) {
-      console.error('WhatsApp check failed', err);
-      return false;
-    }
-  }
+  //     const result = await response.json();
+  //     console.log(result);
+  //     return result.contacts?.[0]?.status === 'valid';
+  //   } catch (err) {
+  //     console.error('WhatsApp check failed', err);
+  //     return false;
+  //   }
+  // }
 
-  async sendWelcomeMessage(phone: string) {
-    const formattedNumber = this.formatPhoneNumber(phone);
-    console.log('Sending WhatsApp message to', formattedNumber);
+  // async sendWelcomeMessage(phone: string) {
+  //   const formattedNumber = this.formatPhoneNumber(phone);
+  //   console.log('Sending WhatsApp message to', formattedNumber);
 
-    try {
-      const response = await fetch(
-        `${this.baseUrl}/${this.version}/${this.phoneNumberId}/messages`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-          body: JSON.stringify({
-            messaging_product: 'whatsapp',
-            recipient_type: 'individual',
-            to: formattedNumber,
-            // type: 'text',
-            // text: {
-            //   preview_url: true,
-            //   body: `Welcome to Ranjha7starCable&Internet! 👋\n\nWe're excited to have you on board. Thanks for choosing our Services\n• `
-            // }
-            type: 'template',
-            template: {
-              name: 'welcome_templates',
-              language: {
-                code: 'en_US',
-              },
-              components: [
-                {
-                  type: 'body',
-                  parameters: [
-                    {
-                      type: 'text',
-                      parameter_name: 'name',
-                      text: 'Sheraz',
-                    },
-                    {
-                      type: 'text',
-                      parameter_name: 'support_number',
-                      text: '+923001234567',
-                    },
-                  ],
-                }
-              ]
-            },
-          }),
-        },
-      );
+  //   try {
+  //     const response = await fetch(
+  //       `${this.baseUrl}/${this.version}/${this.phoneNumberId}/messages`,
+  //       {
+  //         method: 'POST',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //           Authorization: `Bearer ${this.accessToken}`,
+  //         },
+  //         body: JSON.stringify({
+  //           messaging_product: 'whatsapp',
+  //           recipient_type: 'individual',
+  //           to: formattedNumber,
+  //           // type: 'text',
+  //           // text: {
+  //           //   preview_url: true,
+  //           //   body: `Welcome to Ranjha7starCable&Internet! 👋\n\nWe're excited to have you on board. Thanks for choosing our Services\n• `
+  //           // }
+  //           type: 'template',
+  //           template: {
+  //             name: 'welcome_templates',
+  //             language: {
+  //               code: 'en_US',
+  //             },
+  //             components: [
+  //               {
+  //                 type: 'body',
+  //                 parameters: [
+  //                   {
+  //                     type: 'text',
+  //                     parameter_name: 'name',
+  //                     text: 'Sheraz',
+  //                   },
+  //                   {
+  //                     type: 'text',
+  //                     parameter_name: 'support_number',
+  //                     text: '+923001234567',
+  //                   },
+  //                 ],
+  //               },
+  //             ],
+  //           },
+  //         }),
+  //       },
+  //     );
 
-      const data = await response.json();
+  //     const data = await response.json();
 
-      if (!response.ok) {
-        console.error('WhatsApp API error:', data);
-        throw new Error(data.error?.message || 'Failed to send message');
-      }
+  //     if (!response.ok) {
+  //       console.error('WhatsApp API error:', data);
+  //       throw new Error(data.error?.message || 'Failed to send message');
+  //     }
 
-      console.log('WhatsApp response:', data);
-      return data;
-    } catch (err) {
-      console.error('Failed to send WhatsApp message', err);
-      throw err;
-    }
-  }
+  //     console.log('WhatsApp response:', data);
+  //     return data;
+  //   } catch (err) {
+  //     console.error('Failed to send WhatsApp message', err);
+  //     throw err;
+  //   }
+  // }
 
   // Add this method to verify your configuration
   async verifyConfig() {

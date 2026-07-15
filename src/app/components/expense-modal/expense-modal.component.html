@@ -29,7 +29,7 @@
                 </div>
 
 
-                <div class="col-xl-4 m-0">
+                <!-- <div class="col-xl-4 m-0">
                     <label for="validationDefault01" class="form-label">Name</label>
                     <input type="text" class="form-control"
                         [ngClass]="{'is-invalid': expenseForm.get('recovery_officer')?.invalid && expenseForm.get('recovery_officer')?.touched, 'blink-border': expenseForm.get('recovery_officer')?.invalid && expenseForm.get('recovery_officer')?.touched}"
@@ -41,6 +41,32 @@
                         </ng-container>
                     </div>
 
+                </div> -->
+
+
+                 <div class="col-xl-4 m-0">
+                    <label class="form-label">Operator Name</label>
+
+                    <select class="form-control" formControlName="recovery_officer" [ngClass]="{
+      'is-invalid': expenseForm.get('recovery_officer')?.invalid && expenseForm.get('recovery_officer')?.touched,
+      'blink-border': expenseForm.get('recovery_officer')?.invalid && expenseForm.get('recovery_officer')?.touched
+    }">
+                        <option value="" disabled>Select Operator</option>
+
+                        <!-- Optional -->
+                        <!-- <option value="">All</option> -->
+
+                        <option *ngFor="let operator of internetOperators" [value]="operator.operator_name">
+                            {{ operator.operator_name | titlecase }}
+                        </option>
+                    </select>
+
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="expenseForm.get('recovery_officer')?.hasError('required') && expenseForm.get('recovery_officer')?.touched">
+                            <span class="text-danger">Operator Name is required</span>
+                        </ng-container>
+                    </div>
                 </div>
 
 

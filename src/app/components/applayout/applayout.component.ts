@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-applayout',
@@ -13,8 +13,15 @@ export class ApplayoutComponent {
   role: string | null = '';
   @ViewChild('sidebar') sidebar!: ElementRef;
   @ViewChild('toggleBtn') toggleBtn!: ElementRef;
+  isDashboard = false;
 
-  constructor(private route: Router) {}
+  constructor(private route: Router) {
+     this.route.events.subscribe(event => {
+    if (event instanceof NavigationEnd) {
+      this.isDashboard = this.route.url === '/dashboard';
+    }
+  });
+  }
 
   ngOnInit() {
     this.role = localStorage.getItem('role');

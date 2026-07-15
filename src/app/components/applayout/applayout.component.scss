@@ -11,6 +11,10 @@
   z-index: 1100;
 }
 
+.no-padding {
+  padding: 0 !important;
+}
+
 .sidebar ul.nav {
   flex-direction: column !important;
   flex-wrap: nowrap !important;   // ✅ stop wrapping into 2 columns

@@ -12,7 +12,10 @@
 
     <div class="mx-5">
         <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
-            <div class="row align-items-center gy-3 mt-4 mx-7">
+
+            <h5 class="mt-2 text-primary fw-bold">1. Customer Information</h5>
+
+            <div class="row align-items-center gy-3 mt-2 mx-7">
 
 
                 <div class="col-xl-4 m-0">
@@ -29,6 +32,34 @@
 
                 </div>
 
+                <div class="col-xl-4 m-0">
+                    <label for="validationDefault01" class="form-label">Father/Husband Name</label>
+                    <input type="text" class="form-control"
+                        [ngClass]="{'is-invalid': userForm.get('father_name')?.invalid && userForm.get('father_name')?.touched, 'blink-border': userForm.get('father_name')?.invalid && userForm.get('father_name')?.touched}"
+                        formControlName="father_name" id="validationDefault01" placeholder="Enter Father/Husband Name">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('father_name')?.hasError('required') && userForm.get('father_name')?.touched;">
+                            <span class="text-danger">Father Name is required</span>
+                        </ng-container>
+                    </div>
+
+                </div>
+
+
+                <div class="col-xl-4 m-0">
+                    <label for="validationDefault01" class="form-label">CNIC No.</label>
+                    <input type="text" class="form-control"
+                        [ngClass]="{'is-invalid': userForm.get('cnic')?.invalid && userForm.get('cnic')?.touched, 'blink-border': userForm.get('cnic')?.invalid && userForm.get('cnic')?.touched}"
+                        formControlName="cnic" id="validationDefault01" placeholder="Enter CNIC">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('cnic')?.hasError('required') && userForm.get('cnic')?.touched;">
+                            <span class="text-danger">CNIC required</span>
+                        </ng-container>
+                    </div>
+
+                </div>
 
                 <div class="col-xl-4 m-0">
                     <label for="validationDefault01" class="form-label">Internet ID</label>
@@ -67,6 +98,319 @@
 
 
 
+                <div class="col-md-4 m-0">
+                    <div class="card-title">Sub Area</div>
+                    <div class="card-body">
+                        <select
+                            [ngClass]="{'is-invalid': userForm.get('sub_area')?.invalid && userForm.get('sub_area')?.touched, 'blink-border': userForm.get('sub_area')?.invalid && userForm.get('sub_area')?.touched}"
+                            class="form-control" formControlName="sub_area">
+                            <option value="" disabled>Select a Sub Area</option>
+                            <option *ngFor="let area of internetSubAreas" [value]="area.name">
+                                {{ area.name | titlecase }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('sub_area')?.hasError('required') && userForm.get('sub_area')?.touched">
+                            <span class="text-danger">Select a Sub Area</span>
+                        </ng-container>
+                    </div>
+                </div>
+
+
+
+
+
+
+                <div class="col-md-4 m-0">
+                    <label for="validationDefault03" class="form-label">Address</label>
+                    <input type="text" class="form-control" formControlName="address"
+                        [ngClass]="{'is-invalid': userForm.get('address')?.invalid && userForm.get('address')?.touched, 'blink-border': userForm.get('address')?.invalid && userForm.get('address')?.touched}"
+                        id="validationDefault03" placeholder="Enter Address">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('address')?.hasError('required') && userForm.get('address')?.touched; ">
+                            <span class="text-danger" id="address">Address is required</span>
+                        </ng-container>
+                    </div>
+                </div>
+
+                <div class="col-md-4 m-0">
+                    <label for="validationDefault03" class="form-label">Mobile No.</label>
+                    <input type="text" class="form-control" formControlName="mobile_no"
+                        [ngClass]="{'is-invalid': userForm.get('mobile_no')?.invalid && userForm.get('mobile_no')?.touched, 'blink-border': userForm.get('mobile_no')?.invalid && userForm.get('mobile_no')?.touched}"
+                        id="validationDefault03" placeholder="Enter Mobile No.">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('mobile_no')?.hasError('required') && userForm.get('mobile_no')?.touched; ">
+                            <span class="text-danger" id="address">Mobile No. is required</span>
+                        </ng-container>
+                    </div>
+                </div>
+
+                <div class="col-md-4 m-0">
+                    <label for="validationDefault03" class="form-label">Alternate Mobile No.</label>
+                    <input type="text" class="form-control" formControlName="alter_mobile_no"
+                        [ngClass]="{'is-invalid': userForm.get('alter_mobile_no')?.invalid && userForm.get('alter_mobile_no')?.touched, 'blink-border': userForm.get('alter_mobile_no')?.invalid && userForm.get('alter_mobile_no')?.touched}"
+                        id="validationDefault03" placeholder="Enter Alternate Mobile No.">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('alter_mobile_no')?.hasError('required') && userForm.get('alter_mobile_no')?.touched; ">
+                            <span class="text-danger" id="address">Mobile No. is required</span>
+                        </ng-container>
+                    </div>
+                </div>
+
+
+
+
+                <div class="col-md-4 m-0  position-relative">
+                    <label class="form-label mb-0">Location</label>
+
+                    <input type="text" class="form-control pe-5" placeholder="Latitude, Longitude"
+                        [value]="locationText" />
+
+
+                    <span class="btn btn-link location position-absolute top-50 end-0 translate-middle-y me-2"
+                        (click)="getCurrentLocation()" title="Get current location">
+
+                        <i class="fa-solid fa-location-dot"></i>
+                    </span>
+
+                </div>
+
+
+
+
+                <!-- 
+                <div class="col-xl-4 m-0">
+                    <label for="validationDefault01" class="form-label">Operator Name</label>
+
+                    <select class="form-control" formControlName="operator_name" [ngClass]="{
+      'is-invalid': userForm.get('operator_name')?.invalid && userForm.get('operator_name')?.touched,
+      'blink-border': userForm.get('operator_name')?.invalid && userForm.get('operator_name')?.touched
+    }">
+
+                        <option value="" disabled selected>Select Operator</option>
+
+                        <option value="Abu Bakar">Abu Bakar</option>
+                        <option value="Usman">Usman</option>
+                        <option value="Ali Raza">Ali Raza</option>
+                        <option value="Ali Hassan">Ali Hassan</option>
+                        <option value="Umar">Umar</option>
+                        <option value="Shahzad">Shahzad</option>
+                        <option value="Sami Khokhar">Sami Khokhar</option>
+                        <option value="Meni">Meni</option>
+                        <option value="Waseem">Waseem</option>
+                        <option value="Subhani">Subhani</option>
+                        <option value="Sami">Sami</option>
+                        <option value="Ali Hassan">Ali Hassan</option>
+                        <option value="Mithu">Mithu</option>
+
+                    </select>
+
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('operator_name')?.hasError('required') && userForm.get('operator_name')?.touched;">
+                            <span class="text-danger">Operator Name is required</span>
+                        </ng-container>
+                    </div>
+                </div> -->
+
+
+
+
+
+
+            </div>
+
+
+            <h5 class="mt-2 text-primary fw-bold">2. Connection & Payment Details</h5>
+            <div class="row align-items-center gy-3 mt-2 mx-7">
+
+                <div class="col-md-4 m-0">
+                    <div class="card-title">Connection Provider</div>
+                    <div class="card-body">
+                        <select
+                            [ngClass]="{'is-invalid': userForm.get('connection_provider')?.invalid && userForm.get('connection_provider')?.touched, 'blink-border': userForm.get('connection_provider')?.invalid && userForm.get('connection_provider')?.touched}"
+                            class="form-control" formControlName="connection_provider">
+                            <option value="" disabled>Select a Connection Provider</option>
+                            <option value="none">None</option>
+                            <option *ngFor="let company of companies" [value]="company.company_name">
+                                {{ company.company_name | titlecase }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('connection_provider')?.hasError('required') && userForm.get('connection_provider')?.touched">
+                            <span class="text-danger">Select a Connection Provider</span>
+                        </ng-container>
+                    </div>
+                </div>
+
+
+                <div class="col-md-4 m-0">
+                    <div class="card-title">Connection Type</div>
+                    <div class="card-body">
+                        <select
+                            [ngClass]="{'is-invalid': userForm.get('pkg_cable')?.invalid && userForm.get('pkg_cable')?.touched, 'blink-border': userForm.get('pkg_cable')?.invalid && userForm.get('pkg_cable')?.touched}"
+                            class="form-control" formControlName="connection_type">
+                            <option value="" disabled>Select Connection Type</option>
+                            <option value="both">Both</option>
+                            <option value="internet">Internet</option>
+                            <option value="tv_cable">TV Cable</option>
+
+                        </select>
+                    </div>
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('connection_type')?.hasError('required') && userForm.get('connection_type')?.touched">
+                            <span class="text-danger">Select a Connection Type</span>
+                        </ng-container>
+                    </div>
+                </div>
+
+
+
+                <div *ngIf="isCable || isBoth" class="row">
+
+                    <div class="col-md-4 m-0">
+                        <div class="card-title">Pkg-Cable</div>
+                        <div class="card-body">
+                            <select
+                                [ngClass]="{'is-invalid': userForm.get('pkg_cable')?.invalid && userForm.get('pkg_cable')?.touched, 'blink-border': userForm.get('pkg_cable')?.invalid && userForm.get('pkg_cable')?.touched}"
+                                class="form-control" formControlName="pkg_cable">
+                                <option value="" disabled>Select Pkg-Cable</option>
+                                <option *ngFor="let cable of cablePackages" [value]="cable.package_name">
+                                    {{ cable.package_name | titlecase }}
+                                </option>
+
+
+                            </select>
+                        </div>
+                        <div class="extra-space">
+                            <ng-container
+                                *ngIf="userForm.get('pkg_cable')?.hasError('required') && userForm.get('pkg_cable')?.touched">
+                                <span class="text-danger">Select a Pkg-Cable</span>
+                            </ng-container>
+                        </div>
+                    </div>
+
+
+                    <div class="col-md-4 m-0">
+                        <div class="card-title">Discount</div>
+                        <div class="card-body">
+                            <select
+                                [ngClass]="{'is-invalid': userForm.get('cable_discount')?.invalid && userForm.get('cable_discount')?.touched, 'blink-border': userForm.get('cable_discount')?.invalid && userForm.get('cable_discount')?.touched}"
+                                class="form-control" formControlName="cable_discount">
+                                <option value="" disabled>Select Discount</option>
+                                <option value="no_discount">No Discount</option>
+                                <option value="quarter">Quarter</option>
+                                <option value="half">Half</option>
+                                <option value="semi">Semi</option>
+                                <option value="full_free">Full Free</option>
+                                <option value="custom">Custom</option>
+
+
+                            </select>
+                        </div>
+                        <div class="extra-space">
+                            <ng-container
+                                *ngIf="userForm.get('cable_discount')?.hasError('required') && userForm.get('cable_discount')?.touched">
+                                <span class="text-danger">Select a Discount</span>
+                            </ng-container>
+                        </div>
+                    </div>
+
+
+
+                    <div class="col-md-4 m-0">
+                        <div class="card-title">Cable Package Fee</div>
+                        <input type="text" class="form-control" formControlName="cable_package_fee"
+                            [ngClass]="{'is-invalid': userForm.get('cable_package_fee')?.invalid && userForm.get('cable_package_fee')?.touched, 'blink-border': userForm.get('cable_package_fee')?.invalid && userForm.get('cable_package_fee')?.touched}"
+                            id="validationDefault03" placeholder="Enter Package Fee">
+                        <div class="extra-space">
+                            <ng-container
+                                *ngIf="userForm.get('cable_package_fee')?.hasError('required') && userForm.get('cable_package_fee')?.touched">
+                                <span class="text-danger">Select a Package Fee</span>
+                            </ng-container>
+                        </div>
+                    </div>
+
+
+                </div>
+
+
+                <div *ngIf="isInternet || isBoth" class="row">
+
+                    <div class="col-md-4 m-0">
+                        <div class="card-title">Select Internet Package</div>
+                        <div class="card-body">
+                            <select
+                                [ngClass]="{'is-invalid': userForm.get('select_package')?.invalid && userForm.get('select_package')?.touched, 'blink-border': userForm.get('select_package')?.invalid && userForm.get('select_package')?.touched}"
+                                class="form-control" formControlName="select_package">
+                                <option value="" disabled>Select Internet Package</option>
+                                <option *ngFor="let area of internetPackages" [value]="area.package_name">
+                                    {{ area.package_name | titlecase }}
+                                </option>
+
+
+                            </select>
+                        </div>
+                        <div class="extra-space">
+                            <ng-container
+                                *ngIf="userForm.get('select_package')?.hasError('required') && userForm.get('select_package')?.touched">
+                                <span class="text-danger">Select a Package</span>
+                            </ng-container>
+                        </div>
+                    </div>
+
+
+                    <div class="col-md-4 m-0">
+                        <div class="card-title">Discount</div>
+                        <div class="card-body">
+                            <select
+                                [ngClass]="{'is-invalid': userForm.get('internet_discount')?.invalid && userForm.get('internet_discount')?.touched, 'blink-border': userForm.get('internet_discount')?.invalid && userForm.get('internet_discount')?.touched}"
+                                class="form-control" formControlName="internet_discount">
+                                <option value="" disabled>Select Discount</option>
+                                <option value="no_discount">No Discount</option>
+                                <option value="quarter">Quarter</option>
+                                <option value="half">Half</option>
+                                <option value="semi">Semi</option>
+                                <option value="full_free">Full Free</option>
+                                <option value="custom">Custom</option>
+
+
+                            </select>
+                        </div>
+                        <div class="extra-space">
+                            <ng-container
+                                *ngIf="userForm.get('internet_discount')?.hasError('required') && userForm.get('internet_discount')?.touched">
+                                <span class="text-danger">Select a Discount</span>
+                            </ng-container>
+                        </div>
+                    </div>
+
+
+
+                    <div class="col-md-4 m-0">
+                        <div class="card-title">Internet Package Fee</div>
+                        <input type="text" class="form-control" formControlName="internet_package_fee"
+                            [ngClass]="{'is-invalid': userForm.get('internet_package_fee')?.invalid && userForm.get('internet_package_fee')?.touched, 'blink-border': userForm.get('internet_package_fee')?.invalid && userForm.get('internet_package_fee')?.touched}"
+                            id="validationDefault03" placeholder="Enter Package Fee">
+                        <div class="extra-space">
+                            <ng-container
+                                *ngIf="userForm.get('internet_package_fee')?.hasError('required') && userForm.get('internet_package_fee')?.touched">
+                                <span class="text-danger">Select a Package Fee</span>
+                            </ng-container>
+                        </div>
+                    </div>
+
+                </div>
+
+
 
 
 
@@ -86,31 +430,51 @@
                 </div>
 
 
-                <div class="col-md-4 m-0">
-                    <label for="validationDefault03" class="form-label">Address</label>
-                    <input type="text" class="form-control" formControlName="address"
-                        [ngClass]="{'is-invalid': userForm.get('address')?.invalid && userForm.get('address')?.touched, 'blink-border': userForm.get('address')?.invalid && userForm.get('address')?.touched}"
-                        id="validationDefault03" placeholder="Enter Address">
+
+
+                <div class="col-xl-4 m-0">
+                    <label for="validationDefault01" class="form-label">Connection Payment</label>
+
+                    <select class="form-control" formControlName="connection_payment" [ngClass]="{
+      'is-invalid': userForm.get('connection_payment')?.invalid && userForm.get('connection_payment')?.touched,
+      'blink-border': userForm.get('connection_payment')?.invalid && userForm.get('connection_payment')?.touched
+    }">
+
+                        <option value="" disabled selected>Select Payment</option>
+
+                        <option value="Free">Free</option>
+                        <option value="Fully Paid">Fully Paid</option>
+                        <option value="Balance">Balance</option>
+                        <option value="Offer">Offer</option>
+
+
+                    </select>
+
                     <div class="extra-space">
                         <ng-container
-                            *ngIf="userForm.get('address')?.hasError('required') && userForm.get('address')?.touched; ">
-                            <span class="text-danger" id="address">Address is required</span>
+                            *ngIf="userForm.get('connection_payment')?.hasError('required') && userForm.get('connection_payment')?.touched;">
+                            <span class="text-danger">Payment is required</span>
                         </ng-container>
                     </div>
                 </div>
 
-                <div class="col-md-4 m-0">
-                    <label for="validationDefault03" class="form-label">Installation Date</label>
-                    <input type="date" class="form-control" formControlName="installation_date"
-                        [ngClass]="{'is-invalid': userForm.get('installation_date')?.invalid && userForm.get('installation_date')?.touched, 'blink-border': userForm.get('installation_date')?.invalid && userForm.get('installation_date')?.touched}"
-                        id="validationDefault03" placeholder="Enter Installation Date">
+
+
+
+                <div class="col-xl-4 m-0">
+                    <label for="validationDefault01" class="form-label">Monthly Fee</label>
+                    <input type="text" class="form-control"
+                        [ngClass]="{'is-invalid': userForm.get('monthly_fee')?.invalid && userForm.get('monthly_fee')?.touched, 'blink-border': userForm.get('monthly_fee')?.invalid && userForm.get('monthly_fee')?.touched}"
+                        formControlName="monthly_fee" id="validationDefault01" placeholder="Enter Package">
                     <div class="extra-space">
                         <ng-container
-                            *ngIf="userForm.get('installation_date')?.hasError('required') && userForm.get('installation_date')?.touched; ">
-                            <span class="text-danger" id="installation_date">Installation Date is required</span>
+                            *ngIf="userForm.get('monthly_fee')?.hasError('required') && userForm.get('monthly_fee')?.touched;">
+                            <span class="text-danger">Fee required</span>
                         </ng-container>
                     </div>
+
                 </div>
+
 
                 <div class="col-md-4 m-0">
                     <label for="validationDefault03" class="form-label">Installation Amount</label>
@@ -126,54 +490,117 @@
                 </div>
 
 
-                  <div class="col-md-4 m-0">
-                    <label for="validationDefault03" class="form-label">Total Expenses</label>
-                    <input type="text" class="form-control" formControlName="expenses"
-                        [ngClass]="{'is-invalid': userForm.get('expenses')?.invalid && userForm.get('expenses')?.touched, 'blink-border': userForm.get('expenses')?.invalid && userForm.get('expenses')?.touched}"
-                        id="validationDefault03" placeholder="Enter Total Expenses">
+
+                <div class="col-md-4 m-0">
+                    <label for="validationDefault03" class="form-label">Advance Paid</label>
+                    <input type="text" class="form-control" formControlName="advance_paid"
+                        [ngClass]="{'is-invalid': userForm.get('advance_paid')?.invalid && userForm.get('advance_paid')?.touched, 'blink-border': userForm.get('advance_paid')?.invalid && userForm.get('advance_paid')?.touched}"
+                        id="validationDefault03" placeholder="Enter Advance Amount">
                     <div class="extra-space">
                         <ng-container
-                            *ngIf="userForm.get('expenses')?.hasError('required') && userForm.get('expenses')?.touched; ">
-                            <span class="text-danger" id="expenses">Amount is required</span>
+                            *ngIf="userForm.get('advance_paid')?.hasError('required') && userForm.get('advance_paid')?.touched; ">
+                            <span class="text-danger" id="advance_paid">Amount is required</span>
                         </ng-container>
                     </div>
                 </div>
 
-                <div class="col-md-12 mt-4 mb-4">
-                    <div class="isRecieved">
-                        <input style="width: 30px; height: 20px;" type="checkbox" class="form-check-input"
-                            formControlName="isRecieved" id="validationFormCheck1">
-                        <label class="form-check-label mx-2 fw-bold" for="validationFormCheck1">isRecieved</label>
-                    </div>
-                </div>
 
-                <div class="col-md-4 m-0" *ngIf="userForm.get('isRecieved')?.value">
-                    <label for="validationDefault03" class="form-label">Recieved Amount</label>
-                    <input type="text" class="form-control" formControlName="recieved_amount"
-                        [ngClass]="{'is-invalid': userForm.get('recieved_amount')?.invalid && userForm.get('recieved_amount')?.touched, 'blink-border': userForm.get('recieved_amount')?.invalid && userForm.get('recieved_amount')?.touched}"
-                        id="validationDefault03" placeholder="Enter Recieved Amount">
+
+                <div class="col-md-4 m-0">
+                    <label for="validationDefault03" class="form-label">Balance</label>
+                    <input type="text" class="form-control" formControlName="balance"
+                        [ngClass]="{'is-invalid': userForm.get('balance')?.invalid && userForm.get('balance')?.touched, 'blink-border': userForm.get('balance')?.invalid && userForm.get('balance')?.touched}"
+                        id="validationDefault03" placeholder="Enter Balance">
                     <div class="extra-space">
                         <ng-container
-                            *ngIf="userForm.get('recieved_amount')?.hasError('required') && userForm.get('recieved_amount')?.touched; ">
-                            <span class="text-danger" id="recieved_amount">Amount is required</span>
+                            *ngIf="userForm.get('balance')?.hasError('required') && userForm.get('balance')?.touched; ">
+                            <span class="text-danger" id="advance_paid">Balance is required</span>
                         </ng-container>
                     </div>
                 </div>
-
 
 
                 <div class="col-xl-4 m-0">
-                    <label for="validationDefault01" class="form-label">Operator Name</label>
-                    <input type="text" class="form-control"
-                        [ngClass]="{'is-invalid': userForm.get('operator_name')?.invalid && userForm.get('operator_name')?.touched, 'blink-border': userForm.get('operator_name')?.invalid && userForm.get('operator_name')?.touched}"
-                        formControlName="operator_name" id="validationDefault01" placeholder="Enter Name">
+                    <label for="validationDefault01" class="form-label">Payment Method</label>
+
+                    <select class="form-control" formControlName="payment_method" [ngClass]="{
+      'is-invalid': userForm.get('payment_method')?.invalid && userForm.get('payment_method')?.touched,
+      'blink-border': userForm.get('payment_method')?.invalid && userForm.get('payment_method')?.touched
+    }">
+
+                        <option value="" disabled selected>Select Payment Metod</option>
+
+                        <option value="Cash">Cash</option>
+                        <option value="JazzCash">JazzCash</option>
+                        <option value="EasyPaisa">EasyPaisa</option>
+                        <option value="Bank">Bank</option>
+
+
+                    </select>
+
                     <div class="extra-space">
                         <ng-container
-                            *ngIf="userForm.get('operator_name')?.hasError('required') && userForm.get('operator_name')?.touched;">
+                            *ngIf="userForm.get('payment_method')?.hasError('required') && userForm.get('payment_method')?.touched;">
+                            <span class="text-danger">Payment Method is required</span>
+                        </ng-container>
+                    </div>
+                </div>
+
+
+                <div class="col-md-4 m-0" *ngIf="userForm.get('payment_method')?.value == 'Bank'">
+                    <label for="validationDefault03" class="form-label">Bank Name</label>
+                    <input type="text" class="form-control" formControlName="bank_name"
+                        [ngClass]="{'is-invalid': userForm.get('bank_name')?.invalid && userForm.get('bank_name')?.touched, 'blink-border': userForm.get('bank_name')?.invalid && userForm.get('bank_name')?.touched}"
+                        id="validationDefault03" placeholder="Enter Bank">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('bank_name')?.hasError('required') && userForm.get('bank_name')?.touched; ">
+                            <span class="text-danger" id="recieved_amount">Bank required</span>
+                        </ng-container>
+                    </div>
+                </div>
+            </div>
+
+
+            <h5 class="mt-2 text-primary fw-bold">3. Installation Details</h5>
+            <div class="row align-items-center gy-3 mt-2 mx-7">
+                <div class="col-md-4 m-0">
+                    <label for="validationDefault03" class="form-label">Installation Date</label>
+                    <input type="date" class="form-control" formControlName="installation_date"
+                        [ngClass]="{'is-invalid': userForm.get('installation_date')?.invalid && userForm.get('installation_date')?.touched, 'blink-border': userForm.get('installation_date')?.invalid && userForm.get('installation_date')?.touched}"
+                        id="validationDefault03" placeholder="Enter Installation Date">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('installation_date')?.hasError('required') && userForm.get('installation_date')?.touched; ">
+                            <span class="text-danger" id="installation_date">Installation Date is required</span>
+                        </ng-container>
+                    </div>
+                </div>
+
+
+                <div class="col-xl-4 m-0">
+                    <label class="form-label">Operator Name</label>
+
+                    <select class="form-control" formControlName="operator_name" [ngClass]="{
+      'is-invalid': userForm.get('operator_name')?.invalid && userForm.get('operator_name')?.touched,
+      'blink-border': userForm.get('operator_name')?.invalid && userForm.get('operator_name')?.touched
+    }">
+                        <option value="" disabled>Select Operator</option>
+
+                        <!-- Optional -->
+                        <!-- <option value="">All</option> -->
+
+                        <option *ngFor="let operator of internetOperators" [value]="operator.operator_name">
+                            {{ operator.operator_name | titlecase }}
+                        </option>
+                    </select>
+
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('operator_name')?.hasError('required') && userForm.get('operator_name')?.touched">
                             <span class="text-danger">Operator Name is required</span>
                         </ng-container>
                     </div>
-
                 </div>
 
                 <div class="col-xl-4 m-0">
@@ -205,24 +632,202 @@
                 </div>
 
 
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary-light" (click)="activeModal.close()">
-                        Close
-                    </button>
+                <div class="col-md-4 m-0">
+                    <label for="validationDefault03" class="form-label">Recieved Date</label>
+                    <input type="date" class="form-control" formControlName="recieved_date"
+                        [ngClass]="{'is-invalid': userForm.get('recieved_date')?.invalid && userForm.get('recieved_date')?.touched, 'blink-border': userForm.get('recieved_date')?.invalid && userForm.get('recieved_date')?.touched}"
+                        id="validationDefault03" placeholder="Enter Recieved Date">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('recieved_date')?.hasError('required') && userForm.get('recieved_date')?.touched; ">
+                            <span class="text-danger" id="recieved_date">Recieved Date is required</span>
+                        </ng-container>
+                    </div>
+                </div>
+                <!-- 
+                <div class="col-md-4 m-0">
+                    <label for="validationDefault03" class="form-label">Total Expenses</label>
+                    <input type="text" class="form-control" formControlName="expenses"
+                        [ngClass]="{'is-invalid': userForm.get('expenses')?.invalid && userForm.get('expenses')?.touched, 'blink-border': userForm.get('expenses')?.invalid && userForm.get('expenses')?.touched}"
+                        id="validationDefault03" placeholder="Enter Total Expenses">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('expenses')?.hasError('required') && userForm.get('expenses')?.touched; ">
+                            <span class="text-danger" id="expenses">Amount is required</span>
+                        </ng-container>
+                    </div>
+                </div> -->
 
-                    <button class="btn btn-primary" type="submit" [disabled]="isLoading || isSaving">
-                        <span *ngIf="!isSaving"> {{ editMode ? 'Update' : 'Save' }}</span>
-                        <span *ngIf="isSaving" class="d-flex align-items-center">
-                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            {{ editMode ? 'Updating...' : 'Saving...' }}
-                        </span>
-                    </button>
+                <div class="col-md-12 mt-4 mb-4">
+                    <div class="isRecieved">
+                        <input style="width: 30px; height: 20px;" type="checkbox" class="form-check-input"
+                            formControlName="isRecieved" id="validationFormCheck1">
+                        <label class="form-check-label mx-2 fw-bold" for="validationFormCheck1">isRecieved</label>
+                    </div>
+                </div>
 
+                <div class="col-md-4 m-0" *ngIf="userForm.get('isRecieved')?.value">
+                    <label for="validationDefault03" class="form-label">Recieved Amount</label>
+                    <input type="text" class="form-control" formControlName="recieved_amount"
+                        [ngClass]="{'is-invalid': userForm.get('recieved_amount')?.invalid && userForm.get('recieved_amount')?.touched, 'blink-border': userForm.get('recieved_amount')?.invalid && userForm.get('recieved_amount')?.touched}"
+                        id="validationDefault03" placeholder="Enter Recieved Amount">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('recieved_amount')?.hasError('required') && userForm.get('recieved_amount')?.touched; ">
+                            <span class="text-danger" id="recieved_amount">Amount is required</span>
+                        </ng-container>
+                    </div>
+                </div>
+                <!-- 
+                <div class="col-md-4 m-0">
+                    <label for="validationDefault03" class="form-label">Router Serial No.</label>
+                    <input type="text" class="form-control" formControlName="router_no"
+                        [ngClass]="{'is-invalid': userForm.get('router_no')?.invalid && userForm.get('router_no')?.touched, 'blink-border': userForm.get('router_no')?.invalid && userForm.get('router_no')?.touched}"
+                        id="validationDefault03" placeholder="Enter Router No.">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('router_no')?.hasError('required') && userForm.get('router_no')?.touched; ">
+                            <span class="text-danger" id="recieved_amount">Router is required</span>
+                        </ng-container>
+                    </div>
+                </div>
+
+
+                <div class="col-md-4 m-0">
+                    <label for="validationDefault03" class="form-label">MAC Address</label>
+                    <input type="text" class="form-control" formControlName="mac_address"
+                        [ngClass]="{'is-invalid': userForm.get('mac_address')?.invalid && userForm.get('mac_address')?.touched, 'blink-border': userForm.get('mac_address')?.invalid && userForm.get('mac_address')?.touched}"
+                        id="validationDefault03" placeholder="Enter MAC Address">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('mac_address')?.hasError('required') && userForm.get('mac_address')?.touched; ">
+                            <span class="text-danger" id="recieved_amount">MAC Address required</span>
+                        </ng-container>
+                    </div>
+                </div>
+
+                <div class="col-md-4 m-0">
+                    <label for="validationDefault03" class="form-label">Wi-Fi Name</label>
+                    <input type="text" class="form-control" formControlName="wifi"
+                        [ngClass]="{'is-invalid': userForm.get('wifi')?.invalid && userForm.get('wifi')?.touched, 'blink-border': userForm.get('wifi')?.invalid && userForm.get('mac_address')?.touched}"
+                        id="validationDefault03" placeholder="Enter WiFi Name">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('wifi')?.hasError('required') && userForm.get('wifi')?.touched; ">
+                            <span class="text-danger" id="recieved_amount">Wi-Fi required</span>
+                        </ng-container>
+                    </div>
+                </div>
+
+
+                <div class="col-md-4 m-0">
+                    <label for="validationDefault03" class="form-label">Wi-Fi Password</label>
+                    <input type="text" class="form-control" formControlName="wifi_password"
+                        [ngClass]="{'is-invalid': userForm.get('wifi_password')?.invalid && userForm.get('wifi_password')?.touched, 'blink-border': userForm.get('wifi_password')?.invalid && userForm.get('wifi_password')?.touched}"
+                        id="validationDefault03" placeholder="Enter Password">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('wifi_password')?.hasError('required') && userForm.get('wifi_password')?.touched; ">
+                            <span class="text-danger" id="recieved_amount">Wi-Fi required</span>
+                        </ng-container>
+                    </div>
+                </div> -->
+
+
+                <div class="col-md-12 m-0">
+                    <label for="validationDefault03" class="form-label">Remarks</label>
+
+                    <textarea class="form-control" formControlName="remarks" rows="3"
+                        [ngClass]="{'is-invalid': userForm.get('remarks')?.invalid && userForm.get('remarks')?.touched, 'blink-border': userForm.get('remarks')?.invalid && userForm.get('remarks')?.touched}"
+                        id="validationDefault03" placeholder="Enter Remarks"></textarea>
+
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('remarks')?.hasError('required') && userForm.get('remarks')?.touched;">
+                            <span class="text-danger">Remarks required</span>
+                        </ng-container>
+                    </div>
                 </div>
             </div>
+
+
+            <h5 class="mt-2 text-primary fw-bold">4. CNIC Front Side</h5>
+            <div class="row align-items-center gy-3 mt-2 mx-7">
+                <div class="col-xl-12">
+                    <label class="form-label">Upload Photo</label>
+
+                    <input type="file" accept="image/*" class="form-control" (change)="onImageSelect($event, 'front')"
+                        [ngClass]="{'is-invalid': userForm.get('cnic_front')?.invalid && userForm.get('cnic_front')?.touched}" />
+
+                    <div *ngIf="cnicFrontPreview" class="mt-2">
+                        <img [src]="cnicFrontPreview" class="img-thumbnail preview-img"
+                            (click)="openImageModal('front')" />
+                    </div>
+
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('cnic_front')?.hasError('required') && userForm.get('cnic_front')?.touched">
+                            <span class="text-danger">CNIC Front is required</span>
+                        </ng-container>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <h5 class="mt-2 text-primary fw-bold">5. CNIC Back Side</h5>
+            <div class="row align-items-center gy-3 mt-2 mx-7">
+                <div class="col-xl-12">
+                    <label class="form-label">Upload Photo</label>
+
+                    <input type="file" accept="image/*" class="form-control" (change)="onImageSelect($event, 'back')"
+                        [ngClass]="{'is-invalid': userForm.get('cnic_back')?.invalid && userForm.get('cnic_back')?.touched}" />
+
+                    <div *ngIf="cnicBackPreview" class="mt-2">
+                        <img [src]="cnicBackPreview" class="img-thumbnail preview-img"
+                            (click)="openImageModal('back')" />
+                    </div>
+
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('cnic_back')?.hasError('required') && userForm.get('cnic_back')?.touched">
+                            <span class="text-danger">CNIC Back is required</span>
+                        </ng-container>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary-light" (click)="activeModal.close()">
+                    Close
+                </button>
+
+                <button class="btn btn-primary" type="submit" [disabled]="isLoading || isSaving">
+                    <span *ngIf="!isSaving"> {{ editMode ? 'Update' : 'Save' }}</span>
+                    <span *ngIf="isSaving" class="d-flex align-items-center">
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        {{ editMode ? 'Updating...' : 'Saving...' }}
+                    </span>
+                </button>
+
+            </div>
+
         </form>
 
     </div>
 
 
+</div>
+
+
+<div class="custom-backdrop" *ngIf="showImageModal" (click)="closeImageModal()"></div>
+
+<!-- MODAL -->
+<div class="custom-modal" *ngIf="showImageModal" (click)="$event.stopPropagation()">
+    <div class="modal-card">
+        <button class="close-btn" (click)="closeImageModal()">×</button>
+
+        <img [src]="selectedImage" class="modal-image" />
+    </div>
 </div>

@@ -21,7 +21,10 @@
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-center mb-3 row">
         <div class="col-md-3">
-          <label>Sublocality</label>
+          <button class="btn btn-primary d-flex align-items-center">
+            Sublocality
+          </button>
+          <!-- <label>Sublocality</label> -->
           <select class="form-control" [(ngModel)]="sublocality" (change)="onFilterChange()">
             <option value="" disabled>Select Sublocality</option>
             <option value="">All</option>
@@ -36,7 +39,17 @@
             (input)="onFilterChange()" />
         </div>
       </div>
-      <div class="row d-flex justify-content-end">
+      <div class="row d-flex justify-content-between">
+        <div class="col-md-3">
+          <label>Sub Area</label>
+          <select class="form-control" [(ngModel)]="subArea" (change)="onFilterChange()">
+            <option value="" disabled>Select Sub Area</option>
+            <option value="">All</option>
+            <option *ngFor="let area of subInternetArea" [value]="area.sub_area">
+              {{ area.sub_area | titlecase }}
+            </option>
+          </select>
+        </div>
         <div class="col-md-2">
           <label>Entries</label>
           <select class="form-control" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
@@ -58,9 +71,11 @@
               <th>Contact</th>
               <th>Address</th>
               <th>Sublocality</th>
+              <th>Sub Area</th>
               <th>Package</th>
               <th>Connection</th>
               <th>Fee</th>
+              <th>Wire</th>
               <th>Install Date</th>
               <th>Static IP</th>
               <th>Action</th>
@@ -72,9 +87,10 @@
               <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
               <td>{{ user.internet_id }}</td>
               <td>{{ user.user_name | titlecase }}</td>
-              <td>{{ user.phone_no }}</td>
+              <td>{{ user?.phone_no || user?.mobile_no }}</td>
               <td>{{ user.address }}</td>
               <td>{{ user.sublocality | titlecase }}</td>
+              <td>{{ user.sub_area | titlecase }}</td>
               <td>
                 {{
                 user.select_package
@@ -84,7 +100,8 @@
                 }}
               </td>
               <td>{{ user.connection_type | titlecase }}</td>
-              <td>{{ user.internet_package_fee }}</td>
+              <td>{{ user.internet_package_fee + user.cable_package_fee }}</td>
+              <td>{{ user.wire || '-' }}</td>
               <td>{{ user.installation_date | date: 'dd-MM-yyyy' }}</td>
               <td>{{ user.static_ip }}</td>
               <td>
@@ -97,6 +114,22 @@
 
                 <button class="btn btn-success btn-sm" (click)="openReceiptModal(user)">
                   <i class="ri-download-line"></i>
+                </button>
+
+                <button class="btn btn-danger btn-sm" (click)="openPdfModal(user)">
+                  <i class="ri-file-pdf-line"></i>
+                </button>
+                <button class="btn btn-success btn-sm" (click)="sendWhatsapp(user)">
+                  <i class="ri-whatsapp-line"></i>
+                </button>
+                <button class="btn btn-warning btn-sm" (click)="updratePlan(user)">
+                  <i class="ri-whatsapp-line"></i> Upgrade Plan
+                </button>
+                <button class="btn btn-danger btn-sm" (click)="maintanancePlan(user)">
+                  <i class="ri-whatsapp-line"></i> Maintanance
+                </button>
+                <button class="btn btn-primary btn-sm" (click)="servicePlan(user)">
+                  <i class="ri-whatsapp-line"></i> Service
                 </button>
               </td>
             </tr>
@@ -200,12 +233,14 @@
 
           <div class="d-flex justify-content-between mb-1 fw-bold">
             <span>Package:</span>
-            <span class="fw-semibold text-primary">{{ receiptData.select_package | titlecase}}</span>
+            <span class="fw-semibold text-primary">{{ receiptData.select_package | titlecase }}<span
+                *ngIf="receiptData.pkg_cable"> + {{ receiptData.pkg_cable | titlecase }}</span></span>
           </div>
 
           <div class="d-flex justify-content-between mb-1 fw-bold">
             <span>Total Amount</span>
-            <span class="fw-semibold text-primary">Rs. {{ receiptData.internet_package_fee }}</span>
+            <span class="fw-semibold text-primary">Rs. {{ receiptData.internet_package_fee +
+              receiptData.cable_package_fee }}</span>
           </div>
 
           <div class="d-flex justify-content-between mb-1 fw-bold">
@@ -277,3 +312,296 @@
 </div>
 
 <div class="modal-backdrop fade show" *ngIf="showReceiptModal"></div>
+
+
+
+
+
+
+
+
+<!-- <div class="modal fade show d-block" *ngIf="showPdfModal">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Invoice Preview</h5>
+        <button class="btn-close" (click)="closePdfModal()"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div #pdfContent class="pdf-container">
+
+          <div >
+            <img src="assets/ranjha-logo3.jpeg" alt="logo" height="10" width="10">
+          </div>
+          <div class="watermark">
+            Ranjha7StarCable&Internet
+          </div>
+
+          <div class="text-center border-bottom pb-2 mb-3">
+            <h3 class="fw-bold text-primary m-0">
+              Ranjha7StarCable&Internet
+            </h3>
+            <small>Premium Cable & Internet Services</small>
+          </div>
+
+          <h5 class="text-center badge bg-primary mb-3">
+            CUSTOMER INVOICE
+          </h5>
+
+          <div class="row">
+            <div class="col-6">
+              <h6 class="fw-bold text-primary">Customer Info</h6>
+              <p>Name: {{ pdfUser?.user_name }}</p>
+              <p>Phone: {{ pdfUser?.phone_no }}</p>
+              <p>Address: {{ pdfUser?.address }}</p>
+              <p>Connection: {{ pdfUser?.connection_type }}</p>
+            </div>
+
+            <div class="col-6">
+              <h6 class="fw-bold text-danger">Service</h6>
+              <p>ID: {{ pdfUser?.internet_id }}</p>
+              <p>Package: {{ pdfUser?.select_package }}</p>
+              <p>Provider: {{ pdfUser?.connection_provider }}</p>
+              <p>Date: {{ pdfUser?.installation_date | date }}</p>
+            </div>
+          </div>
+
+          <hr>
+
+          <table class="table table-sm">
+            <tr>
+              <td>Internet Fee</td>
+              <td class="text-end">Rs. {{ pdfUser?.internet_package_fee }}</td>
+            </tr>
+            <tr>
+              <td>Cable Fee</td>
+              <td class="text-end">Rs. {{ pdfUser?.cable_package_fee }}</td>
+            </tr>
+            <tr>
+              <td>Discount</td>
+              <td class="text-end text-danger">
+                - Rs. {{ pdfUser?.internet_discount || 0 }}
+              </td>
+            </tr>
+            <tr class="fw-bold border-top">
+              <td>Total</td>
+              <td class="text-end text-primary">
+                Rs.
+                {{
+                (pdfUser?.internet_package_fee || 0) +
+                (pdfUser?.cable_package_fee || 0) -
+                (pdfUser?.internet_discount || 0)
+                }}
+              </td>
+            </tr>
+          </table>
+
+          <div class="text-center mt-4 small text-muted">
+            Thank you for choosing us!
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closePdfModal()">
+          Close
+        </button>
+        <button class="btn btn-primary" (click)="downloadPDF()">
+          Download PDF
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div> -->
+
+
+
+
+<div class="modal fade show d-block" *ngIf="showPdfModal">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+
+      <!-- ==========================================
+      HEADER – subtle, clean, minimal
+      ========================================== -->
+      <div class="modal-header border-0 px-5 pt-4 pb-2">
+        <h5 class="modal-title fw-semibold text-secondary m-0">
+          <span class="text-primary">PDF</span> Preview
+        </h5>
+        <button class="btn-close" (click)="closePdfModal()"></button>
+      </div>
+
+      <!-- ==========================================
+      BODY – PDF content area
+      ========================================== -->
+      <div class="modal-body px-5 pb-4">
+
+        <!-- PDF CONTENT – captured for download -->
+        <div #pdfContent class="pdf-container">
+
+          <!-- WATERMARK (light & elegant) -->
+          <div class="watermark">Ranjha7Star</div>
+
+          <!-- ==========================================
+  HEADER: Company Logo + Invoice Meta
+  ========================================== -->
+          <div class="invoice-header">
+            <div class="brand">
+              <img src="assets/ranjha-logo3.jpeg" alt="Ranjha7Star" class="logo">
+              <div>
+                <h1>Ranjha7Star</h1>
+                <span>Cable &amp; Internet Services</span>
+              </div>
+            </div>
+            <div class="invoice-meta">
+              <div class="meta-item">
+                <span class="label">Invoice #</span>
+                <span class="value">{{ pdfUser?.internet_id || '0000' }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="label">Date</span>
+                <span class="value">{{ pdfUser?.installation_date | date : 'dd/MM/yyyy' }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="label">Due Date</span>
+                <span class="value">{{ pdfUser?.installation_date | date : 'dd/MM/yyyy' : '+7' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ==========================================
+  ADDRESS & CUSTOMER DETAILS
+  ========================================== -->
+          <div class="address-section">
+            <div class="company-address">
+              <strong>Ranjha7Star Cable &amp; Internet</strong>
+              <p>123 Main Street, Lahore, Pakistan</p>
+              <p>Phone: +92-300-1234567</p>
+              <p>Email: ranjha7star.com</p>
+            </div>
+            <div class="customer-address">
+              <strong>Bill To:</strong>
+              <p>{{ pdfUser?.user_name }}</p>
+              <p>{{ pdfUser?.address }}</p>
+              <p>Phone: {{ pdfUser?.phone_no }}</p>
+              <p>Connection: {{ pdfUser?.connection_type }} | Provider: {{ pdfUser?.connection_provider }}</p>
+            </div>
+          </div>
+
+          <!-- ==========================================
+  INVOICE LINE ITEMS (TABLE)
+  ========================================== -->
+          <table class="invoice-items">
+            <thead>
+              <tr>
+                <th class="col-sno">#</th>
+                <th class="col-desc">Description</th>
+                <th class="col-qty">Qty</th>
+                <th class="col-price">Unit Price</th>
+                <th class="col-amount">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="col-sno">1</td>
+                <td class="col-desc">Internet Package ({{ pdfUser?.select_package }})</td>
+                <td class="col-qty">1</td>
+                <td class="col-price">Rs. {{ pdfUser?.internet_package_fee }}</td>
+                <td class="col-amount">Rs. {{ pdfUser?.internet_package_fee }}</td>
+              </tr>
+              <tr>
+                <td class="col-sno">2</td>
+                <td class="col-desc">Cable TV Subscription</td>
+                <td class="col-qty">1</td>
+                <td class="col-price">Rs. {{ pdfUser?.cable_package_fee }}</td>
+                <td class="col-amount">Rs. {{ pdfUser?.cable_package_fee }}</td>
+              </tr>
+               <tr>
+                <td class="col-sno">3</td>
+                <td class="col-desc">Wire</td>
+                <td class="col-qty">1</td>
+                <td class="col-price">Rs. {{ pdfUser?.wire }}</td>
+                <td class="col-amount">Rs. {{ pdfUser?.wire }}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- ==========================================
+  SUMMARY / TOTALS
+  ========================================== -->
+          <div class="summary-section">
+            <div class="summary-left">
+              <div class="payment-terms">
+                <strong>Payment Method</strong>
+                <p>Bank Transfer / JazzCash / EasyPaisa</p>
+                <p class="bank-details">IBAN: PK36HABB0012345678901</p>
+                <p class="bank-details">Account Title: Ranjha7Star (Pvt) Ltd.</p>
+              </div>
+            </div>
+            <div class="summary-right">
+              <div class="total-row">
+                <span>Subtotal</span>
+                <span>
+                  Rs.
+                  {{
+                  (pdfUser?.internet_package_fee || 0) +
+                  (pdfUser?.cable_package_fee || 0)
+                  }}
+                </span>
+              </div>
+              <div class="total-row discount">
+                <span>Discount</span>
+                <span>– Rs. {{ pdfUser?.internet_discount || 0 }}</span>
+              </div>
+              <div class="total-row grand-total">
+                <span>Grand Total</span>
+                <span>
+                  Rs.
+                  {{
+                  (pdfUser?.internet_package_fee || 0)
+                  }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ==========================================
+  FOOTER
+  ========================================== -->
+          <div class="invoice-footer">
+            <p>Thank you for choosing Ranjha7Star! We value your trust.</p>
+            <span>This is a system-generated invoice. For queries, contact support.</span>
+          </div>
+
+        </div>
+        <!-- /pdf-container -->
+
+      </div>
+      <!-- /modal-body -->
+
+      <!-- ==========================================
+      FOOTER – action buttons
+      ========================================== -->
+      <div class="modal-footer border-0 px-5 pb-4 pt-2">
+        <button class="btn btn-outline-secondary btn-sm rounded-3 px-4" (click)="closePdfModal()">
+          Close
+        </button>
+        <button class="btn btn-primary btn-sm rounded-3 px-4" (click)="downloadPDF()">
+          <svg class="me-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Download PDF
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

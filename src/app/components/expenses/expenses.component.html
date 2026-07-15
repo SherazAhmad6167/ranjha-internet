@@ -36,7 +36,35 @@
                         (input)="onFilterChange()" />
                 </div>
             </div>
-            <div class="row d-flex justify-content-end">
+            <div class="row d-flex justify-content-between">
+                  <div class="col-md-3">
+                    <label>Operator Name</label>
+                    <select class="form-control" [(ngModel)]="operatorName" (change)="onFilterChange()">
+                        <option value="" disabled>Select Operator</option>
+                        <option value="">All</option>
+                        <option *ngFor="let area of internetOperators" [value]="area.operator_name">
+                            {{ area.operator_name | titlecase }}
+                        </option>
+                    </select>
+                </div>
+                 <div class="col-md-3">
+                    <label>Select Month</label>
+                    <select class="form-control" [(ngModel)]="selectedMonth" (change)="onFilterChange()">
+                        <option [ngValue]="null">All Months</option>
+                        <option value="january">January</option>
+                        <option value="february">February</option>
+                        <option value="march">March</option>
+                        <option value="april">April</option>
+                        <option value="may">May</option>
+                        <option value="june">June</option>
+                        <option value="july">July</option>
+                        <option value="august">August</option>
+                        <option value="september">September</option>
+                        <option value="october">October</option>
+                        <option value="november">November</option>
+                        <option value="december">December</option>
+                    </select>
+                </div>
                 <div class="col-md-2">
                     <label>Entries</label>
                     <select class="form-control" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
@@ -60,6 +88,7 @@
                             <th>Petrol</th>
                             <th>Food</th>
                             <th>Stationary</th>
+                            <th>Salary</th>
                             <th>Other Reason</th>
                             <th>Other Amount</th>
                             <th>Electricity</th>
@@ -79,6 +108,7 @@
                             <td>{{ user.petrol || '-' }}</td>
                             <td>{{ user.food || '-' }}</td>
                             <td>{{ user.stationary || '-' }}</td>
+                            <td>{{ user.salary || '-' }}</td>
                             <td>{{ user.other_reason | titlecase }}</td>
                             <td>{{ user.other_amount || '-' }}</td>
                             <td>{{ user.electricity || '-' }}</td>
@@ -155,9 +185,15 @@
 
 <div class="container-fluid pt-5">
 
-       <div class="row mb-3">
+      <div class="row mb-3">
         <div class="col-md-3">
-            <input type="date" class="form-control" [(ngModel)]="selectedDate" (change)="filterByDate()" />
+            <label>From Date</label>
+            <input type="date" class="form-control" [(ngModel)]="fromDate" (change)="filterByDateRange()" />
+        </div>
+
+        <div class="col-md-3">
+            <label>To Date</label>
+            <input type="date" class="form-control" [(ngModel)]="toDate" (change)="filterByDateRange()" />
         </div>
     </div>
     <!-- Summary Section -->

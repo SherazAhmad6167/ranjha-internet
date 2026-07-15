@@ -161,6 +161,41 @@
                     </div>
                 </div>
 
+
+                <div *ngIf="connectionStatus === 'close'" class="col-xl-4 m-0">
+                    <label for="validationDefault01" class="form-label">Closed Operator Name</label>
+
+                    <select class="form-control" formControlName="close_operator_name" [ngClass]="{
+      'is-invalid': userForm.get('close_operator_name')?.invalid && userForm.get('close_operator_name')?.touched,
+      'blink-border': userForm.get('close_operator_name')?.invalid && userForm.get('close_operator_name')?.touched
+    }">
+
+                        <option value="" disabled selected>Select Operator</option>
+
+                        <option value="Abu Bakar">Abu Bakar</option>
+                        <option value="Usman">Usman</option>
+                        <option value="Ali Raza">Ali Raza</option>
+                        <option value="Ali Hassan">Ali Hassan</option>
+                        <option value="Umar">Umar</option>
+                        <option value="Shahzad">Shahzad</option>
+                        <option value="Sami Khokhar">Sami Khokhar</option>
+                        <option value="Meni">Meni</option>
+                        <option value="Waseem">Waseem</option>
+                        <option value="Subhani">Subhani</option>
+                        <option value="Sami">Sami</option>
+                        <option value="Ali Hassan">Ali Hassan</option>
+                        <option value="Mithu">Mithu</option>
+
+                    </select>
+
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('close_operator_name')?.hasError('required') && userForm.get('close_operator_name')?.touched;">
+                            <span class="text-danger">Closed Operator Name is required</span>
+                        </ng-container>
+                    </div>
+                </div>
+
                 <div *ngIf="connectionStatus === 'reopen'" class="col-md-4 m-0">
                     <label for="validationDefault03" class="form-label">Reopen Date</label>
                     <input type="date" class="form-control" formControlName="reopen_date"
@@ -184,6 +219,41 @@
                         <ng-container
                             *ngIf="userForm.get('reopened_by')?.hasError('required') && userForm.get('reopened_by')?.touched; ">
                             <span class="text-danger" id="reopened_by">Reopened By is required</span>
+                        </ng-container>
+                    </div>
+                </div>
+
+
+                 <div *ngIf="connectionStatus === 'reopen'" class="col-xl-4 m-0">
+                    <label for="validationDefault01" class="form-label">Reopen Operator Name</label>
+
+                    <select class="form-control" formControlName="reopen_operator_name" [ngClass]="{
+      'is-invalid': userForm.get('reopen_operator_name')?.invalid && userForm.get('reopen_operator_name')?.touched,
+      'blink-border': userForm.get('reopen_operator_name')?.invalid && userForm.get('reopen_operator_name')?.touched
+    }">
+
+                        <option value="" disabled selected>Select Operator</option>
+
+                        <option value="Abu Bakar">Abu Bakar</option>
+                        <option value="Usman">Usman</option>
+                        <option value="Ali Raza">Ali Raza</option>
+                        <option value="Ali Hassan">Ali Hassan</option>
+                        <option value="Umar">Umar</option>
+                        <option value="Shahzad">Shahzad</option>
+                        <option value="Sami Khokhar">Sami Khokhar</option>
+                        <option value="Meni">Meni</option>
+                        <option value="Waseem">Waseem</option>
+                        <option value="Subhani">Subhani</option>
+                        <option value="Sami">Sami</option>
+                        <option value="Ali Hassan">Ali Hassan</option>
+                        <option value="Mithu">Mithu</option>
+
+                    </select>
+
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('reopen_operator_name')?.hasError('required') && userForm.get('reopen_operator_name')?.touched;">
+                            <span class="text-danger">Reopen Operator Name is required</span>
                         </ng-container>
                     </div>
                 </div>

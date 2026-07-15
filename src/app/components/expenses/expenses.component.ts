@@ -8,6 +8,8 @@ import {
   Firestore,
   getDoc,
   getDocs,
+  orderBy,
+  query,
 } from '@angular/fire/firestore';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -38,6 +40,23 @@ export class ExpensesComponent {
 totalRecovery: number = 0;
 totalExpenses: number = 0;
 totalProfit: number = 0;
+ operatorName: string = '';
+ internetOperators: any[] = [];
+  selectedMonth: string | null = null;
+  monthMap: any = {
+  january: '01',
+  february: '02',
+  march: '03',
+  april: '04',
+  may: '05',
+  june: '06',
+  july: '07',
+  august: '08',
+  september: '09',
+  october: '10',
+  november: '11',
+  december: '12',
+};
 
   constructor(
     private modalService: NgbModal,
@@ -47,6 +66,25 @@ totalProfit: number = 0;
 
   ngOnInit(): void {
     this.loadExpenses();
+    this.loadOperatorName();
+  }
+
+
+    async loadOperatorName() {
+    try {
+      const ref = doc(this.firestore, 'operatorName', 'operatorNameDoc');
+      const snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        this.internetOperators = snap.data()?.['operatorNames'] || [];
+
+        this.internetOperators.sort((a: any, b: any) => {
+          return a.operator_name.localeCompare(b.operator_name);
+        });
+      }
+    } catch (error) {
+      console.error('Error loading internet operators', error);
+    }
   }
 
   async loadExpenses() {
@@ -54,7 +92,9 @@ totalProfit: number = 0;
 
     try {
       const usersRef = collection(this.firestore, 'expenses');
-      const snapshot = await getDocs(usersRef);
+       const q = query(usersRef, orderBy('createdAt', 'desc'));
+
+    const snapshot = await getDocs(q);
 
       this.users = snapshot.docs.map((docSnap) => {
         const data: any = docSnap.data();
@@ -64,6 +104,9 @@ totalProfit: number = 0;
           (data.petrol || 0) +
           (data.food || 0) +
           (data.stationary || 0) +
+          (Number(data.electricity) || 0) +
+          (Number(data.motorcycle) || 0) +
+          (Number(data.salary) || 0) +
           (data.other_amount || 0);
 
         // ✅ Calculate profit
@@ -140,11 +183,24 @@ totalProfit: number = 0;
         user.recovey_officer?.toLowerCase().includes(term) ||
         user.date?.includes(term);
 
-      return matchesSearch;
+         const matchesOperator =
+        !this.operatorName || user.recovery_officer === this.operatorName;
+
+       let matchesMonth = true;
+
+    if (this.selectedMonth) {
+      const selectedMonthNumber = this.monthMap[this.selectedMonth]; // e.g. "05"
+      const userMonth = user.date?.split('-')[1]; // "05"
+
+      matchesMonth = userMonth === selectedMonthNumber;
+    }
+
+    return matchesSearch && matchesOperator && matchesMonth;
     });
 
     this.currentPage = 1;
     this.updateTotalPages();
+    this.calculateTotals(this.filteredUsers);
   }
 
   openExpenseModal(userData?: any) {
@@ -216,6 +272,10 @@ totalProfit: number = 0;
     }
   }
 
+  
+  fromDate: string = '';
+toDate: string = '';
+
   filterByDate() {
   if (!this.selectedDate) {
     // agar date select nahi hai to sab ka total dikhao
@@ -230,6 +290,37 @@ totalProfit: number = 0;
   });
 
   // ✅ Calculate totals for filtered data
+  this.calculateTotals(this.filteredUsers);
+}
+
+filterByDateRange() {
+  if (!this.fromDate && !this.toDate) {
+    this.filteredUsers = this.users;
+    this.calculateTotals(this.users);
+    return;
+  }
+
+  this.filteredUsers = this.users.filter((user: any) => {
+    const userDate = new Date(user.date);
+
+    const from = this.fromDate ? new Date(this.fromDate) : null;
+    const to = this.toDate ? new Date(this.toDate) : null;
+
+    if (from && to) {
+      return userDate >= from && userDate <= to;
+    }
+
+    if (from) {
+      return userDate >= from;
+    }
+
+    if (to) {
+      return userDate <= to;
+    }
+
+    return true;
+  });
+
   this.calculateTotals(this.filteredUsers);
 }
 

@@ -19,3 +19,47 @@
     justify-content: center;
     z-index: 1000;
   }
+
+
+  .cnic-box {
+  height: 120px;
+  border: 2px dashed #ccc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: gray;
+  font-size: 14px;
+}
+
+/* Print Friendly */
+@media print {
+  .container {
+    max-width: 100%;
+  }
+}
+
+
+#pdfContent {
+  position: relative;
+}
+
+.watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.08; /* 🔥 light watermark */
+  z-index: 0;
+  pointer-events: none;
+}
+
+.watermark img {
+  width: 300px; /* adjust size */
+  height: auto;
+}
+
+/* Ensure content stays above watermark */
+#pdfContent > *:not(.watermark) {
+  position: relative;
+  z-index: 1;
+}

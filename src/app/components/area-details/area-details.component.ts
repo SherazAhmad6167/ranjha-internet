@@ -90,7 +90,7 @@ export class AreaDetailsComponent {
       (user) =>
         user.city?.toLowerCase().includes(term) ||
         user.country?.toLowerCase().includes(term) ||
-        user.sublocality?.includes(term),
+        user.sublocality?.toLowerCase().includes(term),
     );
 
     this.currentPage = 1; // reset to first page after search

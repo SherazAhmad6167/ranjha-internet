@@ -69,6 +69,21 @@
                 </div>
 
 
+                <div class="col-xl-4 m-0">
+                    <label for="validationDefault01" class="form-label">Wire</label>
+                    <input type="text" class="form-control"
+                        [ngClass]="{'is-invalid': userForm.get('wire')?.invalid && userForm.get('wire')?.touched, 'blink-border': userForm.get('wire')?.invalid && userForm.get('wire')?.touched}"
+                        formControlName="wire" id="validationDefault01" placeholder="Enter Wire Length">
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('wire')?.hasError('required') && userForm.get('wire')?.touched;">
+                            <span class="text-danger">Wire is required</span>
+                        </ng-container>
+                    </div>
+
+                </div>
+
+
                 <div class="col-md-4 m-0">
                     <div class="card-title">Sublocality</div>
                     <div class="card-body">
@@ -90,6 +105,27 @@
                 </div>
 
 
+
+
+                <div class="col-md-4 m-0">
+                    <div class="card-title">Sub Area</div>
+                    <div class="card-body">
+                        <select
+                            [ngClass]="{'is-invalid': userForm.get('sub_area')?.invalid && userForm.get('sub_area')?.touched, 'blink-border': userForm.get('sub_area')?.invalid && userForm.get('sub_area')?.touched}"
+                            class="form-control" formControlName="sub_area">
+                            <option value="" disabled>Select a Sub Area</option>
+                            <option *ngFor="let area of internetSubAreas" [value]="area.name">
+                                {{ area.name | titlecase }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="extra-space">
+                        <ng-container
+                            *ngIf="userForm.get('sub_area')?.hasError('required') && userForm.get('sub_area')?.touched">
+                            <span class="text-danger">Select a Sub Area</span>
+                        </ng-container>
+                    </div>
+                </div>
 
 
 
@@ -126,13 +162,13 @@
                 </div>
 
                 <div class="col-md-4 m-0">
-                    <label for="phone_no" class="form-label">Phone No</label>
-                    <input type="tel" class="form-control" formControlName="phone_no"
-                        [ngClass]="{'is-invalid': userForm.get('phone_no')?.invalid && userForm.get('phone_no')?.touched, 'blink-border': userForm.get('phone_no')?.invalid && userForm.get('phone_no')?.touched}"
+                    <label for="mobile_no" class="form-label">Phone No</label>
+                    <input type="tel" class="form-control" formControlName="mobile_no"
+                        [ngClass]="{'is-invalid': userForm.get('mobile_no')?.invalid && userForm.get('mobile_no')?.touched, 'blink-border': userForm.get('mobile_no')?.invalid && userForm.get('mobile_no')?.touched}"
                         id="validationDefault04" placeholder="Enter Phone Number">
                     <div class="extra-space">
                         <ng-container>
-                            <span *ngIf="userForm.get('phone_no')?.hasError('pattern')" class="text-danger"
+                            <span *ngIf="userForm.get('mobile_no')?.hasError('pattern')" class="text-danger"
                                 id="phone_num">
                                 Phone No must start with "+"
                             </span>
@@ -392,8 +428,10 @@
                         [value]="locationText" />
 
 
-                    <span class="btn btn-link location" (click)="getCurrentLocation()" title="Get current location">
-                        📍
+                    <span class="btn btn-link location position-absolute top-50 end-0 translate-middle-y me-2"
+                        (click)="getCurrentLocation()" title="Get current location">
+
+                        <i class="fa-solid fa-location-dot"></i>
                     </span>
 
                 </div>

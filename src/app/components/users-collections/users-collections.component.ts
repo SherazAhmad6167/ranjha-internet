@@ -81,6 +81,10 @@ export class UsersCollectionsComponent {
   isBulkSubmitting = false;
   userForm: FormGroup;
   internetOriginalPrice = 0;
+  selectedMonth: string | null = null;
+  paymentRecievedTemplate: any;
+  paymentReminderTemplate: any;
+  overdue: any;
 
   constructor(
     private firestore: Firestore,
@@ -94,7 +98,7 @@ export class UsersCollectionsComponent {
     });
   }
 
-  ngOnInit(): void {
+  async ngOnInit() {
     this.userName = localStorage.getItem('username') || '';
     this.role = localStorage.getItem('role') || '';
 
@@ -108,7 +112,9 @@ export class UsersCollectionsComponent {
     this.loadUsers();
     this.loadCompanyDetails();
     this.loadInternetPackages();
-
+    this.paymentRecievedTemplate = await this.getTemplate('paymentReceived');
+    this.paymentReminderTemplate = await this.getTemplate('paymentReminder');
+    this.overdue = await this.getTemplate('overdue');
     // INTERNET PACKAGE
     this.userForm.get('select_package')?.valueChanges.subscribe((pkgName) => {
       const pkg = this.internetPackages.find((p) => p.package_name === pkgName);
@@ -151,22 +157,22 @@ export class UsersCollectionsComponent {
     }
   }
 
-   async loadInternetAreas() {
-  try {
-    const ref = doc(this.firestore, 'internetArea', 'internetAreaDoc');
-    const snap = await getDoc(ref);
+  async loadInternetAreas() {
+    try {
+      const ref = doc(this.firestore, 'internetArea', 'internetAreaDoc');
+      const snap = await getDoc(ref);
 
-    if (snap.exists()) {
-      this.internetAreas = snap.data()?.['internetAreas'] || [];
+      if (snap.exists()) {
+        this.internetAreas = snap.data()?.['internetAreas'] || [];
 
-      this.internetAreas.sort((a: any, b: any) => {
-        return a.sublocality.localeCompare(b.sublocality);
-      });
+        this.internetAreas.sort((a: any, b: any) => {
+          return a.sublocality.localeCompare(b.sublocality);
+        });
+      }
+    } catch (error) {
+      console.error('Error loading internet areas', error);
     }
-  } catch (error) {
-    console.error('Error loading internet areas', error);
   }
-}
 
   get pagedUsers() {
     const start = (this.currentPage - 1) * this.pageSize;
@@ -206,6 +212,8 @@ export class UsersCollectionsComponent {
             advancePayments: advances || [],
             select_package: user['select_package'],
             internet_package_fee: user['internet_package_fee'],
+            extra_advance: user['extra_advance'] || 0,
+            phone_no: user['phone_no'],
           };
 
           if (bill.status === 'paid') {
@@ -218,14 +226,16 @@ export class UsersCollectionsComponent {
               bill_id: bill.bill_id,
               collected_amount: bill.collected_amount,
               remaining_amount: bill.remaining_amount || 0,
+              extra_advance: user['extra_advance'] || 0,
               collected_method: bill.collected_method,
               collected_by: bill.collected_by,
               collected_date: bill.collected_date,
               collected_bank: bill.collected_bank,
               advancePayments: advances || [],
+              phone_no: user['phone_no'],
             });
           } else {
-            const key = `${user['internet_id']}`;
+            const key = `${user['internet_id']}_${bill.month}_${bill.year}`;
 
             if (!unpaidMap.has(key)) {
               unpaidMap.set(key, {
@@ -235,12 +245,27 @@ export class UsersCollectionsComponent {
                 months: [`${bill.month} ${bill.year}`],
                 bills: [bill],
                 advancePayments: advances || [],
+
               });
             } else {
+              // const existing = unpaidMap.get(key);
+              // existing.amount = bill.amount;
+              // existing.months.push(`${bill.month} ${bill.year}`);
+              // existing.bills.push(bill);
               const existing = unpaidMap.get(key);
-              existing.amount = bill.amount;
-              existing.months.push(`${bill.month} ${bill.year}`);
+
+              // ✅ amount add karo
+              existing.amount += bill.amount;
+
+              // ✅ month already same hai (key me hai), so no need push
+
+              // ✅ bills push karo
               existing.bills.push(bill);
+
+              // ✅ type check karo
+              if (existing.connection_type !== bill.type) {
+                existing.connection_type = 'both';
+              }
             }
           }
         });
@@ -261,6 +286,7 @@ export class UsersCollectionsComponent {
             sublocality: user['sublocality'] || '',
             connection_type: user['connection_type'],
             createdAt: adv.collected_date,
+            phone_no: user['phone_no'],
 
             month: advanceMonthText,
             year: '',
@@ -395,6 +421,8 @@ export class UsersCollectionsComponent {
           ? [user.sublocality]
           : [];
 
+      const matchesMonth =
+        !this.selectedMonth || user.month?.toLowerCase() === this.selectedMonth;
       let matchesSublocality = true;
 
       if (this.role === 'operator') {
@@ -416,7 +444,9 @@ export class UsersCollectionsComponent {
           !this.sublocality || userSublocalities.includes(this.sublocality);
       }
 
-      return matchesSearch && matchesStatus && matchesSublocality;
+      return (
+        matchesSearch && matchesStatus && matchesSublocality && matchesMonth
+      );
     });
 
     // this.currentPage = 1;
@@ -530,7 +560,7 @@ export class UsersCollectionsComponent {
       });
 
       if (updated) {
-         updateDoc(userDocRef, { bills });
+        updateDoc(userDocRef, { bills });
       }
 
       if (!navigator.onLine) {
@@ -555,6 +585,7 @@ export class UsersCollectionsComponent {
       month: bill.month,
       year: bill.year,
       address: this.selectedBill.address,
+      phone_no: this.selectedBill.phone_no,
       advance: '',
       totalAmount: bill.amount,
       method: bill.collected_method ?? 'cash',
@@ -576,13 +607,24 @@ export class UsersCollectionsComponent {
   prepareReceipt() {
     const bill = this.selectedBill;
 
+    let totalAmount = 0;
+
+    if (bill.bills && bill.bills.length) {
+      bill.bills.forEach((b: any) => {
+        totalAmount += Number(b.amount || 0);
+      });
+    } else {
+      totalAmount = Number(bill.amount) || 0;
+    }
+
     this.receiptData = {
       name: bill.user_name,
       month: bill.month,
       year: bill.year,
       address: this.selectedBill.address,
       advance: '',
-      totalAmount: Number(bill.amount) || 0,
+      totalAmount,
+      phone_no: this.selectedBill.phone_no,
       collectedAmount: Number(bill.collected_amount) || 0,
       remainingAmount: Number(bill.remaining_amount) || 0,
       internetId: bill.internet_id,
@@ -792,13 +834,12 @@ export class UsersCollectionsComponent {
     this.currentPage = page;
   }
 
-  
-
   packageFee: any;
   openAdvanceModal(row: any) {
     this.selectedBill = row;
 
-    this.packageFee = Number(row.internet_package_fee) || Number(row.cable_package_fee);
+    this.packageFee =
+      Number(row.internet_package_fee) || Number(row.cable_package_fee);
     console.log('Selected Bill MOnth:', row.month, row.year);
     this.nextMonths = this.getNextMonths(row.month, row.year, 12);
 
@@ -824,23 +865,21 @@ export class UsersCollectionsComponent {
       const userData = snap.data();
       const advancePayments = userData['advancePayments'] || [];
 
-        const totalBill =
-      this.advanceForm.months.length * this.packageFee;
+      const totalBill = this.advanceForm.months.length * this.packageFee;
 
-    const paidAmount = Number(this.advanceForm.amount);
+      const paidAmount = Number(this.advanceForm.amount);
 
-    // ✅ extra advance
-    let extraAdvance = 0;
+      // ✅ extra advance
+      let extraAdvance = 0;
 
-    if (paidAmount > totalBill) {
-      extraAdvance = paidAmount - totalBill;
-    }
+      if (paidAmount > totalBill) {
+        extraAdvance = paidAmount - totalBill;
+      }
 
-    const advanceAmountToSave =
-      paidAmount > totalBill ? totalBill : paidAmount;
+      const advanceAmountToSave =
+        paidAmount > totalBill ? totalBill : paidAmount;
 
-    const existingExtraAdvance =
-      Number(userData['extra_advance']) || 0;
+      const existingExtraAdvance = Number(userData['extra_advance']) || 0;
 
       advancePayments.push({
         advance_id: crypto.randomUUID(),
@@ -857,8 +896,10 @@ export class UsersCollectionsComponent {
         isAdvance: true,
       });
 
-      updateDoc(ref, { advancePayments,
-      extra_advance: existingExtraAdvance + extraAdvance, });
+      updateDoc(ref, {
+        advancePayments,
+        extra_advance: existingExtraAdvance + extraAdvance,
+      });
 
       this.showAdvanceModal = false;
       this.prepareAdvanceReceipt();
@@ -996,69 +1037,118 @@ export class UsersCollectionsComponent {
 
       const userData = userSnap.data();
       const bills = userData['bills'] || [];
+      let existingAdvance = Number(userData['extra_advance'] || 0);
+      let newAdvanceTotal = existingAdvance;
       let updatedSelectedBill: any = null;
 
+      // if (this.selectedBill.status === 'unpaid' && this.selectedBill.bills) {
+      //   bills.forEach((bill: any) => {
+      //     const match = this.selectedBill.bills.some((b: any) =>
+      //       b.bill_id
+      //         ? b.bill_id === bill.bill_id
+      //         : b.month === bill.month &&
+      //           b.year === bill.year &&
+      //           b.amount === bill.amount,
+      //     );
+
+      //     if (match) {
+      //       const paidNow = Number(this.collectionForm.collected_amount || 0);
+      //       const total = Number(bill.amount);
+      //       const alreadyPaid = Number(bill.collected_amount || 0);
+
+      //       const newCollected = alreadyPaid + paidNow;
+      //       const remaining = total - newCollected;
+      //       let extraAdvance = 0;
+
+      //       if (newCollected > total) {
+      //         extraAdvance = newCollected - total;
+
+      //         // 🔥 ADD THIS
+      //         newAdvanceTotal += extraAdvance;
+      //       }
+
+      //       bill.collected_amount = newCollected;
+      //       bill.remaining_amount = remaining > 0 ? remaining : 0;
+      //       bill.status = 'paid';
+      //       bill.collected_by = this.userName;
+      //       bill.collected_date = new Date();
+      //       bill.collected_method = this.collectionForm.method;
+      //       bill.collected_id = this.collectionForm.collected_id;
+      //       bill.collected_bank =
+      //         this.collectionForm.method === 'bank'
+      //           ? this.collectionForm.bank_name
+      //           : null;
+      //       updatedSelectedBill = { ...bill };
+      //       // 🔹 NEW ADDITION: adjust payment against previous pending bills
+      //       let adjustAmount = Number(
+      //         this.collectionForm.collected_amount || 0,
+      //       );
+
+      //       bills
+      //         .filter(
+      //           (b: any) =>
+      //             b.type === bill.type &&
+      //             b.remaining_amount > 0 &&
+      //             b.createdAt.toDate() < bill.createdAt.toDate(),
+      //         )
+      //         .sort(
+      //           (a: any, b: any) => a.createdAt.toDate() - b.createdAt.toDate(),
+      //         )
+      //         .forEach((prevBill: any) => {
+      //           if (adjustAmount <= 0) return;
+
+      //           const reduce = Math.min(
+      //             prevBill.remaining_amount,
+      //             adjustAmount,
+      //           );
+      //           prevBill.remaining_amount -= reduce;
+      //           adjustAmount -= reduce;
+
+      //           if (prevBill.remaining_amount === 0) {
+      //             prevBill.status = 'paid';
+      //           }
+      //         });
+      //     }
+      //   });
+      // }
       if (this.selectedBill.status === 'unpaid' && this.selectedBill.bills) {
-        bills.forEach((bill: any) => {
-          const match = this.selectedBill.bills.some((b: any) =>
-            b.bill_id
-              ? b.bill_id === bill.bill_id
-              : b.month === bill.month &&
-                b.year === bill.year &&
-                b.amount === bill.amount,
-          );
+        let remainingPayment = Number(
+          this.collectionForm.collected_amount || 0,
+        );
 
-          if (match) {
-            const paidNow = Number(this.collectionForm.collected_amount || 0);
-            const total = Number(bill.amount);
-            const alreadyPaid = Number(bill.collected_amount || 0);
+        this.selectedBill.bills.forEach((selected: any) => {
+          const bill = bills.find((b: any) => b.bill_id === selected.bill_id);
+          if (!bill || remainingPayment <= 0) return;
 
-            const newCollected = alreadyPaid + paidNow;
-            const remaining = total - newCollected;
+          const total = Number(bill.amount);
+          const alreadyPaid = Number(bill.collected_amount || 0);
+          const pending = total - alreadyPaid;
 
-            bill.collected_amount = newCollected;
-            bill.remaining_amount = remaining > 0 ? remaining : 0;
+          const pay = Math.min(pending, remainingPayment);
+
+          bill.collected_amount = alreadyPaid + pay;
+          bill.remaining_amount = total - bill.collected_amount;
+
+          if (bill.remaining_amount === 0) {
             bill.status = 'paid';
-            bill.collected_by = this.userName;
-            bill.collected_date = new Date();
-            bill.collected_method = this.collectionForm.method;
-            bill.collected_id = this.collectionForm.collected_id;
-            bill.collected_bank =
-              this.collectionForm.method === 'bank'
-                ? this.collectionForm.bank_name
-                : null;
-            updatedSelectedBill = { ...bill };
-            // 🔹 NEW ADDITION: adjust payment against previous pending bills
-            let adjustAmount = Number(
-              this.collectionForm.collected_amount || 0,
-            );
-
-            bills
-              .filter(
-                (b: any) =>
-                  b.type === bill.type &&
-                  b.remaining_amount > 0 &&
-                  b.createdAt.toDate() < bill.createdAt.toDate(),
-              )
-              .sort(
-                (a: any, b: any) => a.createdAt.toDate() - b.createdAt.toDate(),
-              )
-              .forEach((prevBill: any) => {
-                if (adjustAmount <= 0) return;
-
-                const reduce = Math.min(
-                  prevBill.remaining_amount,
-                  adjustAmount,
-                );
-                prevBill.remaining_amount -= reduce;
-                adjustAmount -= reduce;
-
-                if (prevBill.remaining_amount === 0) {
-                  prevBill.status = 'paid';
-                }
-              });
           }
+
+          remainingPayment -= pay;
+
+          bill.collected_by = this.userName;
+          bill.collected_date = new Date();
+          bill.collected_method = this.collectionForm.method;
+          bill.collected_id = this.collectionForm.collected_id;
+          bill.collected_bank =
+            this.collectionForm.method === 'bank'
+              ? this.collectionForm.bank_name
+              : null;
         });
+
+        // ✅ extra advance
+        if (remainingPayment > 0) {
+          newAdvanceTotal += remainingPayment;
+        }
       } else {
         bills.forEach((bill: any) => {
           if (
@@ -1072,6 +1162,14 @@ export class UsersCollectionsComponent {
 
             const newCollected = alreadyPaid + paidNow;
             const remaining = total - newCollected;
+            let extraAdvance = 0;
+
+            if (newCollected > total) {
+              extraAdvance = newCollected - total;
+
+              // 🔥 ADD THIS
+              newAdvanceTotal += extraAdvance;
+            }
 
             bill.collected_amount = newCollected;
             bill.remaining_amount = remaining > 0 ? remaining : 0;
@@ -1120,7 +1218,10 @@ export class UsersCollectionsComponent {
         });
       }
 
-      updateDoc(userDocRef, { bills });
+      updateDoc(userDocRef, {
+        bills,
+        extra_advance: newAdvanceTotal,
+      });
 
       if (updatedSelectedBill) {
         this.selectedBill = {
@@ -1221,16 +1322,16 @@ export class UsersCollectionsComponent {
           }
         });
 
-         updateDoc(userDocRef, { bills });
+        updateDoc(userDocRef, { bills });
       }
 
-       if (!navigator.onLine) {
-          this.toastr.info(
-            'Saved offline. Will sync when connection is restored.',
-          );
-        } else {
-          this.toastr.success('Selected bills collected successfully');
-        }
+      if (!navigator.onLine) {
+        this.toastr.info(
+          'Saved offline. Will sync when connection is restored.',
+        );
+      } else {
+        this.toastr.success('Selected bills collected successfully');
+      }
 
       this.isBulkMode = false;
       this.selectedBulkBills = [];
@@ -1295,19 +1396,19 @@ export class UsersCollectionsComponent {
       });
 
       // 🔥 Firestore Update
-       updateDoc(userRef, {
+      updateDoc(userRef, {
         select_package: newPackage,
         internet_package_fee: newFee,
         bills: updatedBills,
       });
 
-       if (!navigator.onLine) {
-          this.toastr.info(
-            'Saved offline. Will sync when connection is restored.',
-          );
-        } else {
-          this.toastr.success('Bill updated successfully');
-        }
+      if (!navigator.onLine) {
+        this.toastr.info(
+          'Saved offline. Will sync when connection is restored.',
+        );
+      } else {
+        this.toastr.success('Bill updated successfully');
+      }
 
       this.showUpdateModal = false;
       this.loadUsers(); // reload list
@@ -1317,5 +1418,123 @@ export class UsersCollectionsComponent {
     } finally {
       this.isSubmitting = false;
     }
+  }
+
+  async getTemplate(type: string): Promise<string> {
+    const ref = doc(this.firestore, `messageTemplates/${type}`);
+    const snap = await getDoc(ref);
+
+    if (snap.exists()) {
+      return snap.data()['message'] || '';
+    }
+
+    return '';
+  }
+
+  disconnectionWarning(user: any){
+    const formattedPhone = this.formatPhoneNumber(user.phone_no);
+
+    const message = this.mapOverdueTemplate(this.overdue, user);
+    if (!message) {
+      this.toastr.error('Message template not loaded');
+      return;
+    }
+
+    this.sendWelcomeMessage(formattedPhone, message);
+  }
+
+  paymentRemainder(user: any){
+     const formattedPhone = this.formatPhoneNumber(user.phone_no);
+
+    const message = this.mapReminderTemplate(this.paymentReminderTemplate, user);
+    if (!message) {
+      this.toastr.error('Message template not loaded');
+      return;
+    }
+
+    this.sendWelcomeMessage(formattedPhone, message);
+  }
+
+  async sendWhatsapp(user: any) {
+    const formattedPhone = this.formatPhoneNumber(user.phone_no);
+
+    const message = this.mapTemplate(this.paymentRecievedTemplate, user);
+    if (!message) {
+      this.toastr.error('Message template not loaded');
+      return;
+    }
+
+    this.sendWelcomeMessage(formattedPhone, message);
+  }
+
+
+  mapOverdueTemplate(template: any, data: any): string {
+    if (!template || typeof template !== 'string') {
+      console.error('Invalid template:', template);
+      return '';
+    }
+
+    return template
+      .replace(/\[AMOUNT\]/g, data.remaining_amount || '-')
+      .replace(/\[Company Name\]/g, 'Ranjha7star')
+      .replace(/\[DATE\]/g, 'Before 5th of every Month')
+      .replace(/\[Customer Name\]/g, data.name || '')
+      .replace(/\[Number\]/g, this.companyDetail?.complain_no1 || '')
+      .replace(/\[X dinon\]/g, '10 dinon')
+  }
+
+   mapReminderTemplate(template: any, data: any): string {
+    if (!template || typeof template !== 'string') {
+      console.error('Invalid template:', template);
+      return '';
+    }
+
+    return template
+      .replace(/\[AMOUNT\]/g, data.amount || '')
+      .replace(/\[Company Name\]/g, 'Ranjha7star')
+      .replace(/\[DATE\]/g, 'Before 5th of every Month')
+      .replace(/\[Month\]/g, data.month || '')
+      .replace(/\[Customer Name\]/g, data.name || '')
+  }
+
+  mapTemplate(template: any, data: any): string {
+    if (!template || typeof template !== 'string') {
+      console.error('Invalid template:', template);
+      return '';
+    }
+
+    return template
+      .replace(/\[AMOUNT\]/g, data.collectedAmount || '')
+      .replace(/\[Company Name\]/g, 'Ranjha7star')
+      .replace(/\[DATE\]/g, data.date || '')
+      .replace(/\[Customer Name\]/g, data.name || '')
+  }
+
+  formatPhoneNumber(phone: string): string {
+    phone = phone.replace(/\D/g, ''); // remove spaces/dashes
+
+    if (phone.startsWith('03')) {
+      return '92' + phone.substring(1);
+    }
+
+    if (phone.startsWith('3')) {
+      return '92' + phone;
+    }
+
+    if (phone.startsWith('92')) {
+      return phone;
+    }
+
+    if (phone.startsWith('+92')) {
+      return phone.substring(1);
+    }
+
+    return phone;
+  }
+
+  sendWelcomeMessage(phone: string, message: string) {
+    const encodedMessage = encodeURIComponent(message);
+    const url = `https://wa.me/${phone}?text=${encodedMessage}`;
+    window.open(url, '_blank');
   }
 }

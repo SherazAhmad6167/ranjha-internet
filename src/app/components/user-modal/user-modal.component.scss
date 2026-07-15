@@ -69,8 +69,8 @@
   cursor: pointer;
 }
 
-.location{
-    position: absolute;
-    top: 30px;
-    right: 16px;
+
+.location i {
+  font-size: 18px;
+  color: #0d6efd; /* Bootstrap primary */
 }

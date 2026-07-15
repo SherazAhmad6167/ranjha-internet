@@ -128,6 +128,48 @@
                 </div>
             </div>
 
+
+             <div class="col-md-6 m-0">
+                <label for="validationDefault01" class="form-label">Advance Salary</label>
+                <input type="text" class="form-control" [ngClass]="{
+            'is-invalid':
+              userForm.get('advance_salary')?.invalid &&
+              userForm.get('advance_salary')?.touched,
+            'blink-border':
+              userForm.get('advance_salary')?.invalid &&
+              userForm.get('advance_salary')?.touched,
+          }" formControlName="advance_salary" id="validationDefault01" placeholder="Enter Advance Salary" />
+                <div class="extra-space">
+                    <ng-container *ngIf="
+              userForm.get('advance_salary')?.hasError('required') &&
+              userForm.get('advance_salary')?.touched
+            ">
+                        <span class="text-danger">Advance Salary is required</span>
+                    </ng-container>
+                </div>
+            </div>
+
+
+             <div class="col-md-6 m-0">
+                <label for="validationDefault01" class="form-label">Pending Salary</label>
+                <input type="text" class="form-control" [ngClass]="{
+            'is-invalid':
+              userForm.get('pending_salary')?.invalid &&
+              userForm.get('pending_salary')?.touched,
+            'blink-border':
+              userForm.get('pending_salary')?.invalid &&
+              userForm.get('pending_salary')?.touched,
+          }" formControlName="pending_salary" id="validationDefault01" placeholder="Enter Pending Salary" />
+                <div class="extra-space">
+                    <ng-container *ngIf="
+              userForm.get('pending_salary')?.hasError('required') &&
+              userForm.get('pending_salary')?.touched
+            ">
+                        <span class="text-danger">Pending Salary is required</span>
+                    </ng-container>
+                </div>
+            </div>
+
             <div class="col-md-6 m-0">
                 <label for="validationDefault01" class="form-label">User Name</label>
                 <input type="text" class="form-control" [ngClass]="{
