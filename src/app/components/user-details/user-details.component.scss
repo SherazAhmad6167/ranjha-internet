@@ -374,4 +374,8 @@
   .meta-item { justify-content: flex-start; }
   .address-section { flex-direction: column; gap: 12px; }
   .summary-section { flex-direction: column; gap: 12px; }
+}.custom-loader {
+  width: 100px;   /* adjust size */
+  height: 100px;
+  object-fit: contain;
 }

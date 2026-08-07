@@ -1,5 +1,5 @@
 <div class="container-fluid pt-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 fs-5">
         <h2 class="m-0">New Connection</h2>
         <button class="btn btn-primary d-flex align-items-center" (click)="openExpenseModal()">
             <i class="bi bi-person-plus me-2"></i>
@@ -175,6 +175,9 @@
                                 <button class="btn btn-danger btn-sm" (click)="openPdfModal(user)">
                                     <i class="ri-file-pdf-line"></i>
                                 </button>
+                                <button class="btn btn-success btn-sm" (click)="sendWhatsapp(user)">
+                                    <i class="ri-whatsapp-line"></i>
+                                </button>
                             </td>
                         </tr>
                     </tbody>
@@ -311,8 +314,8 @@
                                 <!-- Apna logo yahan laga dena -->
                                 <img src="assets/ranjha-logo3.jpeg" alt="logo" width="80" height="80" />
                                 <h3 class="text-primary fw-bold mb-0">Ranjha 7 Star</h3>
-                                <small>Cable TV & Internet</small><br/>
-                                <small>Powered by Nasstec Airnet</small><br/>
+                                <small>Cable TV & Internet</small><br />
+                                <small>Powered by Nasstec Airnet</small><br />
                                 <small>& ZONG 5G</small>
                             </div>
 
@@ -457,7 +460,8 @@
                                         <li>Non-payment may suspend service.</li>
                                         <li>Company is not responsible for power outages.</li>
                                         <li>Router relocation charges will apply.</li>
-                                        <ng-container *ngIf="selectedUser?.connection_payment === 'Free' || selectedUser?.connection_payment === 'Offer'">
+                                        <ng-container
+                                            *ngIf="selectedUser?.connection_payment === 'Free' || selectedUser?.connection_payment === 'Offer'">
                                             <li>Modem must be returned upon disconnection.</li>
                                             <li>Cable (wire) cannot be removed or shifted without permission.</li>
                                         </ng-container>
@@ -522,6 +526,7 @@
                         </svg>
                         Download PDF
                     </button>
+
                     <button class="btn btn-warning btn-sm rounded-3 px-4 ms-2" (click)="downloadImage()">
 
                         <svg class="me-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -537,6 +542,7 @@
                         <i class="ri-whatsapp-line"></i>
                         WhatsApp
                     </button>
+
                 </div>
             </div>
         </div>

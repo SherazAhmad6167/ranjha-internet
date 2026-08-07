@@ -27,6 +27,7 @@ import { BorrowAmountComponent } from './components/borrow-amount/borrow-amount.
 import { PayableDetailsComponent } from './components/payable-details/payable-details.component';
 import { StockDetailsComponent } from './components/stock-details/stock-details.component';
 import { ComplainDetailsComponent } from './components/complain-details/complain-details.component';
+import { MaterialDetailsComponent } from './components/material-details/material-details.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -61,7 +62,7 @@ export const routes: Routes = [
       { path: 'payable-details', data: { roles: ['admin']}, component: PayableDetailsComponent},
       { path: 'stock-details', data: { roles: ['admin']}, component: StockDetailsComponent},
       { path: 'complain-details', data: { roles: ['admin']}, component: ComplainDetailsComponent},
-
+      { path: 'material-details', data: { roles: ['admin']}, component: MaterialDetailsComponent},
     ],
   },
   { path: 'not-found', component: PageNotFoundComponent },

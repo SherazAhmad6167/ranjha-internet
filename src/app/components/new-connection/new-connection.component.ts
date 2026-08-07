@@ -53,6 +53,8 @@ export class NewConnectionComponent {
   selectOperator: string = '';
   selectedRecievedBy: string = '';
   selectedMonth: string | null = null;
+  welcomeTemplate: any;
+
   monthMap: any = {
     january: '01',
     february: '02',
@@ -100,10 +102,22 @@ export class NewConnectionComponent {
     private toastr: ToastrService,
   ) {}
 
-  ngOnInit(): void {
+  async ngOnInit() {
     this.loadExpenses();
     this.loadInternetAreas();
     this.loadOperatorName();
+    this.welcomeTemplate = await this.getTemplate('welcome');
+  }
+
+  async getTemplate(type: string): Promise<string> {
+    const ref = doc(this.firestore, `messageTemplates/${type}`);
+    const snap = await getDoc(ref);
+
+    if (snap.exists()) {
+      return snap.data()['message'] || '';
+    }
+
+    return '';
   }
 
   async loadInternetAreas() {
@@ -695,7 +709,7 @@ ${fileUrl}`;
   //   return res.secure_url; // ✅ FINAL LINK
   // }
 
- async generateAndUploadImage(): Promise<string> {
+  async generateAndUploadImage(): Promise<string> {
     const original = this.pdfContent.nativeElement;
 
     // Clone the element so original UI isn't disturbed
@@ -771,61 +785,95 @@ ${fileUrl}`;
     });
   }
 
-
   async migrateUsersToMatchConnectionIds() {
-  try {
-    const newConnSnap = await getDocs(collection(this.firestore, 'newConnection'));
-
-    for (const connDoc of newConnSnap.docs) {
-      const connData: any = connDoc.data();
-      const connectionId = connDoc.id;
-
-      if (!connData.internet_id) continue;
-
-      // 🔍 find matching user by internet_id
-      const q = query(
-        collection(this.firestore, 'users'),
-        where('internet_id', '==', connData.internet_id)
+    try {
+      const newConnSnap = await getDocs(
+        collection(this.firestore, 'newConnection'),
       );
 
-      const userSnap = await getDocs(q);
+      for (const connDoc of newConnSnap.docs) {
+        const connData: any = connDoc.data();
+        const connectionId = connDoc.id;
 
-      if (userSnap.empty) {
-        console.warn('No user found for:', connData.internet_id);
-        continue;
-      }
+        if (!connData.internet_id) continue;
 
-      for (const userDoc of userSnap.docs) {
-        const userData = userDoc.data();
-        const oldUserId = userDoc.id;
+        // 🔍 find matching user by internet_id
+        const q = query(
+          collection(this.firestore, 'users'),
+          where('internet_id', '==', connData.internet_id),
+        );
 
-        // ✅ Skip if already correct
-        if (oldUserId === connectionId) {
-          console.log('Already correct:', connectionId);
+        const userSnap = await getDocs(q);
+
+        if (userSnap.empty) {
+          console.warn('No user found for:', connData.internet_id);
           continue;
         }
 
-        // 🔥 Create new doc with correct ID
-        await setDoc(doc(this.firestore, 'users', connectionId), {
-          ...userData,
-          connectionId: connectionId,
-        });
+        for (const userDoc of userSnap.docs) {
+          const userData = userDoc.data();
+          const oldUserId = userDoc.id;
 
-        // ❌ Delete old doc
-        await deleteDoc(doc(this.firestore, 'users', oldUserId));
+          // ✅ Skip if already correct
+          if (oldUserId === connectionId) {
+            console.log('Already correct:', connectionId);
+            continue;
+          }
 
-        console.log(
-          `Migrated user ${oldUserId} → ${connectionId}`
-        );
+          // 🔥 Create new doc with correct ID
+          await setDoc(doc(this.firestore, 'users', connectionId), {
+            ...userData,
+            connectionId: connectionId,
+          });
+
+          // ❌ Delete old doc
+          await deleteDoc(doc(this.firestore, 'users', oldUserId));
+
+          console.log(`Migrated user ${oldUserId} → ${connectionId}`);
+        }
       }
+
+      console.log('✅ Migration completed successfully');
+      this.toastr.success('Migration completed');
+    } catch (error) {
+      console.error(error);
+      this.toastr.error('Migration failed');
+    }
+  }
+
+  async sendWhatsapp(user: any) {
+    const rawNumber =
+      user?.phone_no && user.phone_no !== '0' ? user.phone_no : user?.mobile_no;
+    const formattedPhone = this.formatPhoneNumber(rawNumber);
+    const message = this.mapTemplate(this.welcomeTemplate, user);
+    if (!message) {
+      this.toastr.error('Message template not loaded');
+      return;
     }
 
-    console.log('✅ Migration completed successfully');
-    this.toastr.success('Migration completed');
-
-  } catch (error) {
-    console.error(error);
-    this.toastr.error('Migration failed');
+    this.sendWelcomeMessage(formattedPhone, message);
   }
-}
+
+  mapTemplate(template: any, data: any): string {
+    if (!template || typeof template !== 'string') {
+      console.error('Invalid template:', template);
+      return '';
+    }
+
+    return (
+      template
+        .replace(/\[Customer Name\]/g, data.user_name || '')
+        .replace(/\[Company Name\]/g, 'Ranjha7star')
+        .replace(/\[XXXX\]/g, data.internet_id || '')
+        .replace(/\[Package Name\]/g, data.select_package || '')
+        // .replace(/\[Installation Date\]/g, data.installation_date || '')
+        .replace(/\[Number\]/g, this.companyDetail?.complain_no1 || '')
+    );
+  }
+
+  sendWelcomeMessage(phone: string, message: string) {
+    const encodedMessage = encodeURIComponent(message);
+    const url = `https://wa.me/${phone}?text=${encodedMessage}`;
+    window.open(url, '_blank');
+  }
 }

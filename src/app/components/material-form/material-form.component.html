@@ -1,0 +1,344 @@
+<div class="modal-header d-flex justify-content-between align-items-center">
+    <h4 class="modal-title">
+        {{ editMode ? "Update" : "Add" }} Material Details
+    </h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+</div>
+
+<div *ngIf="isLoading" class="loading-overlay">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+
+<div class="mx-5">
+    <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+        <h5 class="mt-2 text-primary fw-bold">1. Employee Details</h5>
+        <div class="row align-items-center gy-3 mt-4 mx-7">
+
+            <div class="col-md-4 m-0">
+                <label for="validationDefault01" class="form-label">Issue No.</label>
+                <input type="text" class="form-control" [ngClass]="{
+            'is-invalid':
+              userForm.get('issue_no')?.invalid && userForm.get('issue_no')?.touched,
+            'blink-border':
+              userForm.get('issue_no')?.invalid && userForm.get('issue_no')?.touched,
+          }" formControlName="issue_no" id="validationDefault01" placeholder="Enter Issue No." />
+                <div class="extra-space">
+                    <ng-container *ngIf="
+              userForm.get('issue_no')?.hasError('required') &&
+              userForm.get('issue_no')?.touched
+            ">
+                        <span class="text-danger">Issue No is required</span>
+                    </ng-container>
+                </div>
+            </div>
+
+
+            <div class="col-md-4 m-0">
+                <label for="validationDefault01" class="form-label">Date</label>
+                <input type="date" class="form-control" [ngClass]="{
+            'is-invalid':
+              userForm.get('date')?.invalid &&
+              userForm.get('date')?.touched,
+            'blink-border':
+              userForm.get('date')?.invalid &&
+              userForm.get('date')?.touched,
+          }" formControlName="date" id="validationDefault01" placeholder="Enter Date" />
+                <div class="extra-space">
+                    <ng-container *ngIf="
+              userForm.get('date')?.hasError('required') &&
+              userForm.get('date')?.touched
+            ">
+                        <span class="text-danger">Date is required</span>
+                    </ng-container>
+                </div>
+            </div>
+
+
+            <div class="col-md-4 m-0">
+                <label for="validationDefault01" class="form-label">Employee Name</label>
+                <input type="text" class="form-control" [ngClass]="{
+            'is-invalid':
+              userForm.get('name')?.invalid && userForm.get('name')?.touched,
+            'blink-border':
+              userForm.get('name')?.invalid && userForm.get('name')?.touched,
+          }" formControlName="name" id="validationDefault01" placeholder="Enter Name" />
+                <div class="extra-space">
+                    <ng-container *ngIf="
+              userForm.get('name')?.hasError('required') &&
+              userForm.get('name')?.touched
+            ">
+                        <span class="text-danger">Name is required</span>
+                    </ng-container>
+                </div>
+            </div>
+
+            <!-- <div class="col-md-4 m-0">
+                <label for="validationDefault01" class="form-label">Designation</label>
+                <input type="text" class="form-control" [ngClass]="{
+            'is-invalid':
+              userForm.get('designation')?.invalid && userForm.get('designation')?.touched,
+            'blink-border':
+              userForm.get('designation')?.invalid && userForm.get('designation')?.touched,
+          }" formControlName="designation" id="validationDefault01" placeholder="Enter Designation" />
+                <div class="extra-space">
+                    <ng-container *ngIf="
+              userForm.get('designation')?.hasError('required') &&
+              userForm.get('designation')?.touched
+            ">
+                        <span class="text-danger">Designation is required</span>
+                    </ng-container>
+                </div>
+            </div> -->
+
+            <!-- <div class="col-md-4 m-0">
+                <label for="validationDefault01" class="form-label">CNIC</label>
+                <input type="text" class="form-control" [ngClass]="{
+            'is-invalid':
+              userForm.get('cnic')?.invalid && userForm.get('cnic')?.touched,
+            'blink-border':
+              userForm.get('cnic')?.invalid && userForm.get('cnic')?.touched,
+          }" formControlName="cnic" id="validationDefault01" placeholder="Enter CNIC" />
+                <div class="extra-space">
+                    <ng-container *ngIf="
+              userForm.get('cnic')?.hasError('required') &&
+              userForm.get('cnic')?.touched
+            ">
+                        <span class="text-danger">CNIC is required</span>
+                    </ng-container>
+                </div>
+            </div> -->
+
+            <div class="col-md-4 m-0">
+                <label for="validationDefault01" class="form-label">Mobile No</label>
+                <input type="text" class="form-control" [ngClass]="{
+            'is-invalid':
+              userForm.get('phone')?.invalid && userForm.get('phone')?.touched,
+            'blink-border':
+              userForm.get('phone')?.invalid && userForm.get('phone')?.touched,
+          }" formControlName="phone" id="validationDefault01" placeholder="Enter Phone" />
+                <div class="extra-space">
+                    <ng-container *ngIf="
+              userForm.get('phone')?.hasError('required') &&
+              userForm.get('phone')?.touched
+            ">
+                        <span class="text-danger">Mobile No is required</span>
+                    </ng-container>
+                </div>
+            </div>
+
+
+
+
+
+            <div class="col-md-8 m-0">
+                <label for="validationDefault01" class="form-label">Purpose</label>
+                <input type="text" class="form-control" [ngClass]="{
+            'is-invalid':
+              userForm.get('purpose')?.invalid &&
+              userForm.get('purpose')?.touched,
+            'blink-border':
+              userForm.get('purpose')?.invalid &&
+              userForm.get('purpose')?.touched,
+          }" formControlName="purpose" id="validationDefault01" placeholder="Enter Purpose" />
+                <div class="extra-space">
+                    <ng-container *ngIf="
+              userForm.get('purpose')?.hasError('required') &&
+              userForm.get('purpose')?.touched
+            ">
+                        <span class="text-danger">Purpose is required</span>
+                    </ng-container>
+                </div>
+            </div>
+
+
+
+            <h5 class="mt-3 text-primary fw-bold">2. Material Issue Details</h5>
+
+            <div class="row">
+
+                <!-- LEFT COLUMN -->
+                <div class="col-md-6">
+                    <div class="table-responsive">
+                        <table class="table table-bordered text-center align-middle">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>SR.</th>
+                                    <th>ITEM NAME</th>
+                                    <th>QUANTITY</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Modem</td>
+                                    <td><input type="text" class="form-control" formControlName="modem"></td>
+                                </tr>
+
+                                <tr>
+                                    <td>2</td>
+                                    <td>Pectail</td>
+                                    <td><input type="text" class="form-control" formControlName="pigtail"></td>
+                                </tr>
+
+                                <tr>
+                                    <td>3</td>
+                                    <td>Choti Dabi</td>
+                                    <td><input type="text" class="form-control" formControlName="choti_dabi"></td>
+                                </tr>
+
+                                <tr>
+                                    <td>4</td>
+                                    <td>Bari Dabi</td>
+                                    <td><input type="text" class="form-control" formControlName="bari_dabi"></td>
+                                </tr>
+
+                                <tr>
+                                    <td>5</td>
+                                    <td>Swab</td>
+                                    <td><input type="text" class="form-control" formControlName="swab"></td>
+                                </tr>
+
+                                <tr>
+                                    <td>6</td>
+                                    <td>Splitter</td>
+                                    <td><input type="text" class="form-control" formControlName="splitter"></td>
+                                </tr>
+
+                                <tr>
+                                    <td>7</td>
+                                    <td>Meter Bag</td>
+                                    <td><input type="text" class="form-control" formControlName="meter_bag"></td>
+                                </tr>
+
+                                <tr>
+                                    <td>8</td>
+                                    <td>Cable Tie</td>
+                                    <td><input type="text" class="form-control" formControlName="cable_tie"></td>
+                                </tr>
+
+                                <tr>
+                                    <td>9</td>
+                                    <td>Fiber Cable</td>
+                                    <td><input type="text" class="form-control" formControlName="fiber_cable"></td>
+                                </tr>
+
+                                <tr>
+                                    <td>10</td>
+                                    <td>Sleeve</td>
+                                    <td><input type="text" class="form-control" formControlName="sleeve"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN -->
+                <div class="col-md-6">
+                    <div class="table-responsive">
+                        <table class="table table-bordered text-center align-middle">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>SR.</th>
+                                    <th>ITEM NAME</th>
+                                    <th>QUANTITY</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr>
+                                    <td>11</td>
+                                    <td>Cutter</td>
+                                    <td><input type="text" class="form-control" formControlName="cutter"></td>
+                                </tr>
+
+                                <tr>
+                                    <td>12</td>
+                                    <td>Paper Cutter</td>
+                                    <td><input type="text" class="form-control" formControlName="paper_cutter"></td>
+                                </tr>
+
+                                <tr>
+                                    <td>13</td>
+                                    <td>Plass</td>
+                                    <td><input type="text" class="form-control" formControlName="plass"></td>
+                                </tr>
+
+                                <tr>
+                                    <td>14</td>
+                                    <td>Passive Node</td>
+                                    <td><input type="text" class="form-control" formControlName="passive_node"></td>
+                                </tr>
+
+                                <tr>
+                                    <td>15</td>
+                                    <td>Cable Node</td>
+                                    <td><input type="text" class="form-control" formControlName="cable_node"></td>
+                                </tr>
+
+                                <tr>
+                                    <td>16</td>
+                                    <td>Adaptor</td>
+                                    <td><input type="text" class="form-control" formControlName="adaptor"></td>
+                                </tr>
+
+                                <tr>
+                                    <td>17</td>
+                                    <td>Nito Tape</td>
+                                    <td><input type="text" class="form-control" formControlName="nito"></td>
+                                </tr>
+
+                                <tr>
+                                    <td>18</td>
+                                    <td>Osaka Tape</td>
+                                    <td><input type="text" class="form-control" formControlName="osaka"></td>
+                                </tr>
+
+                                <tr>
+                                    <td>19</td>
+                                    <td>Packing Tape</td>
+                                    <td><input type="text" class="form-control" formControlName="packingTape"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="col-md-12 m-0">
+                <label for="validationDefault03" class="form-label">Remarks</label>
+
+                <textarea class="form-control" formControlName="remarks" rows="3"
+                    [ngClass]="{'is-invalid': userForm.get('remarks')?.invalid && userForm.get('remarks')?.touched, 'blink-border': userForm.get('remarks')?.invalid && userForm.get('remarks')?.touched}"
+                    id="validationDefault03" placeholder="Enter Remarks"></textarea>
+
+                <div class="extra-space">
+                    <ng-container
+                        *ngIf="userForm.get('remarks')?.hasError('required') && userForm.get('remarks')?.touched;">
+                        <span class="text-danger">Remarks required</span>
+                    </ng-container>
+                </div>
+            </div>
+
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary-light" (click)="activeModal.close()">
+                    Close
+                </button>
+
+                <button class="btn btn-primary" type="submit" [disabled]="isLoading || isSaving">
+                    <span *ngIf="!isSaving"> {{ editMode ? "Update" : "Save" }}</span>
+                    <span *ngIf="isSaving" class="d-flex align-items-center">
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        {{ editMode ? "Updating..." : "Saving..." }}
+                    </span>
+                </button>
+            </div>
+        </div>
+
+    </form>
+</div>

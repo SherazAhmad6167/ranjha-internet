@@ -12,9 +12,7 @@
   </div>
 
   <div *ngIf="isLoading" class="loading-overlay">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Loading...</span>
-    </div>
+    <img src="assets/loader-africa.svg" alt="Loading..." class="custom-loader" />
   </div>
 
   <div class="card">
@@ -87,7 +85,13 @@
               <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
               <td>{{ user.internet_id }}</td>
               <td>{{ user.user_name | titlecase }}</td>
-              <td>{{ user?.phone_no || user?.mobile_no }}</td>
+              <td>
+                {{
+                user?.phone_no && user?.phone_no !== '0'
+                ? user.phone_no
+                : user?.mobile_no
+                }}
+              </td>
               <td>{{ user.address }}</td>
               <td>{{ user.sublocality | titlecase }}</td>
               <td>{{ user.sub_area | titlecase }}</td>
@@ -119,18 +123,29 @@
                 <button class="btn btn-danger btn-sm" (click)="openPdfModal(user)">
                   <i class="ri-file-pdf-line"></i>
                 </button>
-                <button class="btn btn-success btn-sm" (click)="sendWhatsapp(user)">
+
+                <button class="btn btn-success btn-sm ms-2" (click)="toggleWhatsappActions(user)">
                   <i class="ri-whatsapp-line"></i>
                 </button>
-                <button class="btn btn-warning btn-sm" (click)="updratePlan(user)">
-                  <i class="ri-whatsapp-line"></i> Upgrade Plan
-                </button>
-                <button class="btn btn-danger btn-sm" (click)="maintanancePlan(user)">
-                  <i class="ri-whatsapp-line"></i> Maintanance
-                </button>
-                <button class="btn btn-primary btn-sm" (click)="servicePlan(user)">
-                  <i class="ri-whatsapp-line"></i> Service
-                </button>
+                <div *ngIf="user.showActions" class="mt-2 d-flex flex-column gap-1">
+
+                  <button class="btn btn-success btn-sm" (click)="sendWhatsapp(user)">
+                    <i class="ri-whatsapp-line"></i> Send WhatsApp
+                  </button>
+
+                  <button class="btn btn-warning btn-sm" (click)="updratePlan(user)">
+                    <i class="ri-whatsapp-line"></i> Upgrade Plan
+                  </button>
+
+                  <button class="btn btn-danger btn-sm" (click)="maintanancePlan(user)">
+                    <i class="ri-whatsapp-line"></i> Maintenance
+                  </button>
+
+                  <button class="btn btn-primary btn-sm" (click)="servicePlan(user)">
+                    <i class="ri-whatsapp-line"></i> Service
+                  </button>
+
+                </div>
               </td>
             </tr>
           </tbody>
@@ -521,7 +536,7 @@
                 <td class="col-price">Rs. {{ pdfUser?.cable_package_fee }}</td>
                 <td class="col-amount">Rs. {{ pdfUser?.cable_package_fee }}</td>
               </tr>
-               <tr>
+              <tr>
                 <td class="col-sno">3</td>
                 <td class="col-desc">Wire</td>
                 <td class="col-qty">1</td>

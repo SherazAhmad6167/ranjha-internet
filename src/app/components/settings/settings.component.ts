@@ -1,31 +1,33 @@
 import { Component } from '@angular/core';
-import { BluetoothService } from '../../shared/bluetooth.service';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { CommonModule } from '@angular/common';
 import {
   collection,
   deleteDoc,
-  deleteField,
   doc,
   Firestore,
   getDoc,
   getDocs,
   setDoc,
-  updateDoc,
 } from '@angular/fire/firestore';
-import { FormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
 import { SmsService } from '../../shared/sms.service';
+import { MikrotikService, MikrotikError } from '../../shared/mikrotik.service';
 
 @Component({
   selector: 'app-settings',
-  imports: [CommonModule, FormsModule, ToastrModule],
+  imports: [CommonModule, FormsModule, ToastrModule, ReactiveFormsModule],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
 })
 export class SettingsComponent {
-
-   templates: any[] = [
+  templates: any[] = [
     { id: 'welcome', title: 'Welcome Message', message: '' },
     { id: 'complaint', title: 'Complaint Acknowledgment', message: '' },
     { id: 'paymentReminder', title: 'Payment Reminder', message: '' },
@@ -33,10 +35,42 @@ export class SettingsComponent {
     { id: 'overdue', title: 'Overdue Warning', message: '' },
     { id: 'maintenance', title: 'Maintenance Notice', message: '' },
     { id: 'upgrade', title: 'Upgrade Offer', message: '' },
-    { id: 'restoration', title: 'Service Restoration', message: '' }
+    { id: 'restoration', title: 'Service Restoration', message: '' },
   ];
+  singleSMSForm: FormGroup;
+  bulkSMSForm: FormGroup;
+  mikrotikForm!: FormGroup;
 
-  constructor(private firestore: Firestore, private toastr: ToastrService, private smsService: SmsService) {}
+  mikrotikLoading = false;
+  mikrotikMessage = '';
+  mikrotikIsError = false;
+  mikrotikIsCors = false;
+  mikrotikResponseData: any = null;
+
+  constructor(
+    private firestore: Firestore,
+    private toastr: ToastrService,
+    private smsService: SmsService,
+    private mikrotikService: MikrotikService,
+    private fb: FormBuilder,
+  ) {
+    this.singleSMSForm = this.fb.group({
+      phone: [''],
+      message: [''],
+    });
+
+    this.bulkSMSForm = this.fb.group({
+      phones: [''],
+      message: [''],
+    });
+
+    this.mikrotikForm = this.fb.group({
+      type: ['ppp', Validators.required],
+      name: ['', [Validators.required, Validators.minLength(3)]],
+      password: ['', [Validators.required, Validators.minLength(4)]],
+      groupOrProfile: ['default'],
+    });
+  }
 
   ngOnInit() {
     this.loadTemplates();
@@ -59,7 +93,7 @@ export class SettingsComponent {
     await setDoc(ref, {
       title: item.title,
       message: item.message,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
     this.loadTemplates();
     this.toastr.success('Saved successfully');
@@ -81,9 +115,9 @@ export class SettingsComponent {
     this.toastr.success('Deleted successfully');
   }
 
-   sendTestSMS() {
-    const phone = '+923026167574';
-    const msg = 'welcome to ranjha7star ';
+  sendTestSMS() {
+    const phone = '+923704620052';
+    const msg = 'welcome to ranjha7star';
 
     this.smsService.sendSMS(phone, msg).subscribe({
       next: (res) => {
@@ -93,9 +127,46 @@ export class SettingsComponent {
       error: (err) => {
         console.error('Error:', err);
         alert('SMS failed');
-      }
+      },
     });
   }
+
+  sendTestBulkSMS() {
+    const phone = ['+923006362735', '+923008800263', '+923704620052'];
+    const msg = 'welcome to ranjha7star';
+
+    this.smsService.sendBulkSMS(phone, msg).subscribe({
+      next: (res) => {
+        console.log('SMS Sent:', res);
+        alert('SMS sent successfully');
+      },
+      error: (err) => {
+        console.error('Error:', err);
+        alert('SMS failed');
+      },
+    });
+  }
+
+  //   sendBulkTestSMS() {
+  //   const numbers = [
+  //     '+923026167574',
+  //     '+923008800263',
+  //     '+923045945153'
+  //   ];
+
+  //   const msg = 'Welcome to Ranjha7Star';
+
+  //   this.smsService.sendBulkSMS(numbers, msg).subscribe({
+  //     next: (res) => {
+  //       console.log('Bulk SMS Sent:', res);
+  //       alert('Bulk SMS sent successfully');
+  //     },
+  //     error: (err) => {
+  //       console.error('Error:', err);
+  //       alert('Bulk SMS failed');
+  //     }
+  //   });
+  // }
 
   // async removeBillsFromAllUsers() {
   //   const usersRef = collection(this.firestore, 'users');
@@ -128,4 +199,71 @@ export class SettingsComponent {
 
   //   window.open(url, '_blank');
   // }
+
+  sendSingleSMS() {
+    const { phone, message } = this.singleSMSForm.value;
+
+    if (!phone || !message) {
+      alert('Please fill all fields');
+      return;
+    }
+
+    this.smsService.sendSMS(phone, message).subscribe({
+      next: () => alert('SMS sent successfully'),
+      error: () => alert('SMS failed'),
+    });
+  }
+
+  sendBulkSMS() {
+    const { phones, message } = this.bulkSMSForm.value;
+
+    if (!phones || !message) {
+      alert('Please fill all fields');
+      return;
+    }
+
+    const phoneArray = phones
+      .split(/[\n,]+/)
+      .map((p: string) => p.trim())
+      .filter((p: string) => p);
+
+    this.smsService.sendBulkSMS(phoneArray, message).subscribe({
+      next: () => alert('Bulk SMS sent successfully'),
+      error: () => alert('Bulk SMS failed'),
+    });
+  }
+
+  createUser() {
+    if (this.mikrotikForm.invalid) {
+      this.mikrotikForm.markAllAsTouched();
+      return;
+    }
+
+    this.mikrotikLoading = true;
+    this.mikrotikMessage = '';
+    this.mikrotikResponseData = null;
+    this.mikrotikIsError = false;
+    this.mikrotikIsCors = false;
+
+    const { type, name, password, groupOrProfile } = this.mikrotikForm.value;
+
+    this.mikrotikService.createUser(type, name, password, groupOrProfile).subscribe({
+      next: (res) => {
+        this.mikrotikLoading = false;
+        this.mikrotikMessage = `User "${name}" created successfully in MikroTik.`;
+        this.mikrotikResponseData = res;
+        this.toastr.success(`MikroTik user "${name}" created`);
+        this.mikrotikForm.patchValue({ name: '', password: '' });
+        this.mikrotikForm.get('name')?.markAsUntouched();
+        this.mikrotikForm.get('password')?.markAsUntouched();
+      },
+      error: (err: MikrotikError) => {
+        this.mikrotikLoading = false;
+        this.mikrotikIsError = true;
+        this.mikrotikIsCors = err.isCors;
+        this.mikrotikMessage = err.message;
+        this.toastr.error(err.isCors ? 'CORS / SSL error — see details below' : 'Failed to create MikroTik user');
+      },
+    });
+  }
 }

@@ -476,7 +476,6 @@ export class UserDetailsComponent {
     this.showPdfModal = false;
   }
 
-  
   downloadPDF() {
     const element = this.pdfContent.nativeElement;
 
@@ -507,7 +506,9 @@ export class UserDetailsComponent {
   }
 
   updratePlan(user: any) {
-    const formattedPhone = this.formatPhoneNumber(user.phone_no);
+    const rawNumber =
+      user?.phone_no && user.phone_no !== '0' ? user.phone_no : user?.mobile_no;
+    const formattedPhone = this.formatPhoneNumber(rawNumber);
     const message = this.mapUpgradeTemplate(this.upgradePlan, user);
     if (!message) {
       this.toastr.error('Message template not loaded');
@@ -517,7 +518,9 @@ export class UserDetailsComponent {
   }
 
   maintanancePlan(user: any) {
-    const formattedPhone = this.formatPhoneNumber(user.phone_no);
+    const rawNumber =
+      user?.phone_no && user.phone_no !== '0' ? user.phone_no : user?.mobile_no;
+    const formattedPhone = this.formatPhoneNumber(rawNumber);
     const message = this.mapMaintananceTemplate(this.maintanancesPlan, user);
     if (!message) {
       this.toastr.error('Message template not loaded');
@@ -527,7 +530,9 @@ export class UserDetailsComponent {
   }
 
   servicePlan(user: any) {
-    const formattedPhone = this.formatPhoneNumber(user.phone_no);
+    const rawNumber =
+      user?.phone_no && user.phone_no !== '0' ? user.phone_no : user?.mobile_no;
+    const formattedPhone = this.formatPhoneNumber(rawNumber);
     const message = this.mapServicesTemplate(this.servicesPlan, user);
     if (!message) {
       this.toastr.error('Message template not loaded');
@@ -536,8 +541,20 @@ export class UserDetailsComponent {
     this.sendWelcomeMessage(formattedPhone, message);
   }
 
+  getContact(user: any): string {
+    const phone = user?.phone_no;
+    const mobile = user?.mobile_no;
+
+    if (phone && phone !== '0' && phone !== 'null') return phone;
+    if (mobile && mobile !== '0' && mobile !== 'null') return mobile;
+
+    return '';
+  }
+
   async sendWhatsapp(user: any) {
-    const formattedPhone = this.formatPhoneNumber(user.phone_no);
+    const rawNumber =
+      user?.phone_no && user.phone_no !== '0' ? user.phone_no : user?.mobile_no;
+    const formattedPhone = this.formatPhoneNumber(rawNumber);
     // const hasWhatsApp = await this.checkWhatsAppNumber(formattedPhone);
 
     // console.log('Has WhatsApp:', hasWhatsApp);
@@ -597,13 +614,15 @@ export class UserDetailsComponent {
       return '';
     }
 
-    return template
-      .replace(/\[Customer Name\]/g, data.user_name || '')
-      .replace(/\[Company Name\]/g, 'Ranjha7star')
-      .replace(/\[XXXX\]/g, data.internet_id || '')
-      .replace(/\[Package Name\]/g, data.select_package || '')
-      // .replace(/\[Installation Date\]/g, data.installation_date || '')
-      .replace(/\[Number\]/g, this.companyDetail?.complain_no1 || '');
+    return (
+      template
+        .replace(/\[Customer Name\]/g, data.user_name || '')
+        .replace(/\[Company Name\]/g, 'Ranjha7star')
+        .replace(/\[XXXX\]/g, data.internet_id || '')
+        .replace(/\[Package Name\]/g, data.select_package || '')
+        // .replace(/\[Installation Date\]/g, data.installation_date || '')
+        .replace(/\[Number\]/g, this.companyDetail?.complain_no1 || '')
+    );
   }
 
   formatPhoneNumber(phone: string): string {
@@ -657,4 +676,9 @@ Thank you!`;
     const url = `https://wa.me/${phone}?text=${encodedMessage}`;
     window.open(url, '_blank');
   }
+
+
+ toggleWhatsappActions(user: any) {
+  user.showActions = !user.showActions;
+}
 }

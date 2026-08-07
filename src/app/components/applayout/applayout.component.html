@@ -39,6 +39,10 @@
                 <a routerLink="/recovery-details" routerLinkActive="active" class="nav-link text-white"
                     (click)="onMenuClick()">Recovery Details</a>
             </li>
+                 <li class="nav-item" *ngIf="role === 'admin'">
+                <a routerLink="/material-details" routerLinkActive="active" class="nav-link text-white"
+                    (click)="onMenuClick()">Material Details</a>
+            </li>
             <li class="nav-item" *ngIf="role === 'admin'">
                 <a routerLink="/expenses" routerLinkActive="active" class="nav-link text-white"
                     (click)="onMenuClick()">Expenses</a>
@@ -121,6 +125,7 @@
                 <a routerLink="/settings" routerLinkActive="active" class="nav-link text-white"
                     (click)="onMenuClick()">Settings</a>
             </li>
+        
 
 
         </ul>
