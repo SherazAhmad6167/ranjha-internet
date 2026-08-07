@@ -14,11 +14,9 @@ import {
   FormGroup,
   FormsModule,
   ReactiveFormsModule,
-  Validators,
 } from '@angular/forms';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
 import { SmsService } from '../../shared/sms.service';
-import { MikrotikService, MikrotikError } from '../../shared/mikrotik.service';
 
 @Component({
   selector: 'app-settings',
@@ -39,19 +37,11 @@ export class SettingsComponent {
   ];
   singleSMSForm: FormGroup;
   bulkSMSForm: FormGroup;
-  mikrotikForm!: FormGroup;
-
-  mikrotikLoading = false;
-  mikrotikMessage = '';
-  mikrotikIsError = false;
-  mikrotikIsCors = false;
-  mikrotikResponseData: any = null;
 
   constructor(
     private firestore: Firestore,
     private toastr: ToastrService,
     private smsService: SmsService,
-    private mikrotikService: MikrotikService,
     private fb: FormBuilder,
   ) {
     this.singleSMSForm = this.fb.group({
@@ -62,13 +52,6 @@ export class SettingsComponent {
     this.bulkSMSForm = this.fb.group({
       phones: [''],
       message: [''],
-    });
-
-    this.mikrotikForm = this.fb.group({
-      type: ['ppp', Validators.required],
-      name: ['', [Validators.required, Validators.minLength(3)]],
-      password: ['', [Validators.required, Validators.minLength(4)]],
-      groupOrProfile: ['default'],
     });
   }
 
@@ -233,37 +216,4 @@ export class SettingsComponent {
     });
   }
 
-  createUser() {
-    if (this.mikrotikForm.invalid) {
-      this.mikrotikForm.markAllAsTouched();
-      return;
-    }
-
-    this.mikrotikLoading = true;
-    this.mikrotikMessage = '';
-    this.mikrotikResponseData = null;
-    this.mikrotikIsError = false;
-    this.mikrotikIsCors = false;
-
-    const { type, name, password, groupOrProfile } = this.mikrotikForm.value;
-
-    this.mikrotikService.createUser(type, name, password, groupOrProfile).subscribe({
-      next: (res) => {
-        this.mikrotikLoading = false;
-        this.mikrotikMessage = `User "${name}" created successfully in MikroTik.`;
-        this.mikrotikResponseData = res;
-        this.toastr.success(`MikroTik user "${name}" created`);
-        this.mikrotikForm.patchValue({ name: '', password: '' });
-        this.mikrotikForm.get('name')?.markAsUntouched();
-        this.mikrotikForm.get('password')?.markAsUntouched();
-      },
-      error: (err: MikrotikError) => {
-        this.mikrotikLoading = false;
-        this.mikrotikIsError = true;
-        this.mikrotikIsCors = err.isCors;
-        this.mikrotikMessage = err.message;
-        this.toastr.error(err.isCors ? 'CORS / SSL error — see details below' : 'Failed to create MikroTik user');
-      },
-    });
-  }
 }

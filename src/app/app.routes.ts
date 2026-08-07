@@ -28,6 +28,7 @@ import { PayableDetailsComponent } from './components/payable-details/payable-de
 import { StockDetailsComponent } from './components/stock-details/stock-details.component';
 import { ComplainDetailsComponent } from './components/complain-details/complain-details.component';
 import { MaterialDetailsComponent } from './components/material-details/material-details.component';
+import { MikrotikUsersComponent } from './components/mikrotik-users/mikrotik-users.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -63,6 +64,7 @@ export const routes: Routes = [
       { path: 'stock-details', data: { roles: ['admin']}, component: StockDetailsComponent},
       { path: 'complain-details', data: { roles: ['admin']}, component: ComplainDetailsComponent},
       { path: 'material-details', data: { roles: ['admin']}, component: MaterialDetailsComponent},
+      { path: 'mikrotik-users', data: { roles: ['admin'] }, component: MikrotikUsersComponent },
     ],
   },
   { path: 'not-found', component: PageNotFoundComponent },

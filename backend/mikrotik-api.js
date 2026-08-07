@@ -123,6 +123,20 @@ class MikrotikConn {
     return this._sendRaw([`${menuPath}/print`]);
   }
 
+  // Update an existing record by .id
+  set(menuPath, id, attrs) {
+    const words = [`${menuPath}/set`, `=.id=${id}`];
+    for (const [k, v] of Object.entries(attrs)) {
+      words.push(`=${k}=${v}`);
+    }
+    return this._sendRaw(words);
+  }
+
+  // Remove a record by .id
+  remove(menuPath, id) {
+    return this._sendRaw([`${menuPath}/remove`, `=.id=${id}`]);
+  }
+
   close() {
     this.socket?.destroy();
     this.socket = null;

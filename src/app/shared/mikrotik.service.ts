@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 export type MikrotikUserType = 'router' | 'hotspot' | 'ppp';
 
@@ -19,7 +20,7 @@ export class MikrotikService {
   //
   // Dev:  run `npm start` inside backend/ → http://localhost:3000
   // Prod: host the Node.js server on your LAN or a VPS, update the URL below.
-  private readonly proxyBase = 'http://localhost:3000/mikrotik';
+  private readonly proxyBase = environment.mikrotikProxyUrl;
 
   constructor(private http: HttpClient) {}
 
@@ -58,6 +59,18 @@ export class MikrotikService {
     return this.put('/ppp/secret', { name, password, profile, service });
   }
 
+  getPppSecrets(): Observable<any[]> {
+    return this.get('/ppp/secret');
+  }
+
+  updatePppSecret(id: string, attrs: Record<string, string>): Observable<any> {
+    return this.patch('/ppp/secret', { id, ...attrs });
+  }
+
+  deletePppSecret(id: string): Observable<any> {
+    return this.httpDelete('/ppp/secret', { id });
+  }
+
   getSystemResource(): Observable<any> {
     return this.get('/system/resource');
   }
@@ -80,6 +93,18 @@ export class MikrotikService {
   private put(path: string, body: object): Observable<any> {
     return this.http
       .put(`${this.proxyBase}${path}`, body)
+      .pipe(catchError(this.mapError));
+  }
+
+  private patch(path: string, body: object): Observable<any> {
+    return this.http
+      .patch(`${this.proxyBase}${path}`, body)
+      .pipe(catchError(this.mapError));
+  }
+
+  private httpDelete(path: string, body: object): Observable<any> {
+    return this.http
+      .delete(`${this.proxyBase}${path}`, { body })
       .pipe(catchError(this.mapError));
   }
 

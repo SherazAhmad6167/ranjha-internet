@@ -8,7 +8,10 @@ const app = express();
 app.use(express.json());
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:4200')
+const allowedOrigins = (
+  process.env.ALLOWED_ORIGINS ||
+  'http://localhost:4200,https://ranjha7starcable.web.app'
+)
   .split(',')
   .map((o) => o.trim());
 
@@ -86,6 +89,25 @@ app.put('/mikrotik/user', async (req, res) => {
   );
 });
 
+// Get all PPP secrets
+app.get('/mikrotik/ppp/secret', async (req, res) => {
+  await withRouter(res, (conn) => conn.get('/ppp/secret'));
+});
+
+// Update PPP secret by .id (passed in body)
+app.patch('/mikrotik/ppp/secret', async (req, res) => {
+  const { id, ...attrs } = req.body;
+  if (!id) return res.status(400).json({ message: 'id is required' });
+  await withRouter(res, (conn) => conn.set('/ppp/secret', id, attrs));
+});
+
+// Delete PPP secret by .id (passed in body)
+app.delete('/mikrotik/ppp/secret', async (req, res) => {
+  const { id } = req.body;
+  if (!id) return res.status(400).json({ message: 'id is required' });
+  await withRouter(res, (conn) => conn.remove('/ppp/secret', id));
+});
+
 // System resource (connection health check)
 app.get('/mikrotik/system/resource', async (req, res) => {
   await withRouter(res, async (conn) => {
@@ -98,8 +120,14 @@ app.get('/mikrotik/system/resource', async (req, res) => {
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 // ── Start ─────────────────────────────────────────────────────────────────────
-const PORT = parseInt(process.env.PORT || '3000', 10);
-app.listen(PORT, () => {
-  console.log(`MikroTik proxy running on http://localhost:${PORT}`);
-  console.log(`Router: ${MIKROTIK_HOST}:${MIKROTIK_PORT}`);
-});
+// When run directly (local dev), start the HTTP server.
+// When imported by Vercel serverless, just export the app.
+if (require.main === module) {
+  const PORT = parseInt(process.env.PORT || '3000', 10);
+  app.listen(PORT, () => {
+    console.log(`MikroTik proxy running on http://localhost:${PORT}`);
+    console.log(`Router: ${MIKROTIK_HOST}:${MIKROTIK_PORT}`);
+  });
+}
+
+module.exports = app;
