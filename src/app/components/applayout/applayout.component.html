@@ -1,148 +1,232 @@
 <div class="content-body">
 
-    <!-- Sidebar toggle button (visible on mobile) -->
-    <button #toggleBtn class="btn btn-outline-secondary custom-btn" (click)="toggleSidebar()">
-        &#9776;
+    <!-- Sidebar toggle button -->
+    <button #toggleBtn class="sidebar-toggle" (click)="toggleSidebar()" [class.shifted]="sidebarVisible">
+        <i [class]="sidebarVisible ? 'ri-close-line' : 'ri-menu-line'"></i>
     </button>
 
     <!-- Sidebar -->
-    <nav [ngClass]="{'d-none': !sidebarVisible}" #sidebar class="sidebar flex-column p-3">
-        <h2 class="sidebar-title text-center text-white mb-4">
-            <span>Menu</span>
-        </h2>
+    <nav [ngClass]="{'d-none': !sidebarVisible}" #sidebar class="sidebar">
 
-        <ul class="nav flex-column">
-            <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/dashboard" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Dashboard</a>
-            </li>
-            <li class="nav-item" *ngIf="role === 'admin' || role === 'operator'">
-                <a routerLink="/user-details" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">User Details</a>
-            </li>
+        <!-- Brand -->
+        <div class="sidebar-brand">
+            <i class="ri-star-fill brand-icon"></i>
+            <span class="brand-text">Ranjha<span class="brand-highlight">7star</span></span>
+        </div>
 
-            <li class="nav-item" *ngIf="role === 'admin' || role === 'operator'">
-                <a routerLink="/user-collections" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">User Collections</a>
-            </li>
+        <!-- Scrollable nav area -->
+        <div class="sidebar-nav">
 
+            <!-- Dashboard (standalone) -->
+            <a *ngIf="role === 'admin'" routerLink="/dashboard" routerLinkActive="active"
+                class="nav-link-item" (click)="onMenuClick()">
+                <i class="ri-dashboard-line"></i>
+                <span>Dashboard</span>
+            </a>
 
-            <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/new-connection" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">New Connection</a>
-            </li>
-            <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/customer-status" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Customer Status</a>
-            </li>
-            <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/recovery-details" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Recovery Details</a>
-            </li>
-                 <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/material-details" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Material Details</a>
-            </li>
-            <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/expenses" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Expenses</a>
-            </li>
+            <!-- ── Customers ──────────────────────────────── -->
+            <div class="nav-section" *ngIf="role === 'admin' || role === 'operator'">
+                <div class="section-header" (click)="toggleSection('customers')">
+                    <div class="section-title">
+                        <i class="ri-group-line"></i>
+                        <span>Customers</span>
+                    </div>
+                    <i class="ri-arrow-down-s-line section-arrow"
+                       [class.rotated]="expandedSections['customers']"></i>
+                </div>
+                <div class="section-links" [class.expanded]="expandedSections['customers']">
+                    <a *ngIf="role === 'admin' || role === 'operator'" routerLink="/user-details"
+                       routerLinkActive="active" class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-user-line"></i><span>User Details</span>
+                    </a>
+                    <a *ngIf="role === 'admin' || role === 'operator'" routerLink="/user-collections"
+                       routerLinkActive="active" class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-folders-line"></i><span>User Collections</span>
+                    </a>
+                    <a *ngIf="role === 'admin'" routerLink="/new-connection"
+                       routerLinkActive="active" class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-add-circle-line"></i><span>New Connection</span>
+                    </a>
+                    <a *ngIf="role === 'admin'" routerLink="/customer-status"
+                       routerLinkActive="active" class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-shield-check-line"></i><span>Customer Status</span>
+                    </a>
+                    <a *ngIf="role === 'admin'" routerLink="/defaulter-users"
+                       routerLinkActive="active" class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-error-warning-line"></i><span>Defaulter Users</span>
+                    </a>
+                    <a *ngIf="role === 'admin'" routerLink="/complain-details"
+                       routerLinkActive="active" class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-chat-delete-line"></i><span>Complaints</span>
+                    </a>
+                </div>
+            </div>
 
-            <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/borrow-details" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Borrow Details</a>
-            </li>
+            <!-- ── Finance ────────────────────────────────── -->
+            <div class="nav-section" *ngIf="role === 'admin'">
+                <div class="section-header" (click)="toggleSection('finance')">
+                    <div class="section-title">
+                        <i class="ri-money-dollar-circle-line"></i>
+                        <span>Finance</span>
+                    </div>
+                    <i class="ri-arrow-down-s-line section-arrow"
+                       [class.rotated]="expandedSections['finance']"></i>
+                </div>
+                <div class="section-links" [class.expanded]="expandedSections['finance']">
+                    <a routerLink="/bill-creator" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-file-text-line"></i><span>Bill Creator</span>
+                    </a>
+                    <a routerLink="/recovery-details" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-refund-2-line"></i><span>Recovery Details</span>
+                    </a>
+                    <a routerLink="/recovery-officer" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-user-star-line"></i><span>Recovery Officer</span>
+                    </a>
+                    <a routerLink="/ro-reports" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-bar-chart-box-line"></i><span>RO Reports</span>
+                    </a>
+                    <a routerLink="/expenses" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-wallet-3-line"></i><span>Expenses</span>
+                    </a>
+                    <a routerLink="/borrow-details" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-hand-coin-line"></i><span>Borrow Details</span>
+                    </a>
+                    <a routerLink="/payable-details" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-bank-card-line"></i><span>Payable Details</span>
+                    </a>
+                </div>
+            </div>
 
-              <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/payable-details" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Payable Details</a>
-            </li>
+            <!-- ── Network ────────────────────────────────── -->
+            <div class="nav-section" *ngIf="role === 'admin'">
+                <div class="section-header" (click)="toggleSection('network')">
+                    <div class="section-title">
+                        <i class="ri-global-line"></i>
+                        <span>Network</span>
+                    </div>
+                    <i class="ri-arrow-down-s-line section-arrow"
+                       [class.rotated]="expandedSections['network']"></i>
+                </div>
+                <div class="section-links" [class.expanded]="expandedSections['network']">
+                    <a routerLink="/mikrotik-users" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-router-line"></i><span>MikroTik Users</span>
+                    </a>
+                    <a routerLink="/area-details" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-map-pin-line"></i><span>Area Details</span>
+                    </a>
+                    <a routerLink="/sub-area-details" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-map-2-line"></i><span>Sub-Area Details</span>
+                    </a>
+                    <a routerLink="/city-details" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-building-line"></i><span>City Details</span>
+                    </a>
+                    <a routerLink="/package-details" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-price-tag-3-line"></i><span>Package Details</span>
+                    </a>
+                    <a routerLink="/operator-details" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-user-settings-line"></i><span>Operator Details</span>
+                    </a>
+                </div>
+            </div>
 
-             <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/stock-details" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Stock Details</a>
-            </li>
+            <!-- ── Management ─────────────────────────────── -->
+            <div class="nav-section" *ngIf="role === 'admin'">
+                <div class="section-header" (click)="toggleSection('management')">
+                    <div class="section-title">
+                        <i class="ri-briefcase-line"></i>
+                        <span>Management</span>
+                    </div>
+                    <i class="ri-arrow-down-s-line section-arrow"
+                       [class.rotated]="expandedSections['management']"></i>
+                </div>
+                <div class="section-links" [class.expanded]="expandedSections['management']">
+                    <a routerLink="/material-details" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-tools-line"></i><span>Material Details</span>
+                    </a>
+                    <a routerLink="/stock-details" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-inbox-2-line"></i><span>Stock Details</span>
+                    </a>
+                    <a routerLink="/company-detail" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-building-4-line"></i><span>Company Detail</span>
+                    </a>
+                </div>
+            </div>
 
-            <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/bill-creator" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Bill Creator</a>
-            </li>
-            <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/ro-reports" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">RO Reports</a>
-            </li>
-            <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/area-details" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Area Details</a>
-            </li>
-            <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/sub-area-details" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Sub-Area Details</a>
-            </li>
-            <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/operator-details" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Operator Details</a>
-            </li>
-            <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/city-details" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">City Details</a>
-            </li>
-            <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/package-details" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Package Details</a>
-            </li>
-            <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/recovery-officer" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Recovery Officer</a>
-            </li>
+            <!-- ── System ─────────────────────────────────── -->
+            <div class="nav-section" *ngIf="role === 'admin' || role === 'operator'">
+                <div class="section-header" (click)="toggleSection('system')">
+                    <div class="section-title">
+                        <i class="ri-settings-3-line"></i>
+                        <span>System</span>
+                    </div>
+                    <i class="ri-arrow-down-s-line section-arrow"
+                       [class.rotated]="expandedSections['system']"></i>
+                </div>
+                <div class="section-links" [class.expanded]="expandedSections['system']">
+                    <a *ngIf="role === 'admin'" routerLink="/logs" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-file-list-3-line"></i><span>Logs</span>
+                    </a>
+                    <a *ngIf="role === 'admin'" routerLink="/upload-docs" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-upload-cloud-line"></i><span>Upload Docs</span>
+                    </a>
+                    <a routerLink="/settings" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-equalizer-line"></i><span>Settings</span>
+                    </a>
+                </div>
+            </div>
 
-            <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/defaulter-users" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Defaulter Users</a>
-            </li>
+        </div>
 
-            <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/company-detail" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Company Detail</a>
-            </li>
-
-               <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/complain-details" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Complain Detail</a>
-            </li>
-
-
-
-            <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/mikrotik-users" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">MikroTik Users</a>
-            </li>
-            <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/logs" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Logs</a>
-            </li>
-            <li class="nav-item" *ngIf="role === 'admin'">
-                <a routerLink="/upload-docs" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Upload Docs</a>
-            </li>
-            <li class="nav-item" *ngIf="role === 'admin' || role === 'operator'">
-                <a routerLink="/settings" routerLinkActive="active" class="nav-link text-white"
-                    (click)="onMenuClick()">Settings</a>
-            </li>
-        
-
-
-        </ul>
-
-        <div class="d-flex justify-content-center align-items-center mt-auto">
-            <button class="btn btn-danger" (click)="logout()">Logout</button>
+        <!-- Logout -->
+        <div class="sidebar-footer">
+            <button class="logout-btn" (click)="openLogoutModal()">
+                <i class="ri-logout-box-r-line"></i>
+                <span>Logout</span>
+            </button>
         </div>
 
     </nav>
 
     <!-- Main Content -->
-    <main class="main-content flex-grow-1" [class.full-width]="!sidebarVisible" [ngClass]="{'no-padding': isDashboard}">
+    <main class="main-content flex-grow-1" [class.full-width]="!sidebarVisible"
+          [ngClass]="{'no-padding': isDashboard}">
         <router-outlet></router-outlet>
     </main>
 
 </div>
+
+<!-- ── Logout Confirmation Modal ──────────────────────────── -->
+<ng-template #logoutModal let-modal>
+    <div class="logout-modal">
+        <div class="logout-modal-icon">
+            <i class="ri-logout-box-r-line"></i>
+        </div>
+        <h5 class="fw-bold mt-3 mb-1">Logout?</h5>
+        <p class="text-muted mb-4 small">Are you sure you want to sign out of your account?</p>
+        <div class="d-flex gap-2 w-100">
+            <button class="btn btn-light flex-fill fw-semibold" (click)="modal.dismiss()">Cancel</button>
+            <button class="btn btn-danger flex-fill fw-semibold" (click)="logout(modal)">
+                <i class="ri-logout-box-r-line me-1"></i> Logout
+            </button>
+        </div>
+    </div>
+</ng-template>

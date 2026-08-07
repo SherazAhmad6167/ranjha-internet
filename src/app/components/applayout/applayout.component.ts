@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
-import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Component, ElementRef, HostListener, TemplateRef, ViewChild } from '@angular/core';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-applayout',
-  imports: [CommonModule, RouterOutlet, RouterLink],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './applayout.component.html',
   styleUrl: './applayout.component.scss',
 })
@@ -15,16 +16,31 @@ export class ApplayoutComponent {
   @ViewChild('toggleBtn') toggleBtn!: ElementRef;
   isDashboard = false;
 
-  constructor(private route: Router) {
-     this.route.events.subscribe(event => {
-    if (event instanceof NavigationEnd) {
-      this.isDashboard = this.route.url === '/dashboard';
-    }
-  });
+  expandedSections: Record<string, boolean> = {
+    customers: true,
+    finance: false,
+    network: false,
+    management: false,
+    system: false,
+  };
+
+  @ViewChild('logoutModal') logoutModal!: TemplateRef<any>;
+
+  constructor(private route: Router, private modalService: NgbModal) {
+    this.route.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        this.isDashboard = this.route.url === '/dashboard';
+        this.autoExpandSection(this.route.url);
+      }
+    });
   }
 
   ngOnInit() {
     this.role = localStorage.getItem('role');
+  }
+
+  toggleSection(key: string) {
+    this.expandedSections[key] = !this.expandedSections[key];
   }
 
   toggleSidebar() {
@@ -41,8 +57,13 @@ export class ApplayoutComponent {
     }
   }
 
-  logout() {
-    // localStorage.clear();
+  openLogoutModal() {
+    this.modalService.open(this.logoutModal, { centered: true, size: 'sm' });
+  }
+
+  logout(modal: any) {
+    modal.close();
+    localStorage.clear();
     this.route.navigate(['/login']);
   }
 
@@ -58,6 +79,23 @@ export class ApplayoutComponent {
         !this.toggleBtn.nativeElement.contains(target)
       ) {
         this.sidebarVisible = false;
+      }
+    }
+  }
+
+  private autoExpandSection(url: string) {
+    const sectionMap: Record<string, string[]> = {
+      customers: ['/user-details', '/user-collections', '/new-connection', '/customer-status', '/defaulter-users', '/complain-details'],
+      finance: ['/bill-creator', '/recovery-details', '/recovery-officer', '/ro-reports', '/expenses', '/borrow-details', '/payable-details'],
+      network: ['/mikrotik-users', '/area-details', '/sub-area-details', '/city-details', '/package-details', '/operator-details'],
+      management: ['/material-details', '/stock-details', '/company-detail'],
+      system: ['/logs', '/upload-docs', '/settings'],
+    };
+
+    for (const [section, routes] of Object.entries(sectionMap)) {
+      if (routes.some(r => url.startsWith(r))) {
+        this.expandedSections[section] = true;
+        break;
       }
     }
   }
