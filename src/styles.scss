@@ -388,3 +388,279 @@
   min-height: 100vh;       // make full viewport height to allow vertical centering
   margin: 0;               // remove default margins
 }
+
+/* =====================================================
+   RANJHA7STAR — DARK MODE
+   Applied via body.dark-mode (ThemeService)
+   ===================================================== */
+
+body.dark-mode {
+  background-color: #0f0f1a !important;
+  color: #e2e8f0 !important;
+}
+
+/* ── Page background ── */
+body.dark-mode .background-color {
+  background: linear-gradient(120deg, #0f0f1a 0%, #1a1a2e 100%) !important;
+}
+
+/* ── Sidebar ── */
+body.dark-mode .sidebar {
+  background: #131320 !important;
+  border-right: 1px solid #2a2a40 !important;
+}
+body.dark-mode .sidebar-brand {
+  border-bottom-color: #2a2a40 !important;
+}
+body.dark-mode .brand-text,
+body.dark-mode .brand-highlight {
+  color: #e2e8f0 !important;
+}
+body.dark-mode .nav-link-item {
+  color: #94a3b8 !important;
+}
+body.dark-mode .nav-link-item:hover {
+  background: rgba(108, 99, 255, 0.12) !important;
+  color: #c4b5fd !important;
+}
+body.dark-mode .nav-link-item.active {
+  background: rgba(108, 99, 255, 0.2) !important;
+  color: #a78bfa !important;
+}
+body.dark-mode .section-header {
+  color: #64748b !important;
+}
+body.dark-mode .section-header:hover {
+  background: rgba(255,255,255,0.04) !important;
+  color: #94a3b8 !important;
+}
+body.dark-mode .sidebar-footer {
+  border-top-color: #2a2a40 !important;
+}
+body.dark-mode .logout-btn {
+  background: rgba(239,68,68,0.1) !important;
+  color: #f87171 !important;
+  border-color: rgba(239,68,68,0.2) !important;
+  &:hover { background: rgba(239,68,68,0.2) !important; }
+}
+
+/* ── Main content ── */
+body.dark-mode main {
+  background: #0f0f1a !important;
+}
+
+/* ── Bootstrap cards ── */
+body.dark-mode .card {
+  background-color: #1a1a2e !important;
+  border-color: #2a2a40 !important;
+  color: #e2e8f0 !important;
+}
+body.dark-mode .card-header {
+  background-color: #1e1e32 !important;
+  border-bottom-color: #2a2a40 !important;
+  color: #e2e8f0 !important;
+}
+body.dark-mode .card-footer {
+  background-color: #1e1e32 !important;
+  border-top-color: #2a2a40 !important;
+}
+
+/* ── Tables ── */
+body.dark-mode .table {
+  --bs-table-bg: #1a1a2e;
+  --bs-table-striped-bg: #1e1e32;
+  --bs-table-hover-bg: #252540;
+  --bs-table-border-color: #2a2a40;
+  color: #e2e8f0 !important;
+}
+body.dark-mode .table-light,
+body.dark-mode thead.table-light {
+  --bs-table-bg: #1e1e32 !important;
+  color: #cbd5e1 !important;
+  border-color: #2a2a40 !important;
+}
+body.dark-mode th { color: #94a3b8 !important; }
+
+/* ── Forms ── */
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+  background-color: #1e1e32 !important;
+  border-color: #3a3a55 !important;
+  color: #e2e8f0 !important;
+}
+body.dark-mode .form-control::placeholder { color: #475569 !important; }
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+  background-color: #252540 !important;
+  border-color: #6c63ff !important;
+  box-shadow: 0 0 0 0.2rem rgba(108,99,255,0.2) !important;
+}
+body.dark-mode .input-group-text {
+  background-color: #1e1e32 !important;
+  border-color: #3a3a55 !important;
+  color: #94a3b8 !important;
+}
+body.dark-mode .form-check-input {
+  background-color: #1e1e32 !important;
+  border-color: #3a3a55 !important;
+}
+
+/* ── Text utilities ── */
+body.dark-mode .text-muted   { color: #64748b !important; }
+body.dark-mode .text-dark    { color: #e2e8f0 !important; }
+body.dark-mode .text-black-50 { color: rgba(203,213,225,0.5) !important; }
+body.dark-mode .fw-bold      { color: inherit; }
+
+/* ── Bootstrap badge subtle variants ── */
+body.dark-mode .bg-success-subtle  { background: rgba(16,185,129,0.15) !important; }
+body.dark-mode .text-success-emphasis { color: #34d399 !important; }
+body.dark-mode .bg-danger-subtle   { background: rgba(239,68,68,0.15) !important; }
+body.dark-mode .text-danger-emphasis  { color: #f87171 !important; }
+body.dark-mode .bg-info-subtle     { background: rgba(14,165,233,0.15) !important; }
+body.dark-mode .text-info-emphasis    { color: #38bdf8 !important; }
+body.dark-mode .bg-secondary-subtle   { background: rgba(148,163,184,0.12) !important; }
+body.dark-mode .text-secondary-emphasis { color: #94a3b8 !important; }
+
+/* ── Soft icon backgrounds (MikroTik stat cards) ── */
+body.dark-mode .bg-primary-soft { background: rgba(108,99,255,0.15) !important; }
+body.dark-mode .bg-success-soft { background: rgba(16,185,129,0.15) !important; }
+body.dark-mode .bg-danger-soft  { background: rgba(239,68,68,0.15) !important; }
+
+/* ── Progress bar ── */
+body.dark-mode .progress {
+  background-color: #2a2a40 !important;
+}
+
+/* ── Alert ── */
+body.dark-mode .alert-warning {
+  background: rgba(217,119,6,0.12) !important;
+  border-color: rgba(217,119,6,0.25) !important;
+  color: #fcd34d !important;
+}
+
+/* ── Nav tabs ── */
+body.dark-mode .nav-tabs {
+  border-bottom-color: #2a2a40 !important;
+}
+body.dark-mode .nav-tabs .nav-link {
+  color: #64748b !important;
+}
+body.dark-mode .nav-tabs .nav-link:hover {
+  border-color: #2a2a40 !important;
+  color: #94a3b8 !important;
+}
+body.dark-mode .nav-tabs .nav-link.active {
+  background-color: #1a1a2e !important;
+  border-color: #2a2a40 #2a2a40 #1a1a2e !important;
+  color: #a78bfa !important;
+}
+
+/* ── Bootstrap modals (ng-bootstrap renders in body) ── */
+body.dark-mode .modal-content {
+  background-color: #1a1a2e !important;
+  border-color: #2a2a40 !important;
+  color: #e2e8f0 !important;
+}
+body.dark-mode .modal-header {
+  background-color: #1e1e32 !important;
+  border-bottom-color: #2a2a40 !important;
+}
+body.dark-mode .modal-footer {
+  background-color: #1e1e32 !important;
+  border-top-color: #2a2a40 !important;
+}
+body.dark-mode .modal-title { color: #e2e8f0 !important; }
+body.dark-mode .btn-close { filter: invert(1) grayscale(1); }
+
+/* ── Dashboard stat cards (gradient cards keep their look, tweak text) ── */
+body.dark-mode .dashboard-title {
+  background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* ── Analytic cards ── */
+body.dark-mode .analytic-card {
+  background: #1a1a2e !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35) !important;
+}
+body.dark-mode .analytic-pagination {
+  border-top-color: #2a2a40 !important;
+}
+body.dark-mode .pg-btn {
+  background: #1e1e32 !important;
+  border-color: #3a3a55 !important;
+  color: #94a3b8 !important;
+}
+body.dark-mode .pg-btn:hover:not(:disabled) {
+  background: #6c63ff !important;
+  color: #fff !important;
+  border-color: #6c63ff !important;
+}
+body.dark-mode .pg-info-label {
+  background: #1e1e32 !important;
+  color: #64748b !important;
+}
+
+/* ── Chart wrapper ── */
+body.dark-mode .chart-wrapper {
+  background: #1a1a2e !important;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.25) !important;
+}
+
+/* ── Section accent bar ── */
+body.dark-mode .section-accent-bar {
+  background: linear-gradient(180deg, #a78bfa, #60a5fa) !important;
+}
+
+/* ── Skeleton shimmer in dark ── */
+body.dark-mode .skeleton-bar {
+  background: linear-gradient(90deg, #1e1e32 25%, #2a2a40 50%, #1e1e32 75%) !important;
+  background-size: 200% 100% !important;
+}
+
+/* ── Pagination (Bootstrap) ── */
+body.dark-mode .page-link {
+  background-color: #1e1e32 !important;
+  border-color: #2a2a40 !important;
+  color: #94a3b8 !important;
+}
+body.dark-mode .page-item.active .page-link {
+  background-color: #6c63ff !important;
+  border-color: #6c63ff !important;
+  color: #fff !important;
+}
+body.dark-mode .page-item.disabled .page-link { opacity: 0.4; }
+
+/* ── Outline buttons in dark ── */
+body.dark-mode .btn-outline-primary {
+  color: #a78bfa !important;
+  border-color: #a78bfa !important;
+}
+body.dark-mode .btn-outline-primary:hover {
+  background: #a78bfa !important;
+  color: #fff !important;
+}
+body.dark-mode .btn-outline-secondary {
+  color: #94a3b8 !important;
+  border-color: #3a3a55 !important;
+}
+body.dark-mode .btn-outline-secondary:hover {
+  background: #3a3a55 !important;
+  color: #e2e8f0 !important;
+}
+body.dark-mode .btn-light {
+  background: #1e1e32 !important;
+  border-color: #2a2a40 !important;
+  color: #94a3b8 !important;
+}
+
+/* ── Container-fluid padding areas ── */
+body.dark-mode .container-fluid { color: #e2e8f0; }
+
+/* ── Logout modal component ── */
+body.dark-mode .logout-modal {
+  background: #1a1a2e !important;
+  color: #e2e8f0 !important;
+}

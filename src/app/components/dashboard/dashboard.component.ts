@@ -19,6 +19,7 @@ import { AreaModalComponent } from '../area-modal/area-modal.component';
 import { CustomerStatusModalComponent } from '../customer-status-modal/customer-status-modal.component';
 import { RouterLink } from '@angular/router';
 import { MikrotikService, MikrotikServer } from '../../shared/mikrotik.service';
+import { ThemeService } from '../../shared/theme.service';
 
 export interface MikrotikServerStat {
   id: MikrotikServer;
@@ -59,6 +60,7 @@ export class DashboardComponent {
     private firestore: Firestore,
     private modalService: NgbModal,
     private mikrotikService: MikrotikService,
+    public themeService: ThemeService,
   ) {}
 
   async ngOnInit() {
