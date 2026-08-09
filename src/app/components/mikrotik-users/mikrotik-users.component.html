@@ -109,11 +109,19 @@
           </select>
           <span class="text-muted small">entries</span>
         </div>
-        <div class="col d-flex justify-content-end gap-2">
+        <div class="col d-flex justify-content-end gap-2 flex-wrap">
+          <button class="btn btn-sm btn-outline-success" (click)="openBulkModal('enable')"
+            [disabled]="isBulkUpdating || isLoading || !users.length" title="Enable all users on this server">
+            <i class="ri-wifi-line me-1"></i>Enable All
+          </button>
+          <button class="btn btn-sm btn-outline-danger" (click)="openBulkModal('disable')"
+            [disabled]="isBulkUpdating || isLoading || !users.length" title="Disable all users on this server">
+            <i class="ri-wifi-off-line me-1"></i>Disable All
+          </button>
           <input
             type="text"
             class="form-control form-control-sm"
-            style="max-width: 260px"
+            style="max-width: 220px"
             placeholder="Search username, profile..."
             [(ngModel)]="searchTerm"
             (input)="applyFilter()"
@@ -382,6 +390,65 @@
     <button type="button" class="btn btn-danger" (click)="confirmDelete(modal)" [disabled]="isDeleting">
       <span *ngIf="isDeleting" class="spinner-border spinner-border-sm me-1"></span>
       {{ isDeleting ? 'Deleting...' : 'Delete' }}
+    </button>
+  </div>
+</ng-template>
+
+<!-- ── Bulk Enable / Disable Modal ───────────────────────────────────────── -->
+<ng-template #bulkModal let-modal>
+  <div class="modal-header border-0 pb-0">
+    <h5 class="modal-title fw-semibold"
+        [ngClass]="bulkPendingAction === 'enable' ? 'text-success' : 'text-danger'">
+      <i class="me-2"
+         [ngClass]="bulkPendingAction === 'enable' ? 'ri-wifi-line' : 'ri-wifi-off-line'"></i>
+      {{ bulkPendingAction === 'enable' ? 'Enable' : 'Disable' }} All Users
+    </h5>
+    <button type="button" class="btn-close" (click)="modal.dismiss()" [disabled]="isBulkUpdating"></button>
+  </div>
+
+  <div class="modal-body">
+
+    <!-- Confirmation state -->
+    <ng-container *ngIf="!isBulkUpdating">
+      <p class="mb-1">
+        This will
+        <strong [ngClass]="bulkPendingAction === 'enable' ? 'text-success' : 'text-danger'">
+          {{ bulkPendingAction === 'enable' ? 'enable' : 'disable' }}
+        </strong>
+        all <strong>{{ users.length }}</strong> PPP secrets on server
+        <strong>{{ activeServerTab.label }}</strong>.
+      </p>
+      <p class="text-muted small mb-0">
+        <ng-container *ngIf="bulkPendingAction === 'disable'">
+          Active PPPoE sessions will be dropped immediately.
+        </ng-container>
+        <ng-container *ngIf="bulkPendingAction === 'enable'">
+          Only currently disabled users will be updated.
+        </ng-container>
+      </p>
+    </ng-container>
+
+    <!-- Processing state -->
+    <ng-container *ngIf="isBulkUpdating">
+      <p class="fw-semibold mb-2">
+        <span class="spinner-border spinner-border-sm me-2"
+              [ngClass]="bulkPendingAction === 'enable' ? 'text-success' : 'text-danger'"></span>
+        {{ bulkPendingAction === 'enable' ? 'Enabling' : 'Disabling' }} all users on
+        {{ activeServerTab.label }}…
+      </p>
+      <p class="text-muted small mb-0">Please wait, do not close this window.</p>
+    </ng-container>
+
+  </div>
+
+  <div class="modal-footer border-0 pt-0" *ngIf="!isBulkUpdating">
+    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
+    <button type="button"
+            [ngClass]="bulkPendingAction === 'enable' ? 'btn btn-success' : 'btn btn-danger'"
+            (click)="confirmBulkAction(modal)">
+      <i class="me-1"
+         [ngClass]="bulkPendingAction === 'enable' ? 'ri-wifi-line' : 'ri-wifi-off-line'"></i>
+      {{ bulkPendingAction === 'enable' ? 'Enable All' : 'Disable All' }}
     </button>
   </div>
 </ng-template>

@@ -28,6 +28,8 @@ export class MikrotikUsersComponent implements OnInit {
   isLoading = false;
   isSaving = false;
   isDeleting = false;
+  isBulkUpdating = false;
+  bulkPendingAction: 'enable' | 'disable' | null = null;
   proxyError: string | null = null;
   proxyIsCors = false;
 
@@ -58,6 +60,7 @@ export class MikrotikUsersComponent implements OnInit {
 
   @ViewChild('userModal') userModal!: TemplateRef<any>;
   @ViewChild('deleteModal') deleteModal!: TemplateRef<any>;
+  @ViewChild('bulkModal') bulkModal!: TemplateRef<any>;
 
   private modalRef?: NgbModalRef;
   private deleteModalRef?: NgbModalRef;
@@ -275,6 +278,35 @@ export class MikrotikUsersComponent implements OnInit {
       error: (err: MikrotikError) => {
         this.toastr.error(err.message || 'Failed to delete user');
         this.isDeleting = false;
+      },
+    });
+  }
+
+  openBulkModal(action: 'enable' | 'disable') {
+    this.bulkPendingAction = action;
+    this.modalService.open(this.bulkModal, { centered: true, size: 'sm', backdrop: 'static' });
+  }
+
+  confirmBulkAction(modal: any) {
+    if (!this.bulkPendingAction) return;
+    this.isBulkUpdating = true;
+
+    const req$ = this.bulkPendingAction === 'enable'
+      ? this.mikrotikService.bulkEnablePppSecrets(this.activeServer)
+      : this.mikrotikService.bulkDisablePppSecrets(this.activeServer);
+
+    req$.subscribe({
+      next: (res) => {
+        const action = this.bulkPendingAction === 'enable' ? 'enabled' : 'disabled';
+        this.toastr.success(`${res.updated} users ${action} (${res.total} total) on ${this.activeServerTab.label}`);
+        this.isBulkUpdating = false;
+        this.bulkPendingAction = null;
+        modal.close();
+        this.loadUsers();
+      },
+      error: (err: MikrotikError) => {
+        this.toastr.error(err.message || 'Bulk action failed');
+        this.isBulkUpdating = false;
       },
     });
   }

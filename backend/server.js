@@ -24,7 +24,7 @@ app.use(
         callback(new Error(`CORS: origin ${origin} not allowed`));
       }
     },
-    methods: ['GET', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type'],
   }),
 );
@@ -116,6 +116,36 @@ function registerRoutes(prefix, withRtr) {
   // PPP profiles (for populating the profile dropdown)
   app.get(`${prefix}/ppp/profile`, async (req, res) => {
     await withRtr(res, (conn) => conn.get('/ppp/profile'));
+  });
+
+  // Bulk enable all PPP secrets (single connection, loop server-side)
+  app.post(`${prefix}/ppp/secret/bulk-enable`, async (req, res) => {
+    await withRtr(res, async (conn) => {
+      const secrets = await conn.get('/ppp/secret');
+      let updated = 0;
+      for (const secret of secrets) {
+        if (secret.disabled === 'yes' || secret.disabled === 'true') {
+          await conn.set('/ppp/secret', secret['.id'], { disabled: 'no' });
+          updated++;
+        }
+      }
+      return { updated, total: secrets.length };
+    });
+  });
+
+  // Bulk disable all PPP secrets (single connection, loop server-side)
+  app.post(`${prefix}/ppp/secret/bulk-disable`, async (req, res) => {
+    await withRtr(res, async (conn) => {
+      const secrets = await conn.get('/ppp/secret');
+      let updated = 0;
+      for (const secret of secrets) {
+        if (secret.disabled !== 'yes' && secret.disabled !== 'true') {
+          await conn.set('/ppp/secret', secret['.id'], { disabled: 'yes' });
+          updated++;
+        }
+      }
+      return { updated, total: secrets.length };
+    });
   });
 
   // System resource (connection health check)

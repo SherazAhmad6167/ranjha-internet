@@ -77,6 +77,14 @@ export class MikrotikService {
     return this.httpDelete('/ppp/secret', { id }, server);
   }
 
+  bulkEnablePppSecrets(server: MikrotikServer = 1): Observable<{ updated: number; total: number }> {
+    return this.post('/ppp/secret/bulk-enable', {}, server);
+  }
+
+  bulkDisablePppSecrets(server: MikrotikServer = 1): Observable<{ updated: number; total: number }> {
+    return this.post('/ppp/secret/bulk-disable', {}, server);
+  }
+
   getSystemResource(server: MikrotikServer = 1): Observable<any> {
     return this.get('/system/resource', server);
   }
@@ -108,6 +116,12 @@ export class MikrotikService {
   private patch(path: string, body: object, server: MikrotikServer = 1): Observable<any> {
     return this.http
       .patch(`${this.base(server)}${path}`, body)
+      .pipe(catchError(this.mapError));
+  }
+
+  private post(path: string, body: object, server: MikrotikServer = 1): Observable<any> {
+    return this.http
+      .post(`${this.base(server)}${path}`, body)
       .pipe(catchError(this.mapError));
   }
 
