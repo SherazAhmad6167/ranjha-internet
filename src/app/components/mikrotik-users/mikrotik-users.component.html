@@ -11,6 +11,21 @@
     </button>
   </div>
 
+  <!-- Server Tabs -->
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item" *ngFor="let srv of servers">
+      <button
+        class="nav-link d-flex align-items-center gap-2"
+        [class.active]="activeServer === srv.id"
+        (click)="switchServer(srv.id)"
+      >
+        <i class="ri-router-line"></i>
+        <span class="fw-semibold">{{ srv.label }}</span>
+        <small class="text-muted fw-normal d-none d-sm-inline">({{ srv.ip }})</small>
+      </button>
+    </li>
+  </ul>
+
   <!-- Proxy not running notice -->
   <div class="alert alert-warning d-flex align-items-start gap-2 mb-4" *ngIf="!isLoading && proxyError">
     <i class="ri-error-warning-line fs-5 mt-1 flex-shrink-0"></i>
@@ -113,7 +128,7 @@
     <!-- Loading State -->
     <div *ngIf="isLoading" class="text-center py-5">
       <div class="spinner-border text-primary mb-3" role="status"></div>
-      <p class="text-muted mb-0">Loading PPP secrets from router...</p>
+      <p class="text-muted mb-0">Loading PPP secrets from router {{ activeServerTab.label }}...</p>
     </div>
 
     <!-- Table -->
@@ -221,6 +236,7 @@
     <h5 class="modal-title fw-semibold">
       <i class="ri-router-line me-2 text-primary"></i>
       {{ editMode ? 'Edit PPP Secret' : 'Add PPP Secret' }}
+      <small class="text-muted fw-normal fs-6 ms-1">— {{ activeServerTab.label }}</small>
     </h5>
     <button type="button" class="btn-close" (click)="modal.dismiss()" [disabled]="isSaving"></button>
   </div>
@@ -268,28 +284,53 @@
         </div>
       </div>
 
-      <!-- Profile + Service side by side -->
+      <!-- Profile (Package) + Service side by side -->
       <div class="row g-3 mb-3">
         <div class="col-6">
-          <label class="form-label fw-semibold">Profile <span class="text-danger">*</span></label>
-          <input
-            type="text"
-            class="form-control"
-            formControlName="profile"
-            placeholder="default"
-          />
-          <small class="text-muted">Must exist on the router</small>
+          <label class="form-label fw-semibold">Profile / Package <span class="text-danger">*</span></label>
+          <select class="form-select" formControlName="profile"
+            [class.is-invalid]="form.get('profile')?.touched && form.get('profile')?.invalid">
+            <option value="" disabled>
+              {{ profilesLoading ? 'Loading profiles...' : '— Select profile —' }}
+            </option>
+            <option *ngFor="let p of routerProfiles" [value]="p">{{ p }}</option>
+          </select>
+          <div class="invalid-feedback">Profile is required</div>
+          <small class="text-muted">Profiles loaded directly from the router</small>
         </div>
         <div class="col-6">
           <label class="form-label fw-semibold">Service <span class="text-danger">*</span></label>
           <select class="form-select" formControlName="service">
             <option value="pppoe">PPPoE</option>
-            <option value="pptp">PPTP</option>
-            <option value="l2tp">L2TP</option>
-            <option value="sstp">SSTP</option>
-            <option value="any">Any</option>
+            <!-- <option value="pptp">PPTP</option> -->
+            <!-- <option value="l2tp">L2TP</option> -->
+            <!-- <option value="sstp">SSTP</option> -->
+            <!-- <option value="any">Any</option> -->
           </select>
         </div>
+      </div>
+
+      <!-- Status toggle -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold d-block">Status</label>
+        <div class="d-flex align-items-center gap-3">
+          <div class="form-check form-switch mb-0">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="statusToggle"
+              formControlName="disabled"
+              style="width: 2.5rem; height: 1.25rem; cursor: pointer;"
+            />
+          </div>
+          <span class="badge rounded-pill fs-6 px-3 py-2"
+            [ngClass]="form.get('disabled')?.value ? 'bg-danger' : 'bg-success'">
+            <i class="ri-circle-fill me-1" style="font-size: 0.45rem; vertical-align: middle;"></i>
+            {{ form.get('disabled')?.value ? 'Disabled' : 'Active' }}
+          </span>
+        </div>
+        <small class="text-muted">Toggle to enable or disable this PPP secret on the router</small>
       </div>
 
       <!-- Comment -->
@@ -331,7 +372,7 @@
       <strong class="text-dark">{{ userToDelete?.name }}</strong>?
     </p>
     <p class="text-muted small mb-0">
-      This removes the user from MikroTik immediately. Any active PPPoE session will be dropped.
+      This removes the user from MikroTik <strong>{{ activeServerTab.label }}</strong> immediately. Any active PPPoE session will be dropped.
     </p>
   </div>
   <div class="modal-footer border-0 pt-0">

@@ -5,6 +5,7 @@ import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export type MikrotikUserType = 'router' | 'hotspot' | 'ppp';
+export type MikrotikServer = 1 | 2;
 
 export interface MikrotikError {
   message: string;
@@ -14,13 +15,11 @@ export interface MikrotikError {
 
 @Injectable({ providedIn: 'root' })
 export class MikrotikService {
-  // ── Proxy URL ───────────────────────────────────────────────────────────────
-  // Requests go to the Node.js proxy (backend/server.js) which forwards them
-  // to MikroTik server-side, bypassing CORS and the self-signed SSL cert.
-  //
-  // Dev:  run `npm start` inside backend/ → http://localhost:3000
-  // Prod: host the Node.js server on your LAN or a VPS, update the URL below.
-  private readonly proxyBase = environment.mikrotikProxyUrl;
+  // Proxy bases — server 1 (194.1002) and server 2 (195.9998)
+  private readonly bases: Record<MikrotikServer, string> = {
+    1: environment.mikrotikProxyUrl,
+    2: environment.mikrotikProxyUrl2,
+  };
 
   constructor(private http: HttpClient) {}
 
@@ -31,23 +30,24 @@ export class MikrotikService {
     name: string,
     password: string,
     groupOrProfile: string,
+    server: MikrotikServer = 1,
   ): Observable<any> {
     switch (type) {
       case 'router':
-        return this.createRouterUser(name, password, groupOrProfile || 'full');
+        return this.createRouterUser(name, password, groupOrProfile || 'full', server);
       case 'hotspot':
-        return this.createHotspotUser(name, password, groupOrProfile || 'default');
+        return this.createHotspotUser(name, password, groupOrProfile || 'default', server);
       case 'ppp':
-        return this.createPppSecret(name, password, groupOrProfile || 'default');
+        return this.createPppSecret(name, password, groupOrProfile || 'default', 'pppoe', server);
     }
   }
 
-  createRouterUser(name: string, password: string, group = 'full'): Observable<any> {
-    return this.put('/user', { name, password, group });
+  createRouterUser(name: string, password: string, group = 'full', server: MikrotikServer = 1): Observable<any> {
+    return this.put('/user', { name, password, group }, server);
   }
 
-  createHotspotUser(name: string, password: string, profile = 'default'): Observable<any> {
-    return this.put('/ip/hotspot/user', { name, password, profile });
+  createHotspotUser(name: string, password: string, profile = 'default', server: MikrotikServer = 1): Observable<any> {
+    return this.put('/ip/hotspot/user', { name, password, profile }, server);
   }
 
   createPppSecret(
@@ -55,56 +55,65 @@ export class MikrotikService {
     password: string,
     profile = 'default',
     service = 'pppoe',
+    server: MikrotikServer = 1,
+    disabled = 'no',
   ): Observable<any> {
-    return this.put('/ppp/secret', { name, password, profile, service });
+    return this.put('/ppp/secret', { name, password, profile, service, disabled }, server);
   }
 
-  getPppSecrets(): Observable<any[]> {
-    return this.get('/ppp/secret');
+  getPppSecrets(server: MikrotikServer = 1): Observable<any[]> {
+    return this.get('/ppp/secret', server);
   }
 
-  updatePppSecret(id: string, attrs: Record<string, string>): Observable<any> {
-    return this.patch('/ppp/secret', { id, ...attrs });
+  getPppProfiles(server: MikrotikServer = 1): Observable<any[]> {
+    return this.get('/ppp/profile', server);
   }
 
-  deletePppSecret(id: string): Observable<any> {
-    return this.httpDelete('/ppp/secret', { id });
+  updatePppSecret(id: string, attrs: Record<string, string>, server: MikrotikServer = 1): Observable<any> {
+    return this.patch('/ppp/secret', { id, ...attrs }, server);
   }
 
-  getSystemResource(): Observable<any> {
-    return this.get('/system/resource');
+  deletePppSecret(id: string, server: MikrotikServer = 1): Observable<any> {
+    return this.httpDelete('/ppp/secret', { id }, server);
   }
 
-  userExists(type: MikrotikUserType, name: string): Observable<boolean> {
-    return this.get(this.endpointFor(type)).pipe(
+  getSystemResource(server: MikrotikServer = 1): Observable<any> {
+    return this.get('/system/resource', server);
+  }
+
+  userExists(type: MikrotikUserType, name: string, server: MikrotikServer = 1): Observable<boolean> {
+    return this.get(this.endpointFor(type), server).pipe(
       map((users: any[]) => users.some((u) => u.name === name)),
     );
   }
 
   // ── HTTP helpers ─────────────────────────────────────────────────────────────
-  // No Authorization header needed — credentials live on the Node.js server.
 
-  private get(path: string): Observable<any> {
+  private base(server: MikrotikServer): string {
+    return this.bases[server];
+  }
+
+  private get(path: string, server: MikrotikServer = 1): Observable<any> {
     return this.http
-      .get(`${this.proxyBase}${path}`)
+      .get(`${this.base(server)}${path}`)
       .pipe(catchError(this.mapError));
   }
 
-  private put(path: string, body: object): Observable<any> {
+  private put(path: string, body: object, server: MikrotikServer = 1): Observable<any> {
     return this.http
-      .put(`${this.proxyBase}${path}`, body)
+      .put(`${this.base(server)}${path}`, body)
       .pipe(catchError(this.mapError));
   }
 
-  private patch(path: string, body: object): Observable<any> {
+  private patch(path: string, body: object, server: MikrotikServer = 1): Observable<any> {
     return this.http
-      .patch(`${this.proxyBase}${path}`, body)
+      .patch(`${this.base(server)}${path}`, body)
       .pipe(catchError(this.mapError));
   }
 
-  private httpDelete(path: string, body: object): Observable<any> {
+  private httpDelete(path: string, body: object, server: MikrotikServer = 1): Observable<any> {
     return this.http
-      .delete(`${this.proxyBase}${path}`, { body })
+      .delete(`${this.base(server)}${path}`, { body })
       .pipe(catchError(this.mapError));
   }
 

@@ -32,89 +32,105 @@ app.use(
 // ── MikroTik config ───────────────────────────────────────────────────────────
 // RouterOS 6.x uses the MikroTik API protocol on port 8728.
 // Enable it first on the router: /ip service set api disabled=no
+
+// Server 1 — 103.66.149.194 (194.1002)
 const MIKROTIK_HOST = process.env.MIKROTIK_HOST || '103.66.149.194';
 const MIKROTIK_PORT = parseInt(process.env.MIKROTIK_PORT || '8728', 10);
 const MIKROTIK_USER = process.env.MIKROTIK_USER || 'saqibr';
 const MIKROTIK_PASS = process.env.MIKROTIK_PASS || '';
 
-async function withRouter(res, fn) {
-  const conn = new MikrotikConn({ host: MIKROTIK_HOST, port: MIKROTIK_PORT });
-  try {
-    await conn.connect(MIKROTIK_USER, MIKROTIK_PASS);
-    const result = await fn(conn);
-    res.json(result);
-  } catch (err) {
-    const msg = err?.message || String(err);
-    if (msg.includes('ECONNREFUSED')) {
-      res.status(503).json({ message: 'Cannot connect to MikroTik router. Is port 8728 enabled?' });
-    } else if (msg.includes('ETIMEDOUT') || msg.includes('timed out')) {
-      res.status(504).json({ message: 'Connection to MikroTik router timed out.' });
-    } else {
-      res.status(500).json({ message: msg });
+// Server 2 — 103.66.149.195 (195.9998)
+const MIKROTIK_HOST_2 = process.env.MIKROTIK_HOST_2 || '103.66.149.195';
+const MIKROTIK_PORT_2 = parseInt(process.env.MIKROTIK_PORT_2 || '8728', 10);
+const MIKROTIK_USER_2 = process.env.MIKROTIK_USER_2 || 'admin';
+const MIKROTIK_PASS_2 = process.env.MIKROTIK_PASS_2 || '';
+
+function makeWithRouter(host, port, user, pass) {
+  return async function withRouter(res, fn) {
+    const conn = new MikrotikConn({ host, port, timeout: 6000 });
+    try {
+      await conn.connect(user, pass);
+      const result = await fn(conn);
+      res.json(result);
+    } catch (err) {
+      const msg = err?.message || String(err);
+      if (msg.includes('ECONNREFUSED')) {
+        res.status(503).json({ message: `Cannot connect to ${host}:${port}. Is the MikroTik API service enabled? (/ip service set api disabled=no)` });
+      } else if (msg.includes('ETIMEDOUT') || msg.includes('timed out')) {
+        res.status(504).json({ message: `Connection to ${host}:${port} timed out. Check that port ${port} is open and not blocked by the router firewall.` });
+      } else {
+        res.status(500).json({ message: msg });
+      }
+    } finally {
+      conn.close();
     }
-  } finally {
-    conn.close();
-  }
+  };
 }
 
-// ── Routes ────────────────────────────────────────────────────────────────────
+const withRouter  = makeWithRouter(MIKROTIK_HOST,   MIKROTIK_PORT,   MIKROTIK_USER,   MIKROTIK_PASS);
+const withRouter2 = makeWithRouter(MIKROTIK_HOST_2, MIKROTIK_PORT_2, MIKROTIK_USER_2, MIKROTIK_PASS_2);
 
-// PPP / PPPoE secret  (most common for ISPs)
-app.put('/mikrotik/ppp/secret', async (req, res) => {
-  const { name, password, profile = 'default', service = 'pppoe' } = req.body;
-  if (!name || !password) return res.status(400).json({ message: 'name and password are required' });
+// ── Route factory ────────────────────────────────────────────────────────────
 
-  await withRouter(res, (conn) =>
-    conn.add('/ppp/secret', { name, password, profile, service }),
-  );
-});
-
-// Hotspot user
-app.put('/mikrotik/ip/hotspot/user', async (req, res) => {
-  const { name, password, profile = 'default' } = req.body;
-  if (!name || !password) return res.status(400).json({ message: 'name and password are required' });
-
-  await withRouter(res, (conn) =>
-    conn.add('/ip/hotspot/user', { name, password, profile }),
-  );
-});
-
-// Router management user
-app.put('/mikrotik/user', async (req, res) => {
-  const { name, password, group = 'full' } = req.body;
-  if (!name || !password) return res.status(400).json({ message: 'name and password are required' });
-
-  await withRouter(res, (conn) =>
-    conn.add('/user', { name, password, group }),
-  );
-});
-
-// Get all PPP secrets
-app.get('/mikrotik/ppp/secret', async (req, res) => {
-  await withRouter(res, (conn) => conn.get('/ppp/secret'));
-});
-
-// Update PPP secret by .id (passed in body)
-app.patch('/mikrotik/ppp/secret', async (req, res) => {
-  const { id, ...attrs } = req.body;
-  if (!id) return res.status(400).json({ message: 'id is required' });
-  await withRouter(res, (conn) => conn.set('/ppp/secret', id, attrs));
-});
-
-// Delete PPP secret by .id (passed in body)
-app.delete('/mikrotik/ppp/secret', async (req, res) => {
-  const { id } = req.body;
-  if (!id) return res.status(400).json({ message: 'id is required' });
-  await withRouter(res, (conn) => conn.remove('/ppp/secret', id));
-});
-
-// System resource (connection health check)
-app.get('/mikrotik/system/resource', async (req, res) => {
-  await withRouter(res, async (conn) => {
-    const rows = await conn.get('/system/resource');
-    return rows[0] || {};
+function registerRoutes(prefix, withRtr) {
+  // PPP / PPPoE secret  (most common for ISPs)
+  app.put(`${prefix}/ppp/secret`, async (req, res) => {
+    const { name, password, profile = 'default', service = 'pppoe', disabled = 'no' } = req.body;
+    if (!name || !password) return res.status(400).json({ message: 'name and password are required' });
+    await withRtr(res, (conn) => conn.add('/ppp/secret', { name, password, profile, service, disabled }));
   });
-});
+
+  // Hotspot user
+  app.put(`${prefix}/ip/hotspot/user`, async (req, res) => {
+    const { name, password, profile = 'default' } = req.body;
+    if (!name || !password) return res.status(400).json({ message: 'name and password are required' });
+    await withRtr(res, (conn) => conn.add('/ip/hotspot/user', { name, password, profile }));
+  });
+
+  // Router management user
+  app.put(`${prefix}/user`, async (req, res) => {
+    const { name, password, group = 'full' } = req.body;
+    if (!name || !password) return res.status(400).json({ message: 'name and password are required' });
+    await withRtr(res, (conn) => conn.add('/user', { name, password, group }));
+  });
+
+  // Get all PPP secrets
+  app.get(`${prefix}/ppp/secret`, async (req, res) => {
+    await withRtr(res, (conn) => conn.get('/ppp/secret'));
+  });
+
+  // Update PPP secret by .id (passed in body)
+  app.patch(`${prefix}/ppp/secret`, async (req, res) => {
+    const { id, ...attrs } = req.body;
+    if (!id) return res.status(400).json({ message: 'id is required' });
+    await withRtr(res, (conn) => conn.set('/ppp/secret', id, attrs));
+  });
+
+  // Delete PPP secret by .id (passed in body)
+  app.delete(`${prefix}/ppp/secret`, async (req, res) => {
+    const { id } = req.body;
+    if (!id) return res.status(400).json({ message: 'id is required' });
+    await withRtr(res, (conn) => conn.remove('/ppp/secret', id));
+  });
+
+  // PPP profiles (for populating the profile dropdown)
+  app.get(`${prefix}/ppp/profile`, async (req, res) => {
+    await withRtr(res, (conn) => conn.get('/ppp/profile'));
+  });
+
+  // System resource (connection health check)
+  app.get(`${prefix}/system/resource`, async (req, res) => {
+    await withRtr(res, async (conn) => {
+      const rows = await conn.get('/system/resource');
+      return rows[0] || {};
+    });
+  });
+}
+
+// ── Register routes for both servers ─────────────────────────────────────────
+
+registerRoutes('/mikrotik',  withRouter);   // Server 1 — 103.66.149.194
+registerRoutes('/mikrotik2', withRouter2);  // Server 2 — 103.66.149.195
 
 // Proxy liveness (no router connection)
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
@@ -126,7 +142,8 @@ if (require.main === module) {
   const PORT = parseInt(process.env.PORT || '3000', 10);
   app.listen(PORT, () => {
     console.log(`MikroTik proxy running on http://localhost:${PORT}`);
-    console.log(`Router: ${MIKROTIK_HOST}:${MIKROTIK_PORT}`);
+    console.log(`Server 1: ${MIKROTIK_HOST}:${MIKROTIK_PORT}`);
+    console.log(`Server 2: ${MIKROTIK_HOST_2}:${MIKROTIK_PORT_2}`);
   });
 }
 

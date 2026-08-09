@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  // Replace this with your actual Vercel URL after deployment
-  mikrotikProxyUrl: 'https://backend-tau-seven-57.vercel.app/mikrotik',
+  mikrotikProxyUrl:  'https://backend-tau-seven-57.vercel.app/mikrotik',
+  mikrotikProxyUrl2: 'https://backend-tau-seven-57.vercel.app/mikrotik2',
 };
