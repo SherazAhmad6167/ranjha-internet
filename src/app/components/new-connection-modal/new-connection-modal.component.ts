@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, ElementRef, Input, OnDestroy, ViewChild } from '@angular/core';
 import {
   addDoc,
   collection,
@@ -25,10 +25,24 @@ import { ToastrModule, ToastrService } from 'ngx-toastr';
   templateUrl: './new-connection-modal.component.html',
   styleUrl: './new-connection-modal.component.scss',
 })
-export class NewConnectionModalComponent {
+export class NewConnectionModalComponent implements OnDestroy {
   userForm!: FormGroup;
   @Input() editMode = false;
   @Input() userData: any;
+
+  @ViewChild('cameraVideo') cameraVideoRef?: ElementRef<HTMLVideoElement>;
+
+  // Camera state
+  showCamera = false;
+  cameraTarget: 'front' | 'back' | null = null;
+  cameraStream: MediaStream | null = null;
+  capturedPhoto: string | null = null;
+  cameraError: string | null = null;
+
+  // OCR state
+  isExtracting = false;
+  extractionDone = false;
+  private cnicFrontOcrSource: string | null = null;
   isLoading = false;
   isSaving = false;
   internetAreas: any[] = [];
@@ -83,6 +97,7 @@ export class NewConnectionModalComponent {
       bank_name: [''],
       payment_method: [''],
       connection_payment: [''],
+      dob: [''],
       cnic_front: [''],
       cnic_back: [''],
       connection_provider: [''],
@@ -130,6 +145,7 @@ export class NewConnectionModalComponent {
         bank_name: this.userData.bank_name || '',
         payment_method: this.userData.payment_method || '',
         connection_payment: this.userData.connection_payment || '',
+        dob: this.userData.dob || '',
         cnic_front: this.userData.cnic_front || '',
         cnic_back: this.userData.cnic_back || '',
         connection_provider: this.userData.connection_provider || '',
@@ -510,6 +526,229 @@ export class NewConnectionModalComponent {
   }
 }
 
+  ngOnDestroy() {
+    this.closeCamera();
+  }
+
+  openCamera(type: 'front' | 'back') {
+    this.cameraTarget = type;
+    this.capturedPhoto = null;
+    this.cameraError = null;
+    this.showCamera = true;
+    setTimeout(() => this.startStream(), 80);
+  }
+
+  private async startStream() {
+    try {
+      this.cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      });
+      if (this.cameraVideoRef?.nativeElement) {
+        this.cameraVideoRef.nativeElement.srcObject = this.cameraStream;
+      }
+    } catch (err: any) {
+      this.cameraError =
+        err.name === 'NotAllowedError'
+          ? 'Camera permission denied. Please allow camera access and try again.'
+          : 'Camera not available on this device. Please upload an image instead.';
+    }
+  }
+
+  capturePhoto() {
+    const video = this.cameraVideoRef?.nativeElement;
+    if (!video) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d')!.drawImage(video, 0, 0);
+    this.capturedPhoto = canvas.toDataURL('image/jpeg', 0.85);
+    this.cameraStream?.getTracks().forEach((t) => t.stop());
+  }
+
+  retakePhoto() {
+    this.capturedPhoto = null;
+    this.startStream();
+  }
+
+  usePhoto() {
+    if (!this.capturedPhoto || !this.cameraTarget) return;
+    const target = this.cameraTarget;
+    const photo = this.capturedPhoto;
+    this.closeCamera();
+    if (target === 'front') {
+      this.cnicFrontPreview = photo;
+      this.extractionDone = false;
+      this.userForm.patchValue({ cnic_front: photo });
+    } else {
+      this.cnicBackPreview = photo;
+      this.userForm.patchValue({ cnic_back: photo });
+    }
+  }
+
+  closeCamera() {
+    this.cameraStream?.getTracks().forEach((t) => t.stop());
+    this.cameraStream = null;
+    this.showCamera = false;
+    this.capturedPhoto = null;
+    this.cameraError = null;
+  }
+
+  clearCnic(type: 'front' | 'back') {
+    if (type === 'front') {
+      this.cnicFrontPreview = null;
+      this.extractionDone = false;
+      this.userForm.patchValue({ cnic_front: '' });
+    } else {
+      this.cnicBackPreview = null;
+      this.userForm.patchValue({ cnic_back: '' });
+    }
+  }
+
+  async extractCnicData() {
+    if (!this.cnicFrontPreview) return;
+    this.isExtracting = true;
+    this.extractionDone = false;
+    try {
+      // Use full-res source for file uploads; camera captures are already full-res
+      const source = this.cnicFrontOcrSource ?? this.cnicFrontPreview;
+      const processed = await this.preprocessForOcr(source);
+
+      const { createWorker } = await import('tesseract.js');
+      const worker = await createWorker('eng', 1, { logger: () => {} });
+      const { data: { text } } = await worker.recognize(processed);
+      await worker.terminate();
+
+      console.log('=== CNIC OCR RAW TEXT ===');
+      console.log(text);
+      console.log('=========================');
+
+      this.parseCnicText(text);
+      this.extractionDone = true;
+      this.toastr.success('Data extracted! Please verify the auto-filled fields.');
+    } catch {
+      this.toastr.warning('Could not extract data. Please fill fields manually.');
+    } finally {
+      this.isExtracting = false;
+    }
+  }
+
+  private preprocessForOcr(base64: string): Promise<string> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        // Scale to at least 1400px wide — small images produce bad OCR
+        const scale = Math.max(1, 1400 / img.width);
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, w, h);
+        // Greyscale + contrast boost → sharper text for Tesseract
+        const d = ctx.getImageData(0, 0, w, h);
+        for (let i = 0; i < d.data.length; i += 4) {
+          const g = Math.round(0.299 * d.data[i] + 0.587 * d.data[i + 1] + 0.114 * d.data[i + 2]);
+          const c = Math.min(255, Math.max(0, (g - 128) * 1.6 + 128));
+          d.data[i] = d.data[i + 1] = d.data[i + 2] = c;
+          d.data[i + 3] = 255;
+        }
+        ctx.putImageData(d, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.src = base64;
+    });
+  }
+
+  private parseCnicText(text: string) {
+    const lines = text.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
+    console.log('=== PARSING LINES ===');
+    lines.forEach((l, i) => console.log(`[${i}] "${l}"`));
+
+    // ── 1. CNIC Number ──────────────────────────────────────────────
+    const fmtMatch = text.match(/(\d{5})[-–\s](\d{7})[-–\s](\d)/);
+    if (fmtMatch) {
+      this.userForm.patchValue({ cnic: `${fmtMatch[1]}-${fmtMatch[2]}-${fmtMatch[3]}` });
+    } else {
+      const d13 = text.replace(/[^0-9]/g, '').match(/\d{13}/);
+      if (d13) {
+        const n = d13[0];
+        this.userForm.patchValue({ cnic: `${n.slice(0, 5)}-${n.slice(5, 12)}-${n[12]}` });
+      }
+    }
+
+    // ── 2 & 3. Name / Father Name ────────────────────────────────────
+    // Strategy A: label-based (when OCR reads labels clearly)
+    let nameFound = false;
+    let fatherFound = false;
+
+    const nameIdx = lines.findIndex((l) => /^name$/i.test(l.replace(/[^a-zA-Z]/g, '')));
+    if (nameIdx >= 0) {
+      const val = this.nextValueLine(lines, nameIdx + 1,
+        ['father', 'husband', 'gender', 'date', 'identity', 'country', 'male', 'female']);
+      if (val) { this.userForm.patchValue({ user_name: val }); nameFound = true; }
+    }
+
+    const fatherIdx = lines.findIndex((l) => /father|husband/i.test(l));
+    if (fatherIdx >= 0) {
+      const val = this.nextValueLine(lines, fatherIdx + 1,
+        ['gender', 'date', 'identity', 'country', 'male', 'female', 'name']);
+      if (val) { this.userForm.patchValue({ father_name: val }); fatherFound = true; }
+    }
+
+    // Strategy B: positional fallback — when labels are garbled by OCR,
+    // the Pakistani CNIC always places name first, father name second.
+    if (!nameFound || !fatherFound) {
+      const headerWords = ['pakistan', 'national', 'identity', 'islamic', 'republic', 'holder'];
+      const nameBlocks: string[] = [];
+
+      for (const line of lines) {
+        const clean = line.replace(/["""''`«»*|\\\/\[\]{}()]/g, '').trim();
+        const alphaWords = (clean.match(/[a-zA-Z]{3,}/g) || []);
+        if (alphaWords.length < 2) continue;
+        if (alphaWords.some((w) => headerWords.includes(w.toLowerCase()))) continue;
+        const alphaRatio = (clean.match(/[a-zA-Z]/g) || []).length / clean.length;
+        if (alphaRatio < 0.45) continue;
+        // Longest run of 3+-char alpha words (≥2 words)
+        const namePart = clean.match(/[A-Za-z]{3,}(?:\s+[A-Za-z]{3,})+/)?.[0];
+        if (namePart && namePart.trim().split(/\s+/).length >= 2) {
+          nameBlocks.push(namePart.trim());
+        }
+      }
+
+      console.log('Positional name blocks:', nameBlocks);
+      if (!nameFound && nameBlocks.length >= 1) this.userForm.patchValue({ user_name: nameBlocks[0] });
+      if (!fatherFound && nameBlocks.length >= 2) this.userForm.patchValue({ father_name: nameBlocks[1] });
+    }
+
+    // ── 4. Date of Birth ────────────────────────────────────────────
+    // DOB shares a line with the CNIC number: "34201-0901322-7   19.12.1998"
+    // Pick the rightmost DD.MM.YYYY with a plausible birth year.
+    const dobIdx = lines.findIndex((l) => /date\s*of\s*birth|d\.?o\.?b/i.test(l));
+    const searchFrom = dobIdx >= 0 ? dobIdx : 0;
+    outer: for (let j = searchFrom; j < lines.length; j++) {
+      const allMatches = [...lines[j].matchAll(/(\d{2})[.\/-](\d{2})[.\/-](\d{4})/g)];
+      for (const m of allMatches.reverse()) {
+        const year = parseInt(m[3]);
+        if (year >= 1940 && year <= new Date().getFullYear() - 10) {
+          this.userForm.patchValue({ dob: `${m[3]}-${m[2]}-${m[1]}` });
+          break outer;
+        }
+      }
+    }
+  }
+
+  private nextValueLine(lines: string[], from: number, skipKeywords: string[]): string | null {
+    const skipRe = new RegExp(`^(${skipKeywords.join('|')})`, 'i');
+    for (let j = from; j < Math.min(from + 3, lines.length); j++) {
+      const clean = lines[j].replace(/[|\\\/\[\]{}]/g, '').trim();
+      if (clean.length > 3 && /[a-zA-Z]{2,}/.test(clean) && !skipRe.test(clean)) {
+        return clean;
+      }
+    }
+    return null;
+  }
+
   cnicFrontPreview: string | null = null;
   cnicBackPreview: string | null = null;
 
@@ -522,19 +761,21 @@ export class NewConnectionModalComponent {
       return;
     }
 
-    this.resizeAndConvertToBase64(file, 400, 400).then((base64) => {
+    // Keep a full-resolution copy for OCR on the front side
+    if (type === 'front') {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => { this.cnicFrontOcrSource = reader.result as string; };
+    }
+
+    this.resizeAndConvertToBase64(file, 800, 600).then((base64) => {
       if (type === 'front') {
         this.cnicFrontPreview = base64;
-
-        this.userForm.patchValue({
-          cnic_front: base64,
-        });
+        this.extractionDone = false;
+        this.userForm.patchValue({ cnic_front: base64 });
       } else {
         this.cnicBackPreview = base64;
-
-        this.userForm.patchValue({
-          cnic_back: base64,
-        });
+        this.userForm.patchValue({ cnic_back: base64 });
       }
     });
   }
