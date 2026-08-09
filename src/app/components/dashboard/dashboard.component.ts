@@ -18,6 +18,18 @@ import { RecoveryOfficerModalComponent } from '../recovery-officer-modal/recover
 import { AreaModalComponent } from '../area-modal/area-modal.component';
 import { CustomerStatusModalComponent } from '../customer-status-modal/customer-status-modal.component';
 import { RouterLink } from '@angular/router';
+import { MikrotikService, MikrotikServer } from '../../shared/mikrotik.service';
+
+export interface MikrotikServerStat {
+  id: MikrotikServer;
+  label: string;
+  ip: string;
+  loading: boolean;
+  error: string | null;
+  total: number;
+  active: number;
+  disabled: number;
+}
 
 interface ChartState {
   categories: string[];
@@ -38,18 +50,48 @@ export class DashboardComponent {
   expandedChartId: string | null = null;
   charts: Record<string, ChartState> = {};
 
+  mikrotikServers: MikrotikServerStat[] = [
+    { id: 1, label: '194.1002', ip: '103.66.149.194', loading: true, error: null, total: 0, active: 0, disabled: 0 },
+    { id: 2, label: '195.9998', ip: '103.66.149.195', loading: true, error: null, total: 0, active: 0, disabled: 0 },
+  ];
+
   constructor(
     private firestore: Firestore,
     private modalService: NgbModal,
+    private mikrotikService: MikrotikService,
   ) {}
 
   async ngOnInit() {
     this.loadRecoveryDetails();
     this.loadNewConnections();
+    this.loadMikrotikStats();
     await this.loadAreaUsersChart();
     await this.loadPackageUsersChart();
     await this.loadBillCollectionChart();
     await this.loadBillCreatorPieChart();
+  }
+
+  loadMikrotikStats() {
+    this.mikrotikServers.forEach((srv) => {
+      srv.loading = true;
+      srv.error = null;
+      this.mikrotikService.getPppSecrets(srv.id).subscribe({
+        next: (users) => {
+          srv.total    = users.length;
+          srv.active   = users.filter((u) => u.disabled !== 'true' && u.disabled !== 'yes').length;
+          srv.disabled = users.filter((u) => u.disabled === 'true' || u.disabled === 'yes').length;
+          srv.loading  = false;
+        },
+        error: (err) => {
+          srv.error   = err.message || 'Cannot reach server';
+          srv.loading = false;
+        },
+      });
+    });
+  }
+
+  activePercent(srv: MikrotikServerStat): number {
+    return srv.total ? Math.round((srv.active / srv.total) * 100) : 0;
   }
 
   /* ================================
@@ -334,74 +376,92 @@ export class DashboardComponent {
   }
 
   async loadBillCreatorPieChart() {
-    // 1️⃣ Get billCreator collection
-    const bills = await this.getCollection('billCreator');
-
-    // 2️⃣ Group by month-year (bill amount)
-    const monthYearMap: Record<string, number> = {};
-
-    bills.forEach((bill: any) => {
-      const key = `${bill.month}-${bill.year}`.toLowerCase();
-      if (!monthYearMap[key]) monthYearMap[key] = 0;
-
-      monthYearMap[key] += bill.amount || 0;
-    });
-
-    // 3️⃣ Sort keys by month-year
     const monthOrder = [
-      'january',
-      'february',
-      'march',
-      'april',
-      'may',
-      'june',
-      'july',
-      'august',
-      'september',
-      'october',
-      'november',
-      'december',
+      'january', 'february', 'march', 'april', 'may', 'june',
+      'july', 'august', 'september', 'october', 'november', 'december',
     ];
 
-    const sortedKeys = Object.keys(monthYearMap).sort((a, b) => {
+    // 1️⃣ Bill amounts generated (billCreator collection)
+    const bills = await this.getCollection('billCreator');
+    const generatedMap: Record<string, number> = {};
+    bills.forEach((bill: any) => {
+      const key = `${bill.month}-${bill.year}`.toLowerCase();
+      if (!generatedMap[key]) generatedMap[key] = 0;
+      generatedMap[key] += bill.amount || 0;
+    });
+
+    // 2️⃣ Bill amounts collected (paid bills inside users collection)
+    const users = await this.getCollection('users');
+    const collectedMap: Record<string, number> = {};
+    users.forEach((user: any) => {
+      if (Array.isArray(user['bills'])) {
+        user['bills'].forEach((bill: any) => {
+          if (bill.status === 'paid' && bill.collected_amount) {
+            const key = `${bill.month}-${bill.year}`.toLowerCase();
+            if (!collectedMap[key]) collectedMap[key] = 0;
+            collectedMap[key] += bill.collected_amount;
+          }
+        });
+      }
+    });
+
+    // 3️⃣ Merge and sort all month keys
+    const allKeys = Array.from(new Set([...Object.keys(generatedMap), ...Object.keys(collectedMap)]));
+    const sortedKeys = allKeys.sort((a, b) => {
       const [monthA, yearA] = a.split('-');
       const [monthB, yearB] = b.split('-');
-      if (parseInt(yearA) !== parseInt(yearB))
-        return parseInt(yearA) - parseInt(yearB);
+      if (parseInt(yearA) !== parseInt(yearB)) return parseInt(yearA) - parseInt(yearB);
       return monthOrder.indexOf(monthA) - monthOrder.indexOf(monthB);
     });
 
-    // 4️⃣ Prepare data for pie chart
-    const series = sortedKeys.map((k) => monthYearMap[k]);
     const labels = sortedKeys.map((k) => k.toUpperCase());
+    const generatedSeries = sortedKeys.map((k) => generatedMap[k] || 0);
+    const collectedSeries = sortedKeys.map((k) => collectedMap[k] || 0);
 
-    // 5️⃣ Initialize chart
+    // 4️⃣ Mixed chart: bars = generated, line = collected
     this.charts['billCreatorPie'] = {
       categories: labels,
-      series: series,
+      series: generatedSeries,
       currentPage: 0,
       pageSize: 12,
       chartOptions: {
-        series: series,
+        series: [
+          { name: 'Bills Generated', type: 'column', data: generatedSeries },
+          { name: 'Amount Collected', type: 'line',   data: collectedSeries },
+        ],
         chart: {
-          type: 'pie',
-          height: 400,
+          type: 'line',
+          height: 380,
+          toolbar: { show: false },
         },
-        labels: labels,
-        title: {
-          text: 'Monthly Bill Amount Generation',
+        stroke: {
+          width: [0, 3],
+          curve: 'smooth',
         },
-        dataLabels: {
-          enabled: true,
-          formatter: (val: number, opts: any) => {
-            const label = opts.w.globals.labels[opts.seriesIndex];
-            return `${label}: ${val}%`;
-          },
+        plotOptions: {
+          bar: { columnWidth: '55%', borderRadius: 4 },
         },
+        fill: {
+          opacity: [0.85, 1],
+        },
+        colors: ['#667eea', '#28c76f'],
+        xaxis: {
+          categories: labels,
+          labels: { rotate: -35 },
+        },
+        yaxis: {
+          title: { text: 'Amount (Rs.)' },
+          labels: { formatter: (v: number) => 'Rs. ' + v.toLocaleString() },
+        },
+        dataLabels: { enabled: false },
+        legend: { position: 'top' },
         tooltip: {
-          y: {
-            formatter: (val: number) => 'Rs. ' + val,
-          },
+          shared: true,
+          y: { formatter: (val: number) => 'Rs. ' + (val || 0).toLocaleString() },
+        },
+        title: {
+          text: 'Monthly Bill Generation vs Collection',
+          style: { fontSize: '13px', fontWeight: '600' },
         },
       },
     };
