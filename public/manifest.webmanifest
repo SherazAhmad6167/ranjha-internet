@@ -1,9 +1,13 @@
 {
-  "name": "ranjha-internet",
-  "short_name": "ranjha-internet",
+  "name": "Ranjha7star",
+  "short_name": "Ranjha7star",
+  "description": "Internet Service Provider Management System",
   "display": "standalone",
+  "orientation": "portrait",
   "scope": "./",
   "start_url": "./",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
   "icons": [
     {
       "src": "icons/icon-72x72.png",

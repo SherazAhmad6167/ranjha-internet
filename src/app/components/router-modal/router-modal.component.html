@@ -49,7 +49,8 @@
           <input type="text" class="form-control form-control-lg font-mono"
             formControlName="barcode"
             placeholder="Scan with camera or enter manually"
-            [ngClass]="{'is-invalid': isInvalid('barcode')}">
+            [ngClass]="{'is-invalid': isInvalid('barcode')}"
+            (blur)="onBarcodeBlur()">
           <button type="button" class="btn btn-outline-primary btn-lg scan-btn"
             (click)="openCamera()" title="Scan barcode with camera">
             <i class="ri-camera-line"></i>

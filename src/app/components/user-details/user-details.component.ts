@@ -3,6 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
   ElementRef,
+  TemplateRef,
   ViewChild,
 } from '@angular/core';
 import {
@@ -26,6 +27,7 @@ import {
 import { UserModalComponent } from '../user-modal/user-modal.component';
 import html2canvas from 'html2canvas';
 import html2pdf from 'html2pdf.js';
+import { TemplateMapperService } from '../../shared/template-mapper.service';
 
 @Component({
   selector: 'app-user-details',
@@ -34,6 +36,8 @@ import html2pdf from 'html2pdf.js';
   styleUrl: './user-details.component.scss',
 })
 export class UserDetailsComponent {
+  @ViewChild('whatsappModal') whatsappModal!: TemplateRef<any>;
+  selectedWhatsappUser: any = null;
   isLoading = false;
   isDeleting = false;
   searchTerm = '';
@@ -54,11 +58,17 @@ export class UserDetailsComponent {
   maintanancesPlan: any;
   servicesPlan: any;
 
+  // Maintenance notice schedule, entered in the messaging modal.
+  maintenanceDate = '';
+  maintenanceStart = '';
+  maintenanceEnd = '';
+
   constructor(
     private modalService: NgbModal,
     private firestore: Firestore,
     private toastr: ToastrService,
     private cdr: ChangeDetectorRef,
+    private templateMapper: TemplateMapperService,
   ) {}
 
   async ngOnInit() {
@@ -517,16 +527,19 @@ export class UserDetailsComponent {
     this.sendWelcomeMessage(formattedPhone, message);
   }
 
-  maintanancePlan(user: any) {
+  /** Returns true when the notice was sent, so the modal only closes on success. */
+  maintanancePlan(user: any): boolean {
+    if (!this.hasMaintenanceSchedule()) return false;
     const rawNumber =
       user?.phone_no && user.phone_no !== '0' ? user.phone_no : user?.mobile_no;
     const formattedPhone = this.formatPhoneNumber(rawNumber);
     const message = this.mapMaintananceTemplate(this.maintanancesPlan, user);
     if (!message) {
       this.toastr.error('Message template not loaded');
-      return;
+      return false;
     }
     this.sendWelcomeMessage(formattedPhone, message);
+    return true;
   }
 
   servicePlan(user: any) {
@@ -573,56 +586,46 @@ export class UserDetailsComponent {
     this.sendWelcomeMessage(formattedPhone, message);
   }
 
-  mapMaintananceTemplate(template: any, data: any): string {
-    if (!template || typeof template !== 'string') {
-      console.error('Invalid template:', template);
-      return '';
-    }
+  /** Context shared by every template sent from this screen. */
+  private templateCtx() {
+    return {
+      supportNumber: this.companyDetail?.complain_no1 || undefined,
+    };
+  }
 
-    return template.replace(/\[Company Name\]/g, 'Ranjha7star');
+  mapMaintananceTemplate(template: any, data: any): string {
+    return this.templateMapper.map(template, data, {
+      ...this.templateCtx(),
+      areaName: data?.sublocality || data?.sub_area || data?.area || '',
+      maintenanceDate: this.maintenanceDate || new Date(),
+      startTime: this.to12Hour(this.maintenanceStart),
+      endTime: this.to12Hour(this.maintenanceEnd),
+    });
+  }
+
+  /** Converts a 24h "HH:mm" input value to "h:mm AM/PM" for the message. */
+  private to12Hour(val: string): string {
+    if (!val) return '';
+    const [h, m] = val.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return val;
+    const suffix = h >= 12 ? 'PM' : 'AM';
+    const hour = h % 12 === 0 ? 12 : h % 12;
+    return `${hour}:${String(m).padStart(2, '0')} ${suffix}`;
   }
 
   mapServicesTemplate(template: any, data: any): string {
-    if (!template || typeof template !== 'string') {
-      console.error('Invalid template:', template);
-      return '';
-    }
-
-    return template
-      .replace(/\[Customer Name\]/g, data.user_name || '')
-      .replace(/\[Company Name\]/g, 'Ranjha7star')
-      .replace(/\[Number\]/g, this.companyDetail?.complain_no1 || '');
+    return this.templateMapper.map(template, data, this.templateCtx());
   }
 
   mapUpgradeTemplate(template: any, data: any): string {
-    if (!template || typeof template !== 'string') {
-      console.error('Invalid template:', template);
-      return '';
-    }
-
-    return template
-      .replace(/\[Customer Name\]/g, data.user_name || '')
-      .replace(/\[Company Name\]/g, 'Ranjha7star')
-      .replace(/\[Package Name\]/g, data.select_package || '')
-      .replace(/\[AMOUNT\]/g, data.internet_package_fee || '')
-      .replace(/\[Number\]/g, this.companyDetail?.complain_no1 || '');
+    return this.templateMapper.map(template, data, {
+      ...this.templateCtx(),
+      amount: data?.internet_package_fee,
+    });
   }
 
   mapTemplate(template: any, data: any): string {
-    if (!template || typeof template !== 'string') {
-      console.error('Invalid template:', template);
-      return '';
-    }
-
-    return (
-      template
-        .replace(/\[Customer Name\]/g, data.user_name || '')
-        .replace(/\[Company Name\]/g, 'Ranjha7star')
-        .replace(/\[XXXX\]/g, data.internet_id || '')
-        .replace(/\[Package Name\]/g, data.select_package || '')
-        // .replace(/\[Installation Date\]/g, data.installation_date || '')
-        .replace(/\[Number\]/g, this.companyDetail?.complain_no1 || '')
-    );
+    return this.templateMapper.map(template, data, this.templateCtx());
   }
 
   formatPhoneNumber(phone: string): string {
@@ -678,7 +681,71 @@ Thank you!`;
   }
 
 
- toggleWhatsappActions(user: any) {
-  user.showActions = !user.showActions;
-}
+  openWhatsappModal(user: any) {
+    this.selectedWhatsappUser = user;
+    this.modalService.open(this.whatsappModal, { centered: true });
+  }
+
+  formatPhoneForSms(user: any): string | null {
+    const raw = user?.phone_no && user.phone_no !== '0' ? user.phone_no : user?.mobile_no;
+    if (!raw) return null;
+    const cleaned = raw.toString().trim().replace(/[\s\-()]/g, '');
+    if (cleaned.startsWith('+92') && cleaned.length === 13) return cleaned;
+    if (cleaned.startsWith('92') && cleaned.length === 12) return '+' + cleaned;
+    if (cleaned.startsWith('0') && cleaned.length === 11) return '+92' + cleaned.slice(1);
+    if (cleaned.length === 10) return '+92' + cleaned;
+    return null;
+  }
+
+  sendSmsWelcome(user: any) {
+    this.sendSmsWithTemplate(user, this.welcomeTemplate, 'mapTemplate');
+  }
+
+  sendSmsUpgrade(user: any) {
+    this.sendSmsWithTemplate(user, this.upgradePlan, 'mapUpgradeTemplate');
+  }
+
+  /** Returns true when the notice was queued, so the modal only closes on success. */
+  sendSmsMaintenance(user: any): boolean {
+    if (!this.hasMaintenanceSchedule()) return false;
+    this.sendSmsWithTemplate(user, this.maintanancesPlan, 'mapMaintananceTemplate');
+    return true;
+  }
+
+  /** Blocks sending a maintenance notice with blank date/time placeholders. */
+  private hasMaintenanceSchedule(): boolean {
+    if (this.maintenanceDate && this.maintenanceStart && this.maintenanceEnd) {
+      return true;
+    }
+    this.toastr.error('Set the maintenance date, from and to time first');
+    return false;
+  }
+
+  sendSmsService(user: any) {
+    this.sendSmsWithTemplate(user, this.servicesPlan, 'mapServicesTemplate');
+  }
+
+  private async sendSmsWithTemplate(user: any, template: any, mapMethod: string) {
+    const phone = this.formatPhoneForSms(user);
+    if (!phone) {
+      this.toastr.error('No valid phone number');
+      return;
+    }
+    const message = (this as any)[mapMethod](template, user);
+    if (!message) {
+      this.toastr.error('Message template not loaded');
+      return;
+    }
+    try {
+      await addDoc(collection(this.firestore, 'sms'), {
+        phone,
+        message,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+      });
+      this.toastr.success('SMS queued successfully');
+    } catch {
+      this.toastr.error('Failed to queue SMS');
+    }
+  }
 }

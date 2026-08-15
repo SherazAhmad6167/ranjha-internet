@@ -110,21 +110,14 @@
                 <div class="col-md-4 m-0">
                     <div class="card-title">Sub Area</div>
                     <div class="card-body">
-                        <select
-                            [ngClass]="{'is-invalid': userForm.get('sub_area')?.invalid && userForm.get('sub_area')?.touched, 'blink-border': userForm.get('sub_area')?.invalid && userForm.get('sub_area')?.touched}"
-                            class="form-control" formControlName="sub_area">
-                            <option value="" disabled>Select a Sub Area</option>
+                        <select class="form-control" formControlName="sub_area">
+                            <option value="">Select a Sub Area (optional)</option>
                             <option *ngFor="let area of internetSubAreas" [value]="area.name">
                                 {{ area.name | titlecase }}
                             </option>
                         </select>
                     </div>
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="userForm.get('sub_area')?.hasError('required') && userForm.get('sub_area')?.touched">
-                            <span class="text-danger">Select a Sub Area</span>
-                        </ng-container>
-                    </div>
+                    <div class="extra-space"></div>
                 </div>
 
 
@@ -134,14 +127,8 @@
                 <div class="col-xl-4 m-0">
                     <label for="validationDefault01" class="form-label">Static IP</label>
                     <input type="text" class="form-control"
-                        [ngClass]="{'is-invalid': userForm.get('static_ip')?.invalid && userForm.get('static_ip')?.touched, 'blink-border': userForm.get('static_ip')?.invalid && userForm.get('static_ip')?.touched}"
-                        formControlName="static_ip" id="validationDefault01" placeholder="Enter Static IP">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="userForm.get('static_ip')?.hasError('required') && userForm.get('static_ip')?.touched;">
-                            <span class="text-danger">Static IP is required</span>
-                        </ng-container>
-                    </div>
+                        formControlName="static_ip" id="validationDefault01" placeholder="Enter Static IP (optional)">
+                    <div class="extra-space"></div>
                 </div>
 
 

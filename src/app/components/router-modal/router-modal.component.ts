@@ -8,7 +8,8 @@ import {
   ReactiveFormsModule, FormsModule
 } from '@angular/forms';
 import {
-  Firestore, collection, doc, setDoc, updateDoc
+  Firestore, collection, doc, setDoc, updateDoc,
+  getDocs, query, where
 } from '@angular/fire/firestore';
 import { ToastrService } from 'ngx-toastr';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
@@ -23,22 +24,37 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 export class RouterModalComponent implements OnInit, OnDestroy {
   @ViewChild('videoEl') videoEl!: ElementRef<HTMLVideoElement>;
 
-  editMode      = false;
+  editMode       = false;
   routerData: any = null;
   operators: { id: string; operator_name: string }[] = [];
   prefillBarcode = '';
 
   routerForm!: FormGroup;
-  isSubmitting = false;
+  isSubmitting    = false;
+  isDuplicateBarcode = false;
 
   cameraActive  = false;
   stream: MediaStream | null = null;
 
-  // Native BarcodeDetector (non-Windows Chrome / Android / macOS)
   private nativeInterval: any = null;
-
-  // ZXing fallback (Windows Chrome, Firefox, etc.)
   private zxingControls: { stop: () => void } | null = null;
+  private scanLoopId: any = null;
+
+  // Region of interest, as a fraction of the source frame. Deliberately larger
+  // than the on-screen green frame so anything the user aims at is included.
+  private readonly ROI_W = 0.8;
+  private readonly ROI_H = 0.5;
+
+  // Cap on the width actually handed to the decoder. Decoding is synchronous and
+  // scales with pixel count, so this bounds how long the main thread is blocked.
+  // Raise it (e.g. 960) if small or dense labels fail to scan.
+  private readonly MAX_SCAN_WIDTH = 640;
+
+  // Consensus guard: the same value must decode N times in a row before we
+  // accept it. Single-frame decodes are the main source of false positives.
+  private lastCandidate = '';
+  private candidateHits = 0;
+  private readonly REQUIRED_HITS = 2;
 
   useNativeDetector = false;
 
@@ -92,7 +108,6 @@ export class RouterModalComponent implements OnInit, OnDestroy {
       });
       this.cameraActive = true;
 
-      // Give Angular time to render the <video> element
       setTimeout(async () => {
         const video = this.videoEl?.nativeElement;
         if (!video) return;
@@ -104,7 +119,7 @@ export class RouterModalComponent implements OnInit, OnDestroy {
         } else {
           this.startZXingDetection(video);
         }
-      }, 250);
+      }, 200);
 
     } catch (err: any) {
       const msg = err.name === 'NotAllowedError'
@@ -114,64 +129,195 @@ export class RouterModalComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Native BarcodeDetector (Chrome/Edge on non-Windows)
+  // Native BarcodeDetector. Retail formats (EAN/UPC) are deliberately excluded —
+  // router labels never use them and they are a common false-positive source.
   private startNativeDetection(video: HTMLVideoElement) {
     const BarcodeDetector = (window as any).BarcodeDetector;
     const detector = new BarcodeDetector({
-      formats: ['code_128', 'code_39', 'qr_code', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'data_matrix']
+      formats: ['code_128', 'code_39', 'qr_code', 'data_matrix']
     });
-    this.nativeInterval = setInterval(async () => {
-      if (video.readyState < 2) return;
-      try {
-        const results = await detector.detect(video);
-        if (results.length > 0) {
-          this.zone.run(() => this.onDetected(results[0].rawValue));
-        }
-      } catch {}
-    }, 300);
+    this.zone.runOutsideAngular(() => {
+      this.nativeInterval = setInterval(async () => {
+        if (video.readyState < 2) return;
+        try {
+          const results = await detector.detect(video);
+          if (results.length > 0) {
+            const text = results[0].rawValue;
+            this.zone.run(() => this.handleCandidate(text));
+          }
+        } catch {}
+      }, 100);
+    });
   }
 
-  // ZXing fallback (Windows Chrome, Firefox, Safari)
+  // ZXing fallback (Windows Chrome, Firefox, Safari) — pure JS, so cost scales
+  // directly with pixels scanned. decodeFromVideoElement() binarises the WHOLE
+  // frame (1280x720 ≈ 922k px) every attempt, which is what made desktop slow.
+  // Instead we run our own loop over a cropped centre region.
   private async startZXingDetection(video: HTMLVideoElement) {
     try {
-      const { BrowserMultiFormatReader } = await import('@zxing/browser');
-      const reader = new BrowserMultiFormatReader();
-      this.zxingControls = await reader.decodeFromVideoElement(
-        video,
-        (result, _err) => {
-          if (result) {
-            this.zone.run(() => this.onDetected(result.getText()));
+      const [{ BrowserMultiFormatReader }, { DecodeHintType, BarcodeFormat }] = await Promise.all([
+        import('@zxing/browser') as any,
+        import('@zxing/library') as any
+      ]);
+
+      const hints = new Map();
+      // CODE_128 is what we generate; CODE_39 / QR / DataMatrix cover printed
+      // router labels. No EAN/UPC — those misread partial 1D scans as valid codes.
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.CODE_39,
+        BarcodeFormat.QR_CODE,
+        BarcodeFormat.DATA_MATRIX,
+      ]);
+      // TRY_HARDER is intentionally NOT set: it attempts rotated/inverted decodes,
+      // which costs CPU per frame and raises the misread rate.
+      const reader = new BrowserMultiFormatReader(hints);
+
+      const canvas = document.createElement('canvas');
+      // willReadFrequently keeps the canvas in CPU memory; without it Chrome
+      // backs it on the GPU and every getImageData() stalls on readback.
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      if (!ctx) return;
+
+      const scan = () => {
+        if (!this.cameraActive) return;
+
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+
+        // Pace the next attempt off how long this one blocked the main thread.
+        let elapsed = 0;
+
+        if (vw && vh && video.readyState >= 2) {
+          const started = performance.now();
+
+          // Crop the centre region, then scale it down to MAX_SCAN_WIDTH.
+          const cw = Math.round(vw * this.ROI_W);
+          const ch = Math.round(vh * this.ROI_H);
+          const sx = Math.round((vw - cw) / 2);
+          const sy = Math.round((vh - ch) / 2);
+
+          const scale = Math.min(1, this.MAX_SCAN_WIDTH / cw);
+          const dw    = Math.round(cw * scale);
+          const dh    = Math.round(ch * scale);
+
+          if (canvas.width !== dw || canvas.height !== dh) {
+            canvas.width  = dw;
+            canvas.height = dh;
           }
+          ctx.drawImage(video, sx, sy, cw, ch, 0, 0, dw, dh);
+
+          try {
+            const result = reader.decodeFromCanvas(canvas);
+            if (result) {
+              const text = result.getText();
+              this.zone.run(() => this.handleCandidate(text));
+            }
+          } catch {
+            // NotFoundException on every frame without a barcode — expected.
+          }
+
+          elapsed = performance.now() - started;
         }
-      );
+
+        // Idle for at least as long as the decode took, so the main thread stays
+        // ~50% free. Without this the loop saturates it: the browser hangs and
+        // Chrome logs a "setTimeout handler took Nms" violation every tick.
+        const delay = Math.min(400, Math.max(30, Math.round(elapsed)));
+        this.scanLoopId = setTimeout(scan, delay);
+      };
+
+      // Outside Angular: otherwise every loop tick triggers change detection.
+      this.zone.runOutsideAngular(() => scan());
+
     } catch (e) {
-      console.warn('ZXing scanning error:', e);
+      console.warn('ZXing scan error:', e);
     }
   }
 
-  private onDetected(value: string) {
-    this.routerForm.get('barcode')?.setValue(value);
+  /** Accept a value only after it decodes identically REQUIRED_HITS times. */
+  private handleCandidate(raw: string) {
+    const value = (raw ?? '').trim();
+    if (!value) return;
+
+    if (value === this.lastCandidate) {
+      this.candidateHits++;
+    } else {
+      this.lastCandidate = value;
+      this.candidateHits = 1;
+    }
+
+    if (this.candidateHits >= this.REQUIRED_HITS) {
+      this.onDetected(value);
+    }
+  }
+
+  private async onDetected(value: string) {
     this.stopCamera();
+
+    const isDup = await this.checkDuplicate(value);
+    if (isDup) return; // error already shown, don't fill field
+
+    this.routerForm.get('barcode')?.setValue(value);
     this.toastr.success(`Barcode scanned: ${value}`);
   }
 
   stopCamera() {
-    // Stop native interval
-    if (this.nativeInterval) {
-      clearInterval(this.nativeInterval);
-      this.nativeInterval = null;
-    }
-    // Stop ZXing continuous reader
-    if (this.zxingControls) {
-      try { this.zxingControls.stop(); } catch {}
-      this.zxingControls = null;
-    }
-    // Release camera tracks
-    if (this.stream) {
-      this.stream.getTracks().forEach(t => t.stop());
-      this.stream = null;
-    }
+    // cameraActive = false also breaks the ZXing scan loop on its next tick.
     this.cameraActive = false;
+    if (this.scanLoopId)     { clearTimeout(this.scanLoopId);  this.scanLoopId = null; }
+    if (this.nativeInterval) { clearInterval(this.nativeInterval); this.nativeInterval = null; }
+    if (this.zxingControls)  { try { this.zxingControls.stop(); } catch {} this.zxingControls = null; }
+    if (this.stream)         { this.stream.getTracks().forEach(t => t.stop()); this.stream = null; }
+    this.cameraActive  = false;
+    this.lastCandidate = '';
+    this.candidateHits = 0;
+  }
+
+  // ── Duplicate Check ─────────────────────────────────────────────────────────
+
+  async onBarcodeBlur() {
+    const value = this.routerForm.get('barcode')?.value?.trim();
+    if (value) await this.checkDuplicate(value);
+  }
+
+  private async checkDuplicate(barcode: string): Promise<boolean> {
+    try {
+      const snap = await getDocs(
+        query(collection(this.firestore, 'router'), where('barcode', '==', barcode))
+      );
+      if (snap.empty) {
+        this.isDuplicateBarcode = false;
+        return false;
+      }
+
+      const match     = snap.docs[0];
+      const matchData = match.data() as any;
+
+      // Allow same record in edit mode
+      if (this.editMode && this.routerData?.id === match.id) {
+        this.isDuplicateBarcode = false;
+        return false;
+      }
+
+      this.isDuplicateBarcode = true;
+      const detail = [
+        matchData.date     ? `Date: ${matchData.date}`         : '',
+        matchData.operator ? `Operator: ${matchData.operator}` : '',
+        matchData.givenBy  ? `Given by: ${matchData.givenBy}`  : '',
+      ].filter(Boolean).join('  |  ');
+
+      this.toastr.error(detail, 'Duplicate Barcode — Already Assigned!', {
+        timeOut:        7000,
+        extendedTimeOut: 2000,
+        closeButton:    true,
+      });
+      return true;
+    } catch {
+      this.isDuplicateBarcode = false;
+      return false;
+    }
   }
 
   // ── Submit ──────────────────────────────────────────────────────────────────
@@ -182,6 +328,11 @@ export class RouterModalComponent implements OnInit, OnDestroy {
       this.toastr.error('Please fill all required fields');
       return;
     }
+
+    const barcode = this.routerForm.get('barcode')?.value?.trim();
+    const isDup   = await this.checkDuplicate(barcode);
+    if (isDup) return;
+
     this.isSubmitting = true;
     const payload = { ...this.routerForm.value, updatedAt: new Date() };
     try {

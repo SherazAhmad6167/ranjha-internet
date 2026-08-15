@@ -53,6 +53,7 @@ export class ComplainModalComponent {
       internet_id: ['', [Validators.required]],
       package_name: ['', [Validators.required]],
       phone_number: ['', [Validators.required]],
+      operator_name: ['', [Validators.required]],
       operator_phone_number: ['', [Validators.required]],
       status: ['', [Validators.required]],
       complain: ['', [Validators.required]],

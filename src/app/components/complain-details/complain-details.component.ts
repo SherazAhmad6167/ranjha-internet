@@ -15,6 +15,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
 import { ComplainModalComponent } from '../complain-modal/complain-modal.component';
+import { TemplateMapperService } from '../../shared/template-mapper.service';
 
 @Component({
   selector: 'app-complain-details',
@@ -51,6 +52,7 @@ export class ComplainDetailsComponent {
     private modalService: NgbModal,
     private firestore: Firestore,
     private toastr: ToastrService,
+    private templateMapper: TemplateMapperService,
   ) {}
 
   async ngOnInit() {
@@ -267,21 +269,10 @@ export class ComplainDetailsComponent {
   }
 
   mapTemplate(template: any, data: any): string {
-    if (!template || typeof template !== 'string') {
-      console.error('Invalid template:', template);
-      return '';
-    }
-
-    return (
-      template
-        .replace(/\[Customer Name\]/g, data.user_name || '')
-        .replace(/\[Date\]/g, data.complain_close_date)
-        .replace(/\[XXXX\]/g, data.internet_id || '')
-        .replace(/\[Issue Description\]/g, data.complain || '')
-        .replace(/\[Operator\]/g, data.operator_name || '')
-        .replace(/\[Number\]/g, data.operator_phone_number || '')
-        // .replace(/\[Installation Date\]/g, data.installation_date || '')
-    );
+    return this.templateMapper.map(template, data, {
+      supportNumber: this.companyDetail?.complain_no1 || undefined,
+      complaintDate: data?.complain_date,
+    });
   }
 
   formatPhoneNumber(phone: string): string {

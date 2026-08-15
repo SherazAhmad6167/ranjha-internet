@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, TemplateRef, ViewChild } from '@angular/core';
 import {
+  addDoc,
   collection,
   deleteDoc,
   doc,
@@ -20,6 +21,7 @@ import { ToastrModule, ToastrService } from 'ngx-toastr';
 import html2canvas from 'html2canvas';
 import { UserCollectionModalComponent } from '../user-collection-modal/user-collection-modal.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { TemplateMapperService } from '../../shared/template-mapper.service';
 
 @Component({
   selector: 'app-users-collections',
@@ -28,6 +30,8 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
   styleUrl: './users-collections.component.scss',
 })
 export class UsersCollectionsComponent {
+  @ViewChild('whatsappModal') whatsappModal!: TemplateRef<any>;
+  selectedWhatsappUser: any = null;
   isLoading = false;
   isDeleting = false;
   searchTerm = '';
@@ -91,6 +95,7 @@ export class UsersCollectionsComponent {
     private toastr: ToastrService,
     private modalService: NgbModal,
     private fb: FormBuilder,
+    private templateMapper: TemplateMapperService,
   ) {
     this.userForm = this.fb.group({
       select_package: [null, [Validators.required]],
@@ -1239,6 +1244,7 @@ export class UsersCollectionsComponent {
         );
       } else {
         this.toastr.success('Bill collected successfully');
+        this.autoSendPaymentSms(this.selectedBill);
       }
       const page = this.currentPage;
       console.log('before save', page);
@@ -1331,6 +1337,9 @@ export class UsersCollectionsComponent {
         );
       } else {
         this.toastr.success('Selected bills collected successfully');
+        for (const row of this.selectedBulkBills) {
+          this.autoSendPaymentSms(row);
+        }
       }
 
       this.isBulkMode = false;
@@ -1431,6 +1440,65 @@ export class UsersCollectionsComponent {
     return '';
   }
 
+  openWhatsappModal(user: any) {
+    this.selectedWhatsappUser = user;
+    this.modalService.open(this.whatsappModal, { centered: true });
+  }
+
+  formatPhoneForSms(phone: string): string | null {
+    if (!phone) return null;
+    const cleaned = phone.toString().trim().replace(/[\s\-()]/g, '');
+    if (cleaned.startsWith('+92') && cleaned.length === 13) return cleaned;
+    if (cleaned.startsWith('92') && cleaned.length === 12) return '+' + cleaned;
+    if (cleaned.startsWith('0') && cleaned.length === 11) return '+92' + cleaned.slice(1);
+    if (cleaned.length === 10) return '+92' + cleaned;
+    return null;
+  }
+
+  async sendSmsReminder(user: any) {
+    const phone = this.formatPhoneForSms(user.phone_no);
+    if (!phone) { this.toastr.error('No valid phone number'); return; }
+    const message = this.mapReminderTemplate(this.paymentReminderTemplate, user);
+    if (!message) { this.toastr.error('Template not loaded'); return; }
+    try {
+      await addDoc(collection(this.firestore, 'sms'), { phone, message, status: 'pending', createdAt: new Date().toISOString() });
+      this.toastr.success('SMS queued successfully');
+    } catch { this.toastr.error('Failed to queue SMS'); }
+  }
+
+  async sendSmsDisconnection(user: any) {
+    const phone = this.formatPhoneForSms(user.phone_no);
+    if (!phone) { this.toastr.error('No valid phone number'); return; }
+    const message = this.mapOverdueTemplate(this.overdue, user);
+    if (!message) { this.toastr.error('Template not loaded'); return; }
+    try {
+      await addDoc(collection(this.firestore, 'sms'), { phone, message, status: 'pending', createdAt: new Date().toISOString() });
+      this.toastr.success('SMS queued successfully');
+    } catch { this.toastr.error('Failed to queue SMS'); }
+  }
+
+  async sendSmsPaymentReceived(user: any) {
+    const phone = this.formatPhoneForSms(user.phone_no);
+    if (!phone) { this.toastr.error('No valid phone number'); return; }
+    const message = this.mapTemplate(this.paymentRecievedTemplate, user);
+    if (!message) { this.toastr.error('Template not loaded'); return; }
+    try {
+      await addDoc(collection(this.firestore, 'sms'), { phone, message, status: 'pending', createdAt: new Date().toISOString() });
+      this.toastr.success('SMS queued successfully');
+    } catch { this.toastr.error('Failed to queue SMS'); }
+  }
+
+  private async autoSendPaymentSms(billData: any) {
+    const phone = this.formatPhoneForSms(billData.phone_no);
+    if (!phone || !this.paymentRecievedTemplate) return;
+    const message = this.mapTemplate(this.paymentRecievedTemplate, billData);
+    if (!message) return;
+    try {
+      await addDoc(collection(this.firestore, 'sms'), { phone, message, status: 'pending', createdAt: new Date().toISOString() });
+      this.toastr.info('Payment SMS queued automatically');
+    } catch { console.error('Auto SMS failed for', phone); }
+  }
+
   disconnectionWarning(user: any){
     const formattedPhone = this.formatPhoneNumber(user.phone_no);
 
@@ -1468,46 +1536,37 @@ export class UsersCollectionsComponent {
   }
 
 
+  /** Context shared by every template sent from this screen. */
+  private templateCtx() {
+    return {
+      supportNumber: this.companyDetail?.complain_no1 || undefined,
+    };
+  }
+
+  /** Overdue warning — uses the outstanding balance, not the billed amount. */
   mapOverdueTemplate(template: any, data: any): string {
-    if (!template || typeof template !== 'string') {
-      console.error('Invalid template:', template);
-      return '';
-    }
-
-    return template
-      .replace(/\[AMOUNT\]/g, data.remaining_amount || '-')
-      .replace(/\[Company Name\]/g, 'Ranjha7star')
-      .replace(/\[DATE\]/g, 'Before 5th of every Month')
-      .replace(/\[Customer Name\]/g, data.name || '')
-      .replace(/\[Number\]/g, this.companyDetail?.complain_no1 || '')
-      .replace(/\[X dinon\]/g, '10 dinon')
+    return this.templateMapper.map(template, data, {
+      ...this.templateCtx(),
+      overdueAmount: data?.remaining_amount || data?.amount,
+      amount: data?.remaining_amount || data?.amount,
+    });
   }
 
-   mapReminderTemplate(template: any, data: any): string {
-    if (!template || typeof template !== 'string') {
-      console.error('Invalid template:', template);
-      return '';
-    }
-
-    return template
-      .replace(/\[AMOUNT\]/g, data.amount || '')
-      .replace(/\[Company Name\]/g, 'Ranjha7star')
-      .replace(/\[DATE\]/g, 'Before 5th of every Month')
-      .replace(/\[Month\]/g, data.month || '')
-      .replace(/\[Customer Name\]/g, data.name || '')
+  /** Payment reminder — uses the amount currently billed and due. */
+  mapReminderTemplate(template: any, data: any): string {
+    return this.templateMapper.map(template, data, {
+      ...this.templateCtx(),
+      amount: data?.remaining_amount || data?.amount,
+    });
   }
 
+  /** Payment received — uses what was actually collected and when. */
   mapTemplate(template: any, data: any): string {
-    if (!template || typeof template !== 'string') {
-      console.error('Invalid template:', template);
-      return '';
-    }
-
-    return template
-      .replace(/\[AMOUNT\]/g, data.collectedAmount || '')
-      .replace(/\[Company Name\]/g, 'Ranjha7star')
-      .replace(/\[DATE\]/g, data.date || '')
-      .replace(/\[Customer Name\]/g, data.name || '')
+    return this.templateMapper.map(template, data, {
+      ...this.templateCtx(),
+      amount: data?.collected_amount ?? data?.amount,
+      paymentDate: data?.collected_date || new Date(),
+    });
   }
 
   formatPhoneNumber(phone: string): string {

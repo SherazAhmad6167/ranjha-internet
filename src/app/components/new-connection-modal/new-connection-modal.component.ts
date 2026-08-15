@@ -97,7 +97,6 @@ export class NewConnectionModalComponent implements OnDestroy {
       bank_name: [''],
       payment_method: [''],
       connection_payment: [''],
-      dob: [''],
       cnic_front: [''],
       cnic_back: [''],
       connection_provider: [''],
@@ -145,7 +144,6 @@ export class NewConnectionModalComponent implements OnDestroy {
         bank_name: this.userData.bank_name || '',
         payment_method: this.userData.payment_method || '',
         connection_payment: this.userData.connection_payment || '',
-        dob: this.userData.dob || '',
         cnic_front: this.userData.cnic_front || '',
         cnic_back: this.userData.cnic_back || '',
         connection_provider: this.userData.connection_provider || '',
@@ -719,22 +717,6 @@ export class NewConnectionModalComponent implements OnDestroy {
       console.log('Positional name blocks:', nameBlocks);
       if (!nameFound && nameBlocks.length >= 1) this.userForm.patchValue({ user_name: nameBlocks[0] });
       if (!fatherFound && nameBlocks.length >= 2) this.userForm.patchValue({ father_name: nameBlocks[1] });
-    }
-
-    // ── 4. Date of Birth ────────────────────────────────────────────
-    // DOB shares a line with the CNIC number: "34201-0901322-7   19.12.1998"
-    // Pick the rightmost DD.MM.YYYY with a plausible birth year.
-    const dobIdx = lines.findIndex((l) => /date\s*of\s*birth|d\.?o\.?b/i.test(l));
-    const searchFrom = dobIdx >= 0 ? dobIdx : 0;
-    outer: for (let j = searchFrom; j < lines.length; j++) {
-      const allMatches = [...lines[j].matchAll(/(\d{2})[.\/-](\d{2})[.\/-](\d{4})/g)];
-      for (const m of allMatches.reverse()) {
-        const year = parseInt(m[3]);
-        if (year >= 1940 && year <= new Date().getFullYear() - 10) {
-          this.userForm.patchValue({ dob: `${m[3]}-${m[2]}-${m[1]}` });
-          break outer;
-        }
-      }
     }
   }
 

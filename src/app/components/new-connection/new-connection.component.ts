@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, TemplateRef, ViewChild } from '@angular/core';
 import {
   addDoc,
   collection,
@@ -15,6 +15,7 @@ import {
 } from '@angular/fire/firestore';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { TemplateMapperService } from '../../shared/template-mapper.service';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
 import { NewConnectionModalComponent } from '../new-connection-modal/new-connection-modal.component';
 import html2pdf from 'html2pdf.js';
@@ -96,10 +97,14 @@ export class NewConnectionComponent {
     { label: 'Customer ID', key: 'internet_id' },
   ];
 
+  @ViewChild('msgModal') msgModal!: TemplateRef<any>;
+  selectedMsgUser: any = null;
+
   constructor(
     private modalService: NgbModal,
     private firestore: Firestore,
     private toastr: ToastrService,
+    private templateMapper: TemplateMapperService,
   ) {}
 
   async ngOnInit() {
@@ -855,25 +860,41 @@ ${fileUrl}`;
   }
 
   mapTemplate(template: any, data: any): string {
-    if (!template || typeof template !== 'string') {
-      console.error('Invalid template:', template);
-      return '';
-    }
-
-    return (
-      template
-        .replace(/\[Customer Name\]/g, data.user_name || '')
-        .replace(/\[Company Name\]/g, 'Ranjha7star')
-        .replace(/\[XXXX\]/g, data.internet_id || '')
-        .replace(/\[Package Name\]/g, data.select_package || '')
-        // .replace(/\[Installation Date\]/g, data.installation_date || '')
-        .replace(/\[Number\]/g, this.companyDetail?.complain_no1 || '')
-    );
+    return this.templateMapper.map(template, data, {
+      supportNumber: this.companyDetail?.complain_no1 || undefined,
+    });
   }
 
   sendWelcomeMessage(phone: string, message: string) {
     const encodedMessage = encodeURIComponent(message);
     const url = `https://wa.me/${phone}?text=${encodedMessage}`;
     window.open(url, '_blank');
+  }
+
+  openMsgModal(user: any) {
+    this.selectedMsgUser = user;
+    this.modalService.open(this.msgModal, { centered: true });
+  }
+
+  async sendSmsWelcome(user: any) {
+    const raw = user?.phone_no && user.phone_no !== '0' ? user.phone_no : user?.mobile_no;
+    const phone = this.formatPhoneForSms(raw);
+    if (!phone) { this.toastr.error('No valid phone number'); return; }
+    const message = this.mapTemplate(this.welcomeTemplate, user);
+    if (!message) { this.toastr.error('Template not loaded'); return; }
+    try {
+      await addDoc(collection(this.firestore, 'sms'), { phone, message, status: 'pending', createdAt: new Date().toISOString() });
+      this.toastr.success('SMS queued successfully');
+    } catch { this.toastr.error('Failed to queue SMS'); }
+  }
+
+  private formatPhoneForSms(raw: string): string | null {
+    if (!raw) return null;
+    const cleaned = raw.toString().trim().replace(/[\s\-()]/g, '');
+    if (cleaned.startsWith('+92') && cleaned.length === 13) return cleaned;
+    if (cleaned.startsWith('92') && cleaned.length === 12) return '+' + cleaned;
+    if (cleaned.startsWith('0') && cleaned.length === 11) return '+92' + cleaned.slice(1);
+    if (cleaned.length === 10) return '+92' + cleaned;
+    return null;
   }
 }

@@ -62,7 +62,7 @@ export class UserModalComponent {
       address: ['', Validators.required],
       mobile_no: ['', [Validators.required]],
       sublocality: ['', [Validators.required]],
-      sub_area: ['', [Validators.required]],
+      sub_area: [''],
       installation_amount: ['', [Validators.required]],
       other_amount: ['', [Validators.required]],
       installation_date: ['', [Validators.required]],
@@ -80,7 +80,7 @@ export class UserModalComponent {
       photoName: [''],
       latitude: [''],
       longitude: [''],
-      static_ip: ['', Validators.required],
+      static_ip: [''],
       // isActive: [true],
       createdAt: [new Date()],
     });

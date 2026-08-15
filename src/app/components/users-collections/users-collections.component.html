@@ -227,12 +227,8 @@
                                         <i class="ri-eye-line"></i> Details
                                     </button>
 
-                                    <button class="btn btn-success btn-sm ms-1" (click)="paymentRemainder(row)">
-                                        <i class="ri-whatsapp-line"></i> Whatsapp
-                                    </button>
-
-                                    <button *ngIf="row.status === 'unpaid'" class="btn btn-danger btn-sm ms-1" (click)="disconnectionWarning(row)">
-                                        <i class="ri-whatsapp-line"></i> Whatsapp
+                                    <button class="btn btn-success btn-sm ms-1" (click)="openWhatsappModal(row)">
+                                        <i class="ri-whatsapp-line"></i> WhatsApp
                                     </button>
 
                                     <button class="btn btn-warning btn-sm ms-1" *ngIf="row.status === 'unpaid'"
@@ -795,3 +791,78 @@
 
 <!-- Backdrop -->
 <div class="modal-backdrop fade show" *ngIf="showUpdateModal"></div>
+
+<!-- Messaging Modal -->
+<ng-template #whatsappModal let-modal>
+  <div class="wa-modal">
+    <div class="wa-modal-header">
+      <div class="wa-header-icon">
+        <i class="ri-message-3-line"></i>
+      </div>
+      <div>
+        <div class="wa-header-title">Send Message</div>
+        <div class="wa-header-sub" *ngIf="selectedWhatsappUser">
+          {{ selectedWhatsappUser.name }} &middot; {{ selectedWhatsappUser.phone_no }}
+        </div>
+      </div>
+      <button type="button" class="btn-close btn-close-white ms-auto" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="wa-modal-body">
+
+      <div class="wa-option-row">
+        <div class="wa-option-info">
+          <div class="wa-option-icon reminder"><i class="ri-notification-3-line"></i></div>
+          <div>
+            <div class="wa-option-title">Payment Reminder</div>
+            <div class="wa-option-desc">Remind about pending payment</div>
+          </div>
+        </div>
+        <div class="wa-option-actions">
+          <button class="btn-wa" (click)="paymentRemainder(selectedWhatsappUser); modal.close()" title="WhatsApp">
+            <i class="ri-whatsapp-line"></i>
+          </button>
+          <button class="btn-sms" (click)="sendSmsReminder(selectedWhatsappUser); modal.close()" title="SMS">
+            <i class="ri-message-2-line"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="wa-option-row" *ngIf="selectedWhatsappUser?.status === 'unpaid'">
+        <div class="wa-option-info">
+          <div class="wa-option-icon warning"><i class="ri-error-warning-line"></i></div>
+          <div>
+            <div class="wa-option-title">Disconnection Warning</div>
+            <div class="wa-option-desc">Warn about overdue disconnection</div>
+          </div>
+        </div>
+        <div class="wa-option-actions">
+          <button class="btn-wa" (click)="disconnectionWarning(selectedWhatsappUser); modal.close()" title="WhatsApp">
+            <i class="ri-whatsapp-line"></i>
+          </button>
+          <button class="btn-sms" (click)="sendSmsDisconnection(selectedWhatsappUser); modal.close()" title="SMS">
+            <i class="ri-message-2-line"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="wa-option-row" *ngIf="selectedWhatsappUser?.status === 'paid'">
+        <div class="wa-option-info">
+          <div class="wa-option-icon received"><i class="ri-checkbox-circle-line"></i></div>
+          <div>
+            <div class="wa-option-title">Payment Received</div>
+            <div class="wa-option-desc">Confirm payment received</div>
+          </div>
+        </div>
+        <div class="wa-option-actions">
+          <button class="btn-wa" (click)="sendWhatsapp(selectedWhatsappUser); modal.close()" title="WhatsApp">
+            <i class="ri-whatsapp-line"></i>
+          </button>
+          <button class="btn-sms" (click)="sendSmsPaymentReceived(selectedWhatsappUser); modal.close()" title="SMS">
+            <i class="ri-message-2-line"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</ng-template>

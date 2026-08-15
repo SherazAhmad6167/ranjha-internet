@@ -124,28 +124,9 @@
                   <i class="ri-file-pdf-line"></i>
                 </button>
 
-                <button class="btn btn-success btn-sm ms-2" (click)="toggleWhatsappActions(user)">
+                <button class="btn btn-success btn-sm ms-2" (click)="openWhatsappModal(user)">
                   <i class="ri-whatsapp-line"></i>
                 </button>
-                <div *ngIf="user.showActions" class="mt-2 d-flex flex-column gap-1">
-
-                  <button class="btn btn-success btn-sm" (click)="sendWhatsapp(user)">
-                    <i class="ri-whatsapp-line"></i> Send WhatsApp
-                  </button>
-
-                  <button class="btn btn-warning btn-sm" (click)="updratePlan(user)">
-                    <i class="ri-whatsapp-line"></i> Upgrade Plan
-                  </button>
-
-                  <button class="btn btn-danger btn-sm" (click)="maintanancePlan(user)">
-                    <i class="ri-whatsapp-line"></i> Maintenance
-                  </button>
-
-                  <button class="btn btn-primary btn-sm" (click)="servicePlan(user)">
-                    <i class="ri-whatsapp-line"></i> Service
-                  </button>
-
-                </div>
               </td>
             </tr>
           </tbody>
@@ -206,8 +187,120 @@
   </div>
 </div>
 
+<!-- Messaging Modal -->
+<ng-template #whatsappModal let-modal>
+  <div class="wa-modal">
+    <div class="wa-modal-header">
+      <div class="wa-header-icon">
+        <i class="ri-message-3-line"></i>
+      </div>
+      <div>
+        <div class="wa-header-title">Send Message</div>
+        <div class="wa-header-sub" *ngIf="selectedWhatsappUser">
+          {{ selectedWhatsappUser.user_name }} &middot; {{ getContact(selectedWhatsappUser) }}
+        </div>
+      </div>
+      <button type="button" class="btn-close btn-close-white ms-auto" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="wa-modal-body">
 
+      <div class="wa-option-row">
+        <div class="wa-option-info">
+          <div class="wa-option-icon welcome"><i class="ri-hand-heart-line"></i></div>
+          <div>
+            <div class="wa-option-title">Welcome Message</div>
+            <div class="wa-option-desc">Greeting for new customer</div>
+          </div>
+        </div>
+        <div class="wa-option-actions">
+          <button class="btn-wa" (click)="sendWhatsapp(selectedWhatsappUser); modal.close()" title="WhatsApp">
+            <i class="ri-whatsapp-line"></i>
+          </button>
+          <button class="btn-sms" (click)="sendSmsWelcome(selectedWhatsappUser); modal.close()" title="SMS">
+            <i class="ri-message-2-line"></i>
+          </button>
+        </div>
+      </div>
 
+      <div class="wa-option-row">
+        <div class="wa-option-info">
+          <div class="wa-option-icon upgrade"><i class="ri-rocket-line"></i></div>
+          <div>
+            <div class="wa-option-title">Upgrade Plan</div>
+            <div class="wa-option-desc">Package upgrade offer</div>
+          </div>
+        </div>
+        <div class="wa-option-actions">
+          <button class="btn-wa" (click)="updratePlan(selectedWhatsappUser); modal.close()" title="WhatsApp">
+            <i class="ri-whatsapp-line"></i>
+          </button>
+          <button class="btn-sms" (click)="sendSmsUpgrade(selectedWhatsappUser); modal.close()" title="SMS">
+            <i class="ri-message-2-line"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="wa-option-row">
+        <div class="wa-option-info">
+          <div class="wa-option-icon maintenance"><i class="ri-tools-line"></i></div>
+          <div>
+            <div class="wa-option-title">Maintenance Notice</div>
+            <div class="wa-option-desc">Scheduled maintenance info</div>
+          </div>
+        </div>
+        <div class="wa-option-actions">
+          <button class="btn-wa" (click)="maintanancePlan(selectedWhatsappUser) && modal.close()" title="WhatsApp">
+            <i class="ri-whatsapp-line"></i>
+          </button>
+          <button class="btn-sms" (click)="sendSmsMaintenance(selectedWhatsappUser) && modal.close()" title="SMS">
+            <i class="ri-message-2-line"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Schedule fed into {Maintenance Date} / {Start Time} / {End Time} -->
+      <div class="wa-sub-fields">
+        <div class="wa-sub-title">
+          <i class="ri-corner-down-right-line"></i>
+          Schedule for <strong>Maintenance Notice</strong>
+        </div>
+        <div class="wa-sub-inputs">
+          <div class="wa-field">
+            <label>Date</label>
+            <input type="date" [(ngModel)]="maintenanceDate" />
+          </div>
+          <div class="wa-field">
+            <label>From</label>
+            <input type="time" [(ngModel)]="maintenanceStart" />
+          </div>
+          <div class="wa-field">
+            <label>To</label>
+            <input type="time" [(ngModel)]="maintenanceEnd" />
+          </div>
+        </div>
+      </div>
+
+      <div class="wa-option-row">
+        <div class="wa-option-info">
+          <div class="wa-option-icon service"><i class="ri-restart-line"></i></div>
+          <div>
+            <div class="wa-option-title">Service Restoration</div>
+            <div class="wa-option-desc">Confirm service restored</div>
+          </div>
+        </div>
+        <div class="wa-option-actions">
+          <button class="btn-wa" (click)="servicePlan(selectedWhatsappUser); modal.close()" title="WhatsApp">
+            <i class="ri-whatsapp-line"></i>
+          </button>
+          <button class="btn-sms" (click)="sendSmsService(selectedWhatsappUser); modal.close()" title="SMS">
+            <i class="ri-message-2-line"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</ng-template>
 
 
 

@@ -1,26 +1,18 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
-  collection,
-  deleteDoc,
   doc,
   Firestore,
   getDoc,
-  getDocs,
+  deleteDoc,
   setDoc,
 } from '@angular/fire/firestore';
-import {
-  FormBuilder,
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-} from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
-import { SmsService } from '../../shared/sms.service';
 
 @Component({
   selector: 'app-settings',
-  imports: [CommonModule, FormsModule, ToastrModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ToastrModule],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
 })
@@ -35,25 +27,11 @@ export class SettingsComponent {
     { id: 'upgrade', title: 'Upgrade Offer', message: '' },
     { id: 'restoration', title: 'Service Restoration', message: '' },
   ];
-  singleSMSForm: FormGroup;
-  bulkSMSForm: FormGroup;
 
   constructor(
     private firestore: Firestore,
     private toastr: ToastrService,
-    private smsService: SmsService,
-    private fb: FormBuilder,
-  ) {
-    this.singleSMSForm = this.fb.group({
-      phone: [''],
-      message: [''],
-    });
-
-    this.bulkSMSForm = this.fb.group({
-      phones: [''],
-      message: [''],
-    });
-  }
+  ) {}
 
   ngOnInit() {
     this.loadTemplates();
@@ -82,7 +60,6 @@ export class SettingsComponent {
     this.toastr.success('Saved successfully');
   }
 
-  // 🔄 Reset (optional)
   resetTemplate(item: any) {
     item.message = '';
   }
@@ -97,123 +74,4 @@ export class SettingsComponent {
 
     this.toastr.success('Deleted successfully');
   }
-
-  sendTestSMS() {
-    const phone = '+923704620052';
-    const msg = 'welcome to ranjha7star';
-
-    this.smsService.sendSMS(phone, msg).subscribe({
-      next: (res) => {
-        console.log('SMS Sent:', res);
-        alert('SMS sent successfully');
-      },
-      error: (err) => {
-        console.error('Error:', err);
-        alert('SMS failed');
-      },
-    });
-  }
-
-  sendTestBulkSMS() {
-    const phone = ['+923006362735', '+923008800263', '+923704620052'];
-    const msg = 'welcome to ranjha7star';
-
-    this.smsService.sendBulkSMS(phone, msg).subscribe({
-      next: (res) => {
-        console.log('SMS Sent:', res);
-        alert('SMS sent successfully');
-      },
-      error: (err) => {
-        console.error('Error:', err);
-        alert('SMS failed');
-      },
-    });
-  }
-
-  //   sendBulkTestSMS() {
-  //   const numbers = [
-  //     '+923026167574',
-  //     '+923008800263',
-  //     '+923045945153'
-  //   ];
-
-  //   const msg = 'Welcome to Ranjha7Star';
-
-  //   this.smsService.sendBulkSMS(numbers, msg).subscribe({
-  //     next: (res) => {
-  //       console.log('Bulk SMS Sent:', res);
-  //       alert('Bulk SMS sent successfully');
-  //     },
-  //     error: (err) => {
-  //       console.error('Error:', err);
-  //       alert('Bulk SMS failed');
-  //     }
-  //   });
-  // }
-
-  // async removeBillsFromAllUsers() {
-  //   const usersRef = collection(this.firestore, 'users');
-  //   const snapshot = await getDocs(usersRef);
-
-  //   const promises: any[] = [];
-
-  //   snapshot.forEach((userDoc) => {
-  //     const ref = doc(this.firestore, 'users', userDoc.id);
-
-  //     promises.push(
-  //       updateDoc(ref, {
-  //         bills: deleteField(),
-  //       }),
-  //     );
-  //   });
-
-  //   await Promise.all(promises);
-  //   console.log('Bills field removed from all users');
-  //   alert('Bills field removed from all users');
-  // }
-
-  // openWhatsApp() {
-  //   const phoneNumber = '923008800263';
-  //   const message = 'Welcome to Ranjha7star';
-
-  //   const encodedMessage = encodeURIComponent(message);
-
-  //   const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-
-  //   window.open(url, '_blank');
-  // }
-
-  sendSingleSMS() {
-    const { phone, message } = this.singleSMSForm.value;
-
-    if (!phone || !message) {
-      alert('Please fill all fields');
-      return;
-    }
-
-    this.smsService.sendSMS(phone, message).subscribe({
-      next: () => alert('SMS sent successfully'),
-      error: () => alert('SMS failed'),
-    });
-  }
-
-  sendBulkSMS() {
-    const { phones, message } = this.bulkSMSForm.value;
-
-    if (!phones || !message) {
-      alert('Please fill all fields');
-      return;
-    }
-
-    const phoneArray = phones
-      .split(/[\n,]+/)
-      .map((p: string) => p.trim())
-      .filter((p: string) => p);
-
-    this.smsService.sendBulkSMS(phoneArray, message).subscribe({
-      next: () => alert('Bulk SMS sent successfully'),
-      error: () => alert('Bulk SMS failed'),
-    });
-  }
-
 }

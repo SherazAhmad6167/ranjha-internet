@@ -175,8 +175,8 @@
                                 <button class="btn btn-danger btn-sm" (click)="openPdfModal(user)">
                                     <i class="ri-file-pdf-line"></i>
                                 </button>
-                                <button class="btn btn-success btn-sm" (click)="sendWhatsapp(user)">
-                                    <i class="ri-whatsapp-line"></i>
+                                <button class="btn btn-success btn-sm" (click)="openMsgModal(user)">
+                                    <i class="ri-message-3-line"></i>
                                 </button>
                             </td>
                         </tr>
@@ -203,6 +203,40 @@
                             Deleting...
                         </span>
                     </button>
+                </div>
+            </ng-template>
+
+            <!-- Messaging Modal -->
+            <ng-template #msgModal let-modal>
+                <div class="wa-modal">
+                    <div class="wa-modal-header">
+                        <div class="wa-header-icon"><i class="ri-message-3-line"></i></div>
+                        <div>
+                            <div class="wa-header-title">{{ selectedMsgUser?.user_name }}</div>
+                            <div class="wa-header-sub">{{ selectedMsgUser?.mobile_no }}</div>
+                        </div>
+                    </div>
+                    <div class="wa-modal-body">
+                        <div class="wa-option-row">
+                            <div class="wa-option-info">
+                                <div class="wa-option-icon reminder">
+                                    <i class="ri-hand-heart-line"></i>
+                                </div>
+                                <div>
+                                    <div class="wa-option-title">Welcome Message</div>
+                                    <div class="wa-option-desc">Send welcome greeting to new customer</div>
+                                </div>
+                            </div>
+                            <div class="wa-option-actions">
+                                <button class="btn-wa" title="WhatsApp" (click)="sendWhatsapp(selectedMsgUser); modal.close()">
+                                    <i class="ri-whatsapp-line"></i>
+                                </button>
+                                <button class="btn-sms" title="SMS" (click)="sendSmsWelcome(selectedMsgUser); modal.close()">
+                                    <i class="ri-mail-send-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </ng-template>
 

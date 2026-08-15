@@ -2,6 +2,204 @@
    SMS PAGE
    ═══════════════════════════════════════ */
 
+/* ── Broadcast Card ── */
+.broadcast-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+  border: 1px solid #e8f5e9;
+}
+
+.broadcast-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: #fff;
+}
+
+.bh-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.bh-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.bh-sub {
+  font-size: 12px;
+  opacity: 0.82;
+  margin-top: 2px;
+}
+
+.broadcast-body {
+  padding: 22px 24px;
+}
+
+.bc-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.bc-label-note {
+  font-size: 11px;
+  font-weight: 400;
+  color: #94a3b8;
+}
+
+.bc-select {
+  font-size: 13px;
+  border-radius: 8px;
+  border-color: #dde2e8;
+  padding: 8px 12px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    border-color: #16a34a;
+    box-shadow: 0 0 0 3px rgba(22,163,74,0.12);
+  }
+}
+
+.user-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  font-size: 12px;
+  color: #64748b;
+  transition: all 0.25s;
+
+  i { font-size: 14px; }
+
+  &.has-users {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #15803d;
+    font-weight: 600;
+  }
+}
+
+.var-hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.var-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  font-size: 10px;
+  font-weight: 600;
+  color: #1d4ed8;
+  font-family: monospace;
+  cursor: default;
+}
+
+.btn-broadcast {
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: #fff;
+  border: none;
+  width: 100%;
+  transition: box-shadow 0.2s, transform 0.15s, opacity 0.15s;
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 4px 14px rgba(22,163,74,0.38);
+    transform: translateY(-1px);
+    color: #fff;
+  }
+
+  &:disabled { opacity: 0.55; color: #fff; }
+}
+
+.broadcast-progress-wrap {
+  height: 5px;
+  border-radius: 3px;
+  background: #dcfce7;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.broadcast-progress-bar {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #16a34a, #4ade80);
+  transition: width 0.3s ease;
+}
+
+.bc-textarea {
+  border-radius: 8px;
+  border: 1px solid #dde2e8;
+  font-size: 13.5px;
+  resize: vertical;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    border-color: #16a34a;
+    box-shadow: 0 0 0 3px rgba(22,163,74,0.12);
+  }
+}
+
+.bc-char-count {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #94a3b8;
+  text-align: right;
+}
+
+/* ── Section Divider ── */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+.divider-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  white-space: nowrap;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
 /* ── Page Header ── */
 .sms-page-header {
   display: flex;
@@ -67,6 +265,18 @@
     background: #fff7ed;
     color: #c2410c;
     border-color: #fed7aa;
+  }
+
+  &.sent {
+    background: #f0fdf4;
+    color: #15803d;
+    border-color: #bbf7d0;
+  }
+
+  &.failed {
+    background: #fff1f2;
+    color: #be123c;
+    border-color: #fecdd3;
   }
 }
 
@@ -394,6 +604,131 @@
   font-size: 28px;
   color: #dc3545;
   margin: 0 auto;
+}
+
+/* ── Broadcast Confirm Modal ── */
+.bc-modal-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.bc-confirm-stats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bc-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-size: 13px;
+  color: #475569;
+
+  i { color: #16a34a; font-size: 14px; }
+}
+
+.bc-msg-preview {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.bc-msg-label {
+  padding: 6px 14px;
+  background: #f1f5f9;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.bc-msg-body {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #334155;
+  max-height: 140px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.btn-broadcast-confirm {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: box-shadow 0.2s;
+
+  &:hover { box-shadow: 0 4px 14px rgba(22,163,74,0.38); color: #fff; }
+}
+
+/* ── View SMS Modal ── */
+.view-modal-header {
+  background: linear-gradient(135deg, #0d6efd, #0a58ca);
+  color: #fff;
+  padding: 14px 20px;
+  border-bottom: none;
+  font-size: 18px;
+
+  i { font-size: 18px; }
+}
+
+.view-field {
+  padding: 12px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+
+  &.msg {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+.view-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.view-value {
+  font-size: 13px;
+  color: #334155;
+  font-weight: 500;
+}
+
+.view-msg-body {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 13px;
+  color: #334155;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 300px;
+  overflow-y: auto;
+  width: 100%;
+  line-height: 1.6;
 }
 
 /* Loading overlay */

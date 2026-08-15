@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   collection,
   Firestore,
@@ -17,7 +17,7 @@ import { ToastrModule, ToastrService } from 'ngx-toastr';
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   username = '';
   password = '';
   loading = false;
@@ -29,6 +29,18 @@ export class LoginComponent {
     private router: Router,
     private toastr: ToastrService,
   ) {}
+
+  ngOnInit() {
+    const username = localStorage.getItem('username');
+    const role = localStorage.getItem('role');
+    if (username && role) {
+      if (role === 'operator') {
+        this.router.navigate(['/user-details']);
+      } else {
+        this.router.navigate(['/dashboard']);
+      }
+    }
+  }
 
   togglePassword() {
     this.showPassword = !this.showPassword;

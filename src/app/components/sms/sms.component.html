@@ -18,7 +18,15 @@
       </div>
       <div class="stat-pill pending">
         <i class="ri-time-line"></i>
-        <span>{{ smsList.length }} Pending</span>
+        <span>{{ pendingCount }} Pending</span>
+      </div>
+      <div class="stat-pill sent">
+        <i class="ri-check-double-line"></i>
+        <span>{{ sentCount }} Sent</span>
+      </div>
+      <div class="stat-pill failed">
+        <i class="ri-close-circle-line"></i>
+        <span>{{ failedCount }} Failed</span>
       </div>
     </div>
   </div>
@@ -36,6 +44,127 @@
 
   <!-- ── COMPOSE TAB ─────────────────────────────── -->
   <div *ngIf="activeTab === 'compose'">
+
+    <!-- ══ BROADCAST SECTION ══ -->
+    <div class="broadcast-card mb-4">
+
+      <div class="broadcast-header">
+        <div class="bh-icon">
+          <i class="ri-broadcast-line"></i>
+        </div>
+        <div>
+          <div class="bh-title">Broadcast SMS</div>
+          <div class="bh-sub">Send a message to all users in an area — phone numbers auto-formatted from user profiles</div>
+        </div>
+      </div>
+
+      <div class="broadcast-body">
+        <div class="row g-3 align-items-start">
+
+          <!-- Area Dropdown -->
+          <div class="col-md-4">
+            <label class="bc-label">
+              <i class="ri-map-pin-2-line me-1"></i> Area
+            </label>
+            <select class="form-select bc-select"
+                    [(ngModel)]="broadcastArea"
+                    (change)="onBroadcastAreaChange()"
+                    [disabled]="isBroadcasting">
+              <option value="all">All Areas</option>
+              <option *ngFor="let a of areas" [value]="a.sublocality">{{ a.sublocality }}</option>
+            </select>
+
+            <!-- User Count Badge -->
+            <div class="user-count-badge" [class.has-users]="broadcastUsers.length > 0">
+              <i class="ri-group-line"></i>
+              <span *ngIf="!broadcastDataLoaded">Loading...</span>
+              <span *ngIf="broadcastDataLoaded">
+                <strong>{{ broadcastUsers.length }}</strong>
+                user{{ broadcastUsers.length !== 1 ? 's' : '' }} with valid numbers
+              </span>
+            </div>
+          </div>
+
+          <!-- Template Dropdown -->
+          <div class="col-md-4">
+            <label class="bc-label">
+              <i class="ri-file-text-line me-1"></i> SMS Template
+            </label>
+            <select class="form-select bc-select"
+                    [(ngModel)]="broadcastTemplateId"
+                    (change)="onBroadcastTemplateChange()"
+                    [disabled]="isBroadcasting">
+              <option value="">— Select a template —</option>
+              <option *ngFor="let t of smsTemplates" [value]="t.id">{{ t.title }}</option>
+            </select>
+
+            <!-- Variable hints (ngNonBindable prevents Angular from interpreting {{ }} as expressions) -->
+            <div class="var-hints" ngNonBindable>
+              <span class="var-chip">{{name}}</span>
+              <span class="var-chip">{{area}}</span>
+              <span class="var-chip">{{package}}</span>
+              <span class="var-chip">{{id}}</span>
+              <span class="var-chip">{{amount}}</span>
+            </div>
+          </div>
+
+          <!-- Send Button + Progress (right-aligned) -->
+          <div class="col-md-4 d-flex flex-column justify-content-start">
+            <label class="bc-label">&nbsp;</label>
+            <button class="btn btn-broadcast"
+                    (click)="openBroadcastConfirm()"
+                    [disabled]="!broadcastMessage.trim() || broadcastUsers.length === 0 || isBroadcasting">
+              <span *ngIf="!isBroadcasting">
+                <i class="ri-send-plane-fill me-1"></i>
+                Send to {{ broadcastUsers.length }} user{{ broadcastUsers.length !== 1 ? 's' : '' }}
+              </span>
+              <span *ngIf="isBroadcasting">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Queuing {{ broadcastSent }}/{{ broadcastTotal }}...
+              </span>
+            </button>
+
+            <!-- Progress bar -->
+            <div class="broadcast-progress-wrap" *ngIf="isBroadcasting">
+              <div class="broadcast-progress-bar" [style.width.%]="broadcastProgress"></div>
+            </div>
+          </div>
+
+          <!-- Message Preview -->
+          <div class="col-12">
+            <label class="bc-label">
+              <i class="ri-chat-3-line me-1"></i> Message
+              <span class="bc-label-note ms-2">
+                — loaded from template, editable. Variables replaced per user on send.
+              </span>
+            </label>
+            <textarea class="form-control bc-textarea"
+                      rows="4"
+                      [(ngModel)]="broadcastMessage"
+                      [disabled]="isBroadcasting"
+                      [placeholder]="'Select a template above, or type your message. Use {{name}}, {{area}}, {{package}}, {{id}}, {{amount}} for personalization.'"></textarea>
+            <div class="bc-char-count">
+              {{ broadcastMessage.length }} chars
+              <span *ngIf="broadcastMessage.length > 160" class="text-warning ms-1">
+                · <i class="ri-error-warning-line"></i> Multi-part SMS ({{ broadcastParts }} parts)
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Divider ── -->
+    <div class="section-divider mb-4">
+      <div class="divider-line"></div>
+      <span class="divider-label">
+        <i class="ri-edit-2-line me-1"></i> Manual Compose
+      </span>
+      <div class="divider-line"></div>
+    </div>
+
+    <!-- ══ MANUAL COMPOSE FORM ══ -->
     <div class="row justify-content-center">
       <div class="col-xl-6 col-lg-8">
         <div class="sms-compose-card">
@@ -189,10 +318,16 @@
                 </td>
                 <td>{{ sms.createdAt | date:'dd-MM-yyyy HH:mm' }}</td>
                 <td>
-                  <button class="btn btn-sm btn-outline-danger" (click)="openDeleteModal(sms.id)"
-                    title="Delete">
-                    <i class="ri-delete-bin-line"></i>
-                  </button>
+                  <div class="d-flex gap-1">
+                    <button class="btn btn-sm btn-outline-primary" (click)="openViewModal(sms)"
+                      title="View">
+                      <i class="ri-eye-line"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" (click)="openDeleteModal(sms.id)"
+                      title="Delete">
+                      <i class="ri-delete-bin-line"></i>
+                    </button>
+                  </div>
                 </td>
               </tr>
               <tr *ngIf="!isLoading && pagedList.length === 0">
@@ -234,6 +369,89 @@
   </div>
 
 </div>
+
+<!-- View SMS Modal -->
+<ng-template #viewModal let-modal>
+  <div class="modal-header view-modal-header">
+    <div class="d-flex align-items-center gap-2">
+      <i class="ri-message-3-line"></i>
+      <h6 class="mb-0 fw-bold">SMS Details</h6>
+    </div>
+    <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body p-0" *ngIf="selectedSms">
+    <div class="view-field">
+      <div class="view-label"><i class="ri-phone-line me-1"></i> Recipient</div>
+      <div class="view-value phone-cell">{{ selectedSms.phone }}</div>
+    </div>
+    <div class="view-field">
+      <div class="view-label"><i class="ri-loader-4-line me-1"></i> Status</div>
+      <div class="view-value">
+        <span class="sms-status-badge" [ngClass]="statusClass(selectedSms.status)">
+          {{ selectedSms.status | titlecase }}
+        </span>
+      </div>
+    </div>
+    <div class="view-field">
+      <div class="view-label"><i class="ri-calendar-line me-1"></i> Created At</div>
+      <div class="view-value">{{ selectedSms.createdAt | date:'dd-MM-yyyy HH:mm:ss' }}</div>
+    </div>
+    <div class="view-field" *ngIf="selectedSms.source">
+      <div class="view-label"><i class="ri-broadcast-line me-1"></i> Source</div>
+      <div class="view-value">{{ selectedSms.source | titlecase }}</div>
+    </div>
+    <div class="view-field" *ngIf="selectedSms.area">
+      <div class="view-label"><i class="ri-map-pin-2-line me-1"></i> Area</div>
+      <div class="view-value">{{ selectedSms.area }}</div>
+    </div>
+    <div class="view-field msg">
+      <div class="view-label"><i class="ri-chat-3-line me-1"></i> Message</div>
+      <div class="view-msg-body">{{ selectedSms.message }}</div>
+    </div>
+  </div>
+</ng-template>
+
+<!-- Broadcast Confirm Modal -->
+<ng-template #broadcastConfirmModal let-modal>
+  <div class="modal-body p-4">
+    <div class="d-flex align-items-center gap-3 mb-3">
+      <div class="bc-modal-icon">
+        <i class="ri-broadcast-line"></i>
+      </div>
+      <div>
+        <h6 class="fw-bold mb-0">Confirm Broadcast</h6>
+        <p class="text-muted small mb-0">This will queue SMS for multiple users</p>
+      </div>
+    </div>
+
+    <div class="bc-confirm-stats mb-3">
+      <div class="bc-stat">
+        <i class="ri-group-line"></i>
+        <span><strong>{{ broadcastUsers.length }}</strong> recipient{{ broadcastUsers.length !== 1 ? 's' : '' }}</span>
+      </div>
+      <div class="bc-stat">
+        <i class="ri-map-pin-2-line"></i>
+        <span>{{ broadcastArea === 'all' ? 'All Areas' : broadcastArea }}</span>
+      </div>
+      <div class="bc-stat">
+        <i class="ri-text"></i>
+        <span>{{ broadcastMessage.length }} chars</span>
+      </div>
+    </div>
+
+    <div class="bc-msg-preview mb-4">
+      <div class="bc-msg-label">Message preview</div>
+      <div class="bc-msg-body">{{ broadcastMessage }}</div>
+    </div>
+
+    <div class="d-flex gap-2 justify-content-end">
+      <button class="btn btn-outline-secondary px-4" (click)="modal.dismiss()">Cancel</button>
+      <button class="btn btn-broadcast-confirm px-4" (click)="sendBroadcast(modal)">
+        <i class="ri-send-plane-fill me-1"></i> Queue {{ broadcastUsers.length }} SMS
+      </button>
+    </div>
+  </div>
+</ng-template>
 
 <!-- Delete Confirm Modal -->
 <ng-template #deleteModal let-modal>
