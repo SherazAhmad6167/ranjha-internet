@@ -1,151 +1,168 @@
 <div *ngIf="isLoading" class="loading-overlay">
-    <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-    </div>
-</div>
-
-<div class="card">
-  <div class="card-body">
-
-    <div>
-        <h5 class="card-title">Upload User Data via CSV</h5>
-        <p class="card-text">Select a CSV file containing user details and upload it to the database.</p>
-    </div>
-
-    <div class="alert alert-info">
-  <h6 class="fw-bold mb-2">📄 CSV Format Instructions</h6>
-
-  <p class="mb-1">Please upload CSV with following columns:</p>
-
-  <ul class="mb-2">
-    <li><b>Internet ID</b></li>
-    <li><b>User Name</b></li>
-    <li><b>Phone No</b></li>
-    <li><b>Address</b></li>
-    <li><b>Sublocality</b></li>
-    <li><b>Static IP</b></li>
-    <li><b>Installation Date</b></li>
-    <li><b>Connection Provider</b></li>
-    <li><b>Connection Type</b></li>
-    <li><b>Select Internet Package</b></li>
-    <li><b>Internet Package Fee</b></li>
-    <!-- <li><b>Recharge Date</b></li> -->
-    <li><b>Latitude</b></li>
-    <li><b>Longitude</b></li>
-  </ul>
-
-  <p class="mb-1 fw-bold">Example:</p>
-
-  <div class="table-responsive">
-    <table class="table table-bordered table-sm">
-      <thead class="table-light">
-        <tr>
-          <th>Internet ID</th>
-          <th>User Name</th>
-          <th>Phone No</th>
-          <th>Address</th>
-          <th>Sublocality</th>
-          <th>Package</th>
-          <th>Fee</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>INT123</td>
-          <td>Ali Khan</td>
-          <td>03001234567</td>
-          <td>Lahore</td>
-          <td>Johar Town</td>
-          <td>basic</td>
-          <td>2000</td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="spinner-border" role="status">
+    <span class="visually-hidden">Loading...</span>
   </div>
 </div>
 
-    <!-- Upload CSV -->
-    <div class="mb-3">
-      <label class="form-label fw-bold">Upload CSV File</label>
-      <input type="file" class="form-control" (change)="onFileChange($event)" accept=".csv">
+<!-- ── CSV Format Guide ── -->
+<div class="udc-card mb-4">
+  <div class="udc-card-header">
+    <div class="udc-card-icon info-icon"><i class="ri-information-line"></i></div>
+    <div>
+      <div class="udc-card-title">CSV Format Guide</div>
+      <div class="udc-card-sub">Required columns for bulk user import</div>
+    </div>
+  </div>
+  <div class="udc-info-body">
+
+    <!-- Column tags -->
+    <div class="udc-columns-grid">
+      <div class="udc-col-tag"><i class="ri-hashtag"></i> Internet ID</div>
+      <div class="udc-col-tag"><i class="ri-user-line"></i> User Name</div>
+      <div class="udc-col-tag"><i class="ri-phone-line"></i> Phone No</div>
+      <div class="udc-col-tag"><i class="ri-map-pin-line"></i> Address</div>
+      <div class="udc-col-tag"><i class="ri-map-2-line"></i> Sublocality</div>
+      <div class="udc-col-tag"><i class="ri-server-line"></i> Static IP</div>
+      <div class="udc-col-tag"><i class="ri-calendar-line"></i> Installation Date</div>
+      <div class="udc-col-tag"><i class="ri-links-line"></i> Connection Provider</div>
+      <div class="udc-col-tag"><i class="ri-router-line"></i> Connection Type</div>
+      <div class="udc-col-tag"><i class="ri-box-3-line"></i> Select Internet Package</div>
+      <div class="udc-col-tag"><i class="ri-money-dollar-circle-line"></i> Internet Package Fee</div>
+      <div class="udc-col-tag"><i class="ri-map-pin-user-line"></i> Latitude</div>
+      <div class="udc-col-tag"><i class="ri-map-pin-user-line"></i> Longitude</div>
+    </div>
+
+    <!-- Example table -->
+    <div class="udc-example-label"><i class="ri-table-line"></i> Example row</div>
+    <div class="table-responsive udc-example-table">
+      <table class="table table-sm table-bordered mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Internet ID</th>
+            <th>User Name</th>
+            <th>Phone No</th>
+            <th>Address</th>
+            <th>Package</th>
+            <th>Fee</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>INT123</td>
+            <td>Ali Khan</td>
+            <td>03001234567</td>
+            <td>Lahore</td>
+            <td>basic</td>
+            <td>2000</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Upload Card ── -->
+<div class="udc-card">
+  <div class="udc-card-header">
+    <div class="udc-card-icon upload-icon"><i class="ri-file-upload-line"></i></div>
+    <div>
+      <div class="udc-card-title">Upload CSV File</div>
+      <div class="udc-card-sub">Select a .csv file to preview and import data</div>
+    </div>
+    <div *ngIf="csvData.length > 0" class="udc-count-pill ms-auto">
+      <i class="ri-database-2-line"></i>
+      <strong>{{ csvData.length }}</strong> Entries Ready
+    </div>
+  </div>
+
+  <div class="udc-upload-body">
+
+    <!-- File drop area -->
+    <div class="udc-file-area">
+      <label class="udc-file-label">
+        <i class="ri-folder-open-line udc-file-icon"></i>
+        <span class="udc-file-text">Click to select CSV file</span>
+        <span class="udc-file-hint">.csv files only</span>
+        <input type="file" class="udc-file-input" (change)="onFileChange($event)" accept=".csv">
+      </label>
     </div>
 
     <!-- Error -->
-    <div *ngIf="fileError" class="text-danger mb-2">
-      {{ fileError }}
+    <div *ngIf="fileError" class="udc-error">
+      <i class="ri-error-warning-line"></i> {{ fileError }}
     </div>
 
-    <!-- Count -->
-    <div *ngIf="csvData.length > 0" class="mb-2">
-      <strong>Total Entries: {{ csvData.length }}</strong>
+    <!-- Preview -->
+    <div *ngIf="csvData.length > 0" class="udc-preview-wrap">
+      <div class="udc-preview-header">
+        <span class="udc-preview-label"><i class="ri-eye-line"></i> Data Preview</span>
+        <span class="udc-count-badge">{{ csvData.length }} records</span>
+      </div>
+      <div class="table-responsive" style="max-height: 400px; overflow: auto;">
+        <table class="udc-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Internet ID</th>
+              <th>User Name</th>
+              <th>Phone</th>
+              <th>Address</th>
+              <th>Sublocality</th>
+              <th>Static IP</th>
+              <th>Install Amount</th>
+              <th>Other Amount</th>
+              <th>Install Date</th>
+              <th>Provider</th>
+              <th>Type</th>
+              <th>Package</th>
+              <th>Fee</th>
+              <th>Cable Discount</th>
+              <th>Cable Fee</th>
+              <th>Internet Discount</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th>Cable Package</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of csvData; let i = index">
+              <td class="udc-row-num">{{ i + 1 }}</td>
+              <td>{{ row.internet_id }}</td>
+              <td>{{ row.user_name }}</td>
+              <td>{{ row.mobile_no }}</td>
+              <td>{{ row.address }}</td>
+              <td>{{ row.sublocality }}</td>
+              <td>{{ row.static_ip }}</td>
+              <td>{{ row.installation_amount }}</td>
+              <td>{{ row.other_amount }}</td>
+              <td>{{ row.installation_date }}</td>
+              <td>{{ row.connection_provider }}</td>
+              <td>{{ row.connection_type }}</td>
+              <td>{{ row.select_package }}</td>
+              <td>{{ row.internet_package_fee }}</td>
+              <td>{{ row.cable_discount }}</td>
+              <td>{{ row.cable_package_fee }}</td>
+              <td>{{ row.internet_discount }}</td>
+              <td>{{ row.latitude }}</td>
+              <td>{{ row.longitude }}</td>
+              <td>{{ row.pkg_cable }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-
-    <!-- Table Preview -->
-    <div class="table-responsive" *ngIf="csvData.length > 0" style="max-height: 500px; overflow: auto;">
-  <table class="table table-bordered table-hover table-sm">
-    
-    <thead class="table-dark sticky-top">
-      <tr>
-        <th>#</th>
-        <th>Internet ID</th>
-        <th>User Name</th>
-        <th>Phone</th>
-        <th>Address</th>
-        <th>Sublocality</th>
-        <th>Static IP</th>
-        <th>Install Amount</th>
-        <th>Other Amount</th>
-        <th>Install Date</th>
-        <th>Provider</th>
-        <th>Type</th>
-        <th>Package</th>
-        <th>Fee</th>
-        <th>Cable Discount</th>
-        <th>Cable Fee</th>
-        <th>Internet Discount</th>
-        <!-- <th>Recharge Date</th> -->
-        <th>Latitude</th>
-        <th>Longitude</th>
-        <th>Cable Package</th>
-      </tr>
-    </thead>
-
-    <tbody>
-      <tr *ngFor="let row of csvData; let i = index">
-        <td>{{ i + 1 }}</td>
-        <td>{{ row.internet_id }}</td>
-        <td>{{ row.user_name }}</td>
-        <td>{{ row.phone_no }}</td>
-        <td>{{ row.address }}</td>
-        <td>{{ row.sublocality }}</td>
-        <td>{{ row.static_ip }}</td>
-        <td>{{ row.installation_amount }}</td>
-        <td>{{ row.other_amount }}</td>
-        <td>{{ row.installation_date }}</td>
-        <td>{{ row.connection_provider }}</td>
-        <td>{{ row.connection_type }}</td>
-        <td>{{ row.select_package }}</td>
-        <td>{{ row.internet_package_fee }}</td>
-        <td>{{ row.cable_discount }}</td>
-        <td>{{ row.cable_package_fee }}</td>
-        <td>{{ row.internet_discount }}</td>
-        <!-- <td>{{ row.recharge_date }}</td> -->
-        <td>{{ row.latitude }}</td>
-        <td>{{ row.longitude }}</td>
-        <td>{{ row.pkg_cable }}</td>
-      </tr>
-    </tbody>
-
-  </table>
-</div>
 
     <!-- Submit -->
-    <button 
-      class="btn btn-primary mt-3"
-      [disabled]="csvData.length === 0 || loading"
-      (click)="uploadToFirestore()">
-      {{ loading ? 'Uploading...' : 'Save to Database' }}
-    </button>
+    <div class="udc-footer">
+      <button
+        class="udc-submit-btn"
+        [disabled]="csvData.length === 0 || loading"
+        (click)="uploadToFirestore()">
+        <i [class]="loading ? 'ri-loader-4-line' : 'ri-cloud-upload-line'"></i>
+        {{ loading ? 'Uploading...' : 'Save to Database' }}
+      </button>
+    </div>
 
   </div>
 </div>

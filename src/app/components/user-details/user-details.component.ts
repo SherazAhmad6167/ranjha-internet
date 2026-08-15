@@ -564,6 +564,33 @@ export class UserDetailsComponent {
     return '';
   }
 
+  get totalUsersCount(): number { return this.users.length; }
+
+  connectionBadgeClass(type: string): string {
+    if (type === 'internet') return 'conn-internet';
+    if (type === 'tv_cable') return 'conn-cable';
+    if (type === 'both') return 'conn-both';
+    return '';
+  }
+
+  connectionLabel(type: string): string {
+    if (type === 'internet') return 'Internet';
+    if (type === 'tv_cable') return 'Cable';
+    if (type === 'both') return 'Both';
+    return type || '—';
+  }
+
+  packageDisplay(user: any): string {
+    if (user?.select_package) {
+      return user.select_package.replace('_', '-').replace('mbps', 'Mbps').toUpperCase();
+    }
+    return user?.pkg_cable || '—';
+  }
+
+  userInitial(user: any): string {
+    return (user?.user_name || '?').charAt(0).toUpperCase();
+  }
+
   async sendWhatsapp(user: any) {
     const rawNumber =
       user?.phone_no && user.phone_no !== '0' ? user.phone_no : user?.mobile_no;

@@ -64,6 +64,20 @@ export class SettingsComponent {
     item.message = '';
   }
 
+  getTemplateIcon(id: string): string {
+    const map: Record<string, string> = {
+      welcome:      'ri-hand-heart-line',
+      complaint:    'ri-customer-service-2-line',
+      paymentReminder: 'ri-notification-3-line',
+      paymentReceived: 'ri-checkbox-circle-line',
+      overdue:      'ri-error-warning-line',
+      maintenance:  'ri-tools-line',
+      upgrade:      'ri-rocket-line',
+      restoration:  'ri-wifi-line',
+    };
+    return map[id] || 'ri-message-2-line';
+  }
+
   async deleteTemplate(id: string) {
     const confirmDelete = confirm('Are you sure?');
 

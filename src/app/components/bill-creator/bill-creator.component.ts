@@ -37,6 +37,24 @@ export class BillCreatorComponent {
   selectedMonth: string = '';
   selectedYear: string = '';
   userName: string | null = '';
+  overlayMessage = 'Loading bills...';
+
+  months = [
+    { value: 'january', label: 'January' },
+    { value: 'february', label: 'February' },
+    { value: 'march', label: 'March' },
+    { value: 'april', label: 'April' },
+    { value: 'may', label: 'May' },
+    { value: 'june', label: 'June' },
+    { value: 'july', label: 'July' },
+    { value: 'august', label: 'August' },
+    { value: 'september', label: 'September' },
+    { value: 'october', label: 'October' },
+    { value: 'november', label: 'November' },
+    { value: 'december', label: 'December' },
+  ];
+  years: string[] = [];
+
   constructor(
     private modalService: NgbModal,
     private firestore: Firestore,
@@ -45,8 +63,63 @@ export class BillCreatorComponent {
 
   ngOnInit(): void {
     this.userName = localStorage.getItem('username');
+    this.buildYears();
     this.loadInternetAreas();
     this.loadBills();
+  }
+
+  buildYears() {
+    const now = new Date().getFullYear();
+    this.years = [];
+    for (let y = now - 3; y <= now + 2; y++) this.years.push(String(y));
+  }
+
+  // ── Header stats ──────────────────────────────
+  get totalUsersBilled(): number {
+    return this.bills.reduce((sum, b) => sum + (Number(b.users) || 0), 0);
+  }
+
+  get totalAmountBilled(): number {
+    return this.bills.reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
+  }
+
+  // ── Display helpers ───────────────────────────
+  get canCreate(): boolean {
+    return !!(
+      this.selectedMonth &&
+      this.selectedYear &&
+      this.connection_type &&
+      this.sublocality
+    );
+  }
+
+  connectionLabel(type: string): string {
+    if (type === 'tv_cable') return 'Cable';
+    if (type === 'internet') return 'Internet';
+    if (type === 'both') return 'Both';
+    return type || '—';
+  }
+
+  connectionClass(type: string): string {
+    if (type === 'tv_cable') return 'conn-cable';
+    if (type === 'internet') return 'conn-internet';
+    if (type === 'both') return 'conn-both';
+    return '';
+  }
+
+  areaLabel(area: string): string {
+    return area === 'all' ? 'All Areas' : area;
+  }
+
+  monthLabel(value: string): string {
+    return this.months.find((m) => m.value === value)?.label || value;
+  }
+
+  resetFilters() {
+    this.selectedMonth = '';
+    this.selectedYear = '';
+    this.connection_type = '';
+    this.sublocality = '';
   }
 
   async loadInternetAreas() {
@@ -74,6 +147,7 @@ export class BillCreatorComponent {
 
   async loadBills() {
     this.isLoading = true;
+    this.overlayMessage = 'Loading bills...';
 
     try {
       const billsRef = collection(this.firestore, 'billCreator');
@@ -113,8 +187,10 @@ export class BillCreatorComponent {
     this.filteredBills = this.bills.filter(
       (bill) =>
         bill.month?.toLowerCase().includes(term) ||
-        bill.year?.toLowerCase().includes(term) ||
-        bill.sublocality?.toLowerCase().includes(term),
+        String(bill.year ?? '').toLowerCase().includes(term) ||
+        bill.sublocality?.toLowerCase().includes(term) ||
+        bill.connection_type?.toLowerCase().includes(term) ||
+        bill.created_by?.toLowerCase().includes(term),
     );
 
     this.currentPage = 1; // reset to first page after search
@@ -179,6 +255,7 @@ export class BillCreatorComponent {
 
   async createBillForUsers() {
     this.isLoading = true;
+    this.overlayMessage = 'Creating bills, please wait...';
 
     try {
       const usersSnap = await getDocs(collection(this.firestore, 'users'));

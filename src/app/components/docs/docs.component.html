@@ -1,21 +1,23 @@
-<div class="container-fluid pt-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="m-0">Upload Documents</h2>
-        <!-- <button class="btn btn-primary d-flex align-items-center" (click)="openUserModal()">
-            <i class="bi bi-person-plus me-2"></i>
-            Add Area
-        </button> -->
-    </div>
+<div class="container-fluid ud-wrapper">
 
-    <div *ngIf="isLoading" class="loading-overlay">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
+  <div *ngIf="isLoading" class="loading-overlay">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
     </div>
+  </div>
 
-    <div>
-        <app-user-docs></app-user-docs>
+  <!-- ── Page Header ── -->
+  <div class="ud-page-header mb-4">
+    <div class="ud-header-left">
+      <div class="ud-header-icon"><i class="ri-upload-cloud-2-line"></i></div>
+      <div>
+        <h1 class="ud-title">Upload Documents</h1>
+        <p class="ud-sub">Import user data in bulk using CSV file upload</p>
+      </div>
     </div>
+  </div>
 
-    
+  <!-- Child Component -->
+  <app-user-docs></app-user-docs>
+
 </div>
