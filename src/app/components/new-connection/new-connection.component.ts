@@ -77,7 +77,7 @@ export class NewConnectionComponent {
     { label: 'Advance Paid', key: 'advance_paid' },
     { label: 'Balance', key: 'balance' },
     { label: 'Payment Method', key: 'payment_method' },
-    { label: 'Connection Payment', key: 'connection_payment' },
+    { label: 'Connection Type', key: 'connection_payment' },
   ];
 
   installFields = [

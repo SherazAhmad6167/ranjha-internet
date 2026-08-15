@@ -155,7 +155,7 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Connection Type <span class="text-danger">*</span></label>
+                        <label class="form-label">Connection Mode <span class="text-danger">*</span></label>
                         <select class="form-control"
                             [ngClass]="{'is-invalid': userForm.get('connection_type')?.invalid && userForm.get('connection_type')?.touched}"
                             formControlName="connection_type">
@@ -164,7 +164,7 @@
                             <option value="internet">Internet Only</option>
                             <option value="tv_cable">TV Cable Only</option>
                         </select>
-                        <div class="invalid-feedback">Connection type is required</div>
+                        <div class="invalid-feedback">Connection Mode is required</div>
                     </div>
 
                     <!-- Cable Package (conditional) -->
@@ -256,7 +256,7 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Connection Payment</label>
+                        <label class="form-label">Connection Mode</label>
                         <select class="form-control" formControlName="connection_payment">
                             <option value="" disabled selected>Select payment status</option>
                             <option value="Free">Free</option>

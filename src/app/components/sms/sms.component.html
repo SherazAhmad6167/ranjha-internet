@@ -1,0 +1,254 @@
+<div class="container-fluid pt-5">
+
+  <!-- Page Header -->
+  <div class="sms-page-header mb-4">
+    <div class="sph-left">
+      <div class="sph-icon">
+        <i class="ri-message-3-fill"></i>
+      </div>
+      <div>
+        <h4 class="sph-title">Mobile SMS</h4>
+        <p class="sph-sub">Compose and track outbound SMS messages</p>
+      </div>
+    </div>
+    <div class="sph-stats">
+      <div class="stat-pill">
+        <i class="ri-send-plane-line"></i>
+        <span>{{ smsList.length }} Total</span>
+      </div>
+      <div class="stat-pill pending">
+        <i class="ri-time-line"></i>
+        <span>{{ smsList.length }} Pending</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="sms-tabs mb-3">
+    <button class="sms-tab" [class.active]="activeTab === 'compose'" (click)="switchTab('compose')">
+      <i class="ri-edit-2-line"></i> Compose SMS
+    </button>
+    <button class="sms-tab" [class.active]="activeTab === 'inbox'" (click)="switchTab('inbox')">
+      <i class="ri-inbox-line"></i> SMS Log
+      <span class="tab-badge" *ngIf="smsList.length">{{ smsList.length }}</span>
+    </button>
+  </div>
+
+  <!-- ── COMPOSE TAB ─────────────────────────────── -->
+  <div *ngIf="activeTab === 'compose'">
+    <div class="row justify-content-center">
+      <div class="col-xl-6 col-lg-8">
+        <div class="sms-compose-card">
+
+          <div class="compose-header">
+            <i class="ri-message-3-line"></i>
+            <div>
+              <div class="compose-title">New Message</div>
+              <div class="compose-sub">Message will be queued with status <strong>Pending</strong></div>
+            </div>
+          </div>
+
+          <form [formGroup]="smsForm" (ngSubmit)="onSubmit()" class="compose-form">
+
+            <!-- Phone -->
+            <div class="mb-4">
+              <label class="form-label">
+                <i class="ri-phone-line me-1"></i> Recipient Number
+              </label>
+              <div class="phone-input-wrap">
+                <span class="phone-prefix">
+                  <i class="ri-flag-line"></i> +92
+                </span>
+                <input
+                  type="text"
+                  class="form-control phone-field"
+                  formControlName="phone"
+                  placeholder="+923001234567"
+                  [class.is-invalid]="smsForm.get('phone')?.invalid && smsForm.get('phone')?.touched"
+                />
+              </div>
+              <div class="phone-hint">
+                <i class="ri-information-line"></i>
+                Format: <code>+92XXXXXXXXXX</code> — 10 digits after +92
+              </div>
+              <div class="invalid-feedback d-block"
+                *ngIf="smsForm.get('phone')?.invalid && smsForm.get('phone')?.touched">
+                Enter a valid number e.g. +923001234567
+              </div>
+            </div>
+
+            <!-- Message -->
+            <div class="mb-4">
+              <label class="form-label d-flex justify-content-between">
+                <span><i class="ri-chat-3-line me-1"></i> Message</span>
+                <span class="char-count" [class.warn]="charCount > 140">
+                  {{ charCount }} / 160
+                </span>
+              </label>
+              <textarea
+                class="form-control message-area"
+                formControlName="message"
+                rows="5"
+                maxlength="160"
+                placeholder="Type your message here..."
+                [class.is-invalid]="smsForm.get('message')?.invalid && smsForm.get('message')?.touched"
+              ></textarea>
+              <div class="invalid-feedback"
+                *ngIf="smsForm.get('message')?.invalid && smsForm.get('message')?.touched">
+                Message is required
+              </div>
+            </div>
+
+            <!-- Status (readonly) -->
+            <div class="mb-4">
+              <label class="form-label">
+                <i class="ri-loader-4-line me-1"></i> Status
+              </label>
+              <div class="status-readonly">
+                <span class="status-dot"></span>
+                Pending
+                <span class="status-readonly-note">(auto-assigned)</span>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="compose-actions">
+              <button type="button" class="btn btn-outline-secondary btn-reset"
+                (click)="smsForm.reset(); smsForm.patchValue({ phone: '+92' })">
+                <i class="ri-refresh-line"></i> Reset
+              </button>
+              <button type="submit" class="btn btn-send" [disabled]="isSaving">
+                <span *ngIf="!isSaving">
+                  <i class="ri-send-plane-fill me-1"></i> Queue SMS
+                </span>
+                <span *ngIf="isSaving">
+                  <span class="spinner-border spinner-border-sm me-2"></span> Sending...
+                </span>
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── INBOX TAB ───────────────────────────────── -->
+  <div *ngIf="activeTab === 'inbox'">
+
+    <div *ngIf="isLoading" class="loading-overlay">
+      <img src="assets/loader-africa.svg" alt="Loading..." class="custom-loader" />
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+
+        <!-- Toolbar -->
+        <div class="row align-items-end mb-3 g-2">
+          <div class="col-md-5">
+            <label class="form-label mb-1">Search</label>
+            <div class="search-wrap">
+              <i class="ri-search-line search-icon"></i>
+              <input type="text" class="form-control ps-4" placeholder="Search phone, message, status…"
+                [(ngModel)]="searchTerm" (input)="onSearch()" />
+            </div>
+          </div>
+          <div class="col-md-2 ms-auto">
+            <label class="form-label mb-1">Entries</label>
+            <select class="form-control" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+              <option [value]="10">10</option>
+              <option [value]="30">30</option>
+              <option [value]="50">50</option>
+              <option [value]="100">100</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-responsive">
+          <table class="table table-hover table-bordered sms-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th><i class="ri-phone-line me-1"></i>Phone</th>
+                <th><i class="ri-chat-3-line me-1"></i>Message</th>
+                <th><i class="ri-loader-4-line me-1"></i>Status</th>
+                <th><i class="ri-calendar-line me-1"></i>Created At</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let sms of pagedList; let i = index">
+                <td>{{ (currentPage - 1) * pageSize + i + 1 }}</td>
+                <td><span class="phone-cell">{{ sms.phone }}</span></td>
+                <td class="msg-cell">{{ sms.message }}</td>
+                <td>
+                  <span class="sms-status-badge" [ngClass]="statusClass(sms.status)">
+                    {{ sms.status | titlecase }}
+                  </span>
+                </td>
+                <td>{{ sms.createdAt | date:'dd-MM-yyyy HH:mm' }}</td>
+                <td>
+                  <button class="btn btn-sm btn-outline-danger" (click)="openDeleteModal(sms.id)"
+                    title="Delete">
+                    <i class="ri-delete-bin-line"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="!isLoading && pagedList.length === 0">
+                <td colspan="6" class="text-center py-5 text-muted">
+                  <i class="ri-message-3-line" style="font-size:2.5rem;opacity:.3;display:block;margin-bottom:8px"></i>
+                  No SMS records found
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="totalPages > 1">
+          <small class="text-muted">
+            Showing {{ (currentPage - 1) * pageSize + 1 }}–{{ currentPage * pageSize > filteredList.length ? filteredList.length : currentPage * pageSize }} of {{ filteredList.length }}
+          </small>
+          <nav>
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item" [class.disabled]="currentPage === 1">
+                <button class="page-link" (click)="prevPage()">
+                  <i class="ri-arrow-left-s-line"></i>
+                </button>
+              </li>
+              <li class="page-item" *ngFor="let p of visiblePages" [class.active]="p === currentPage">
+                <button class="page-link" (click)="currentPage = p">{{ p }}</button>
+              </li>
+              <li class="page-item" [class.disabled]="currentPage === totalPages">
+                <button class="page-link" (click)="nextPage()">
+                  <i class="ri-arrow-right-s-line"></i>
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Delete Confirm Modal -->
+<ng-template #deleteModal let-modal>
+  <div class="modal-body text-center p-4">
+    <div class="del-icon-ring mb-3">
+      <i class="ri-delete-bin-fill"></i>
+    </div>
+    <h6 class="fw-bold mb-1">Delete SMS?</h6>
+    <p class="text-muted small mb-4">This action cannot be undone.</p>
+    <div class="d-flex gap-2 justify-content-center">
+      <button class="btn btn-outline-secondary px-4" (click)="modal.dismiss()">Cancel</button>
+      <button class="btn btn-danger px-4" (click)="confirmDelete(modal)" [disabled]="isDeleting">
+        <span *ngIf="!isDeleting">Delete</span>
+        <span *ngIf="isDeleting"><span class="spinner-border spinner-border-sm"></span></span>
+      </button>
+    </div>
+  </div>
+</ng-template>

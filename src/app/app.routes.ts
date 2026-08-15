@@ -29,6 +29,8 @@ import { StockDetailsComponent } from './components/stock-details/stock-details.
 import { ComplainDetailsComponent } from './components/complain-details/complain-details.component';
 import { MaterialDetailsComponent } from './components/material-details/material-details.component';
 import { MikrotikUsersComponent } from './components/mikrotik-users/mikrotik-users.component';
+import { SmsComponent } from './components/sms/sms.component';
+import { RouterComponent } from './components/router/router.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -65,6 +67,8 @@ export const routes: Routes = [
       { path: 'complain-details', data: { roles: ['admin']}, component: ComplainDetailsComponent},
       { path: 'material-details', data: { roles: ['admin']}, component: MaterialDetailsComponent},
       { path: 'mikrotik-users', data: { roles: ['admin'] }, component: MikrotikUsersComponent },
+      { path: 'sms', data: { roles: ['admin'] }, component: SmsComponent },
+      { path: 'router-details', data: { roles: ['admin'] }, component: RouterComponent },
     ],
   },
   { path: 'not-found', component: PageNotFoundComponent },

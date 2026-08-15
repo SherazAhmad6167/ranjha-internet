@@ -139,6 +139,10 @@
                        class="nav-link-item sub-link" (click)="onMenuClick()">
                         <i class="ri-user-settings-line"></i><span>Operator Details</span>
                     </a>
+                    <a routerLink="/router-details" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-router-fill"></i><span>Router Details</span>
+                    </a>
                 </div>
             </div>
 
@@ -164,6 +168,24 @@
                     <a routerLink="/company-detail" routerLinkActive="active"
                        class="nav-link-item sub-link" (click)="onMenuClick()">
                         <i class="ri-building-4-line"></i><span>Company Detail</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- ── Communication ─────────────────────────── -->
+            <div class="nav-section" *ngIf="role === 'admin'">
+                <div class="section-header" (click)="toggleSection('communication')">
+                    <div class="section-title">
+                        <i class="ri-message-3-line"></i>
+                        <span>Communication</span>
+                    </div>
+                    <i class="ri-arrow-down-s-line section-arrow"
+                       [class.rotated]="expandedSections['communication']"></i>
+                </div>
+                <div class="section-links" [class.expanded]="expandedSections['communication']">
+                    <a routerLink="/sms" routerLinkActive="active"
+                       class="nav-link-item sub-link" (click)="onMenuClick()">
+                        <i class="ri-chat-forward-line"></i><span>Mobile SMS</span>
                     </a>
                 </div>
             </div>
@@ -216,16 +238,31 @@
 
 <!-- ── Logout Confirmation Modal ──────────────────────────── -->
 <ng-template #logoutModal let-modal>
-    <div class="logout-modal">
-        <div class="logout-modal-icon">
-            <i class="ri-logout-box-r-line"></i>
+    <div class="lm-wrap">
+        <!-- decorative blobs -->
+        <span class="lm-blob lm-blob-1"></span>
+        <span class="lm-blob lm-blob-2"></span>
+
+        <!-- icon -->
+        <div class="lm-icon-wrap">
+            <span class="lm-ring lm-ring-1"></span>
+            <span class="lm-ring lm-ring-2"></span>
+            <div class="lm-icon">
+                <i class="ri-shut-down-line"></i>
+            </div>
         </div>
-        <h5 class="fw-bold mt-3 mb-1">Logout?</h5>
-        <p class="text-muted mb-4 small">Are you sure you want to sign out of your account?</p>
-        <div class="d-flex gap-2 w-100">
-            <button class="btn btn-light flex-fill fw-semibold" (click)="modal.dismiss()">Cancel</button>
-            <button class="btn btn-danger flex-fill fw-semibold" (click)="logout(modal)">
-                <i class="ri-logout-box-r-line me-1"></i> Logout
+
+        <!-- text -->
+        <h4 class="lm-title">Sign Out?</h4>
+        <p class="lm-subtitle">You're about to sign out of<br><strong>Ranjha7star</strong>. See you soon!</p>
+
+        <!-- actions -->
+        <div class="lm-actions">
+            <button class="lm-btn-cancel" (click)="modal.dismiss()">
+                <i class="ri-arrow-left-line me-1"></i> Stay
+            </button>
+            <button class="lm-btn-logout" (click)="logout(modal)">
+                Sign Out <i class="ri-logout-box-r-line ms-1"></i>
             </button>
         </div>
     </div>

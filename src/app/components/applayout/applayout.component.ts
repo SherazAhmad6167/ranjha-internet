@@ -21,6 +21,7 @@ export class ApplayoutComponent {
     finance: false,
     network: false,
     management: false,
+    communication: false,
     system: false,
   };
 
@@ -58,7 +59,7 @@ export class ApplayoutComponent {
   }
 
   openLogoutModal() {
-    this.modalService.open(this.logoutModal, { centered: true, size: 'sm' });
+    this.modalService.open(this.logoutModal, { centered: true, windowClass: 'logout-modal-dialog' });
   }
 
   logout(modal: any) {
@@ -87,8 +88,9 @@ export class ApplayoutComponent {
     const sectionMap: Record<string, string[]> = {
       customers: ['/user-details', '/user-collections', '/new-connection', '/customer-status', '/defaulter-users', '/complain-details'],
       finance: ['/bill-creator', '/recovery-details', '/recovery-officer', '/ro-reports', '/expenses', '/borrow-details', '/payable-details'],
-      network: ['/mikrotik-users', '/area-details', '/sub-area-details', '/city-details', '/package-details', '/operator-details'],
+      network: ['/mikrotik-users', '/area-details', '/sub-area-details', '/city-details', '/package-details', '/operator-details', '/router-details'],
       management: ['/material-details', '/stock-details', '/company-detail'],
+      communication: ['/sms'],
       system: ['/logs', '/upload-docs', '/settings'],
     };
 
