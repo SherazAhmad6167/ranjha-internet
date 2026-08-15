@@ -54,6 +54,9 @@ export class SmsComponent {
   broadcastSent = 0;
   broadcastTotal = 0;
   broadcastDataLoaded = false;
+  showRecipientList = false;
+  broadcastCurrentIndex = -1;
+  broadcastUserStatuses: Record<string, 'done' | 'failed'> = {};
 
   constructor(
     private fb: FormBuilder,
@@ -246,6 +249,23 @@ export class SmsComponent {
       : this.allUsers.filter(u => (u as any).sublocality === this.broadcastArea);
 
     this.broadcastUsers = source.filter(u => !!this.formatUserPhone((u as any).mobile_no || (u as any).phone_no));
+    this.broadcastUserStatuses = {};
+    this.broadcastCurrentIndex = -1;
+    if (this.broadcastUsers.length > 0) this.showRecipientList = true;
+  }
+
+  getUserStatus(user: any, index: number): 'idle' | 'waiting' | 'sending' | 'done' | 'failed' {
+    const uid = user.id || `u_${index}`;
+    if (this.broadcastUserStatuses[uid] === 'done') return 'done';
+    if (this.broadcastUserStatuses[uid] === 'failed') return 'failed';
+    if (!this.isBroadcasting) return 'idle';
+    if (index === this.broadcastCurrentIndex) return 'sending';
+    return 'waiting';
+  }
+
+  getUserInitials(user: any): string {
+    const name: string = user.user_name || user.name || '?';
+    return name.charAt(0).toUpperCase();
   }
 
   onBroadcastTemplateChange() {
@@ -295,28 +315,39 @@ export class SmsComponent {
     this.isBroadcasting = true;
     this.broadcastSent = 0;
     this.broadcastTotal = this.broadcastUsers.length;
+    this.broadcastUserStatuses = {};
+    this.showRecipientList = true;
 
     const areaLabel = this.broadcastArea === 'all' ? 'All Areas' : this.broadcastArea;
 
     try {
       const smsCol = collection(this.firestore, 'sms');
 
-      for (const user of this.broadcastUsers) {
+      for (let i = 0; i < this.broadcastUsers.length; i++) {
+        const user = this.broadcastUsers[i];
+        const uid = user.id || `u_${i}`;
+        this.broadcastCurrentIndex = i;
         const phone = this.formatUserPhone((user as any).mobile_no || (user as any).phone_no)!;
         const message = this.mapTemplate(this.broadcastMessage, user);
 
-        await addDoc(smsCol, {
-          phone,
-          message,
-          status: 'pending',
-          createdAt: new Date().toISOString(),
-          source: 'broadcast',
-          area: areaLabel,
-        });
+        try {
+          await addDoc(smsCol, {
+            phone,
+            message,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            source: 'broadcast',
+            area: areaLabel,
+          });
+          this.broadcastUserStatuses = { ...this.broadcastUserStatuses, [uid]: 'done' };
+        } catch {
+          this.broadcastUserStatuses = { ...this.broadcastUserStatuses, [uid]: 'failed' };
+        }
 
         this.broadcastSent++;
       }
 
+      this.broadcastCurrentIndex = -1;
       this.toastr.success(`${this.broadcastTotal} SMS queued successfully`);
       this.broadcastMessage = '';
       this.broadcastTemplateId = '';
@@ -324,6 +355,7 @@ export class SmsComponent {
       this.toastr.error('Failed to queue some broadcast SMS');
     } finally {
       this.isBroadcasting = false;
+      this.broadcastCurrentIndex = -1;
     }
   }
 }

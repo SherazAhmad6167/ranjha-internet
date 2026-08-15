@@ -74,14 +74,19 @@
               <option *ngFor="let a of areas" [value]="a.sublocality">{{ a.sublocality }}</option>
             </select>
 
-            <!-- User Count Badge -->
-            <div class="user-count-badge" [class.has-users]="broadcastUsers.length > 0">
+            <!-- User Count Badge — clickable toggle -->
+            <div class="user-count-badge" [class.has-users]="broadcastUsers.length > 0"
+                 [class.clickable]="broadcastUsers.length > 0"
+                 (click)="broadcastUsers.length > 0 ? (showRecipientList = !showRecipientList) : null">
               <i class="ri-group-line"></i>
               <span *ngIf="!broadcastDataLoaded">Loading...</span>
               <span *ngIf="broadcastDataLoaded">
                 <strong>{{ broadcastUsers.length }}</strong>
                 user{{ broadcastUsers.length !== 1 ? 's' : '' }} with valid numbers
               </span>
+              <i *ngIf="broadcastUsers.length > 0"
+                 [class]="showRecipientList ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'"
+                 style="margin-left:4px;font-size:14px;"></i>
             </div>
           </div>
 
@@ -127,6 +132,49 @@
             <!-- Progress bar -->
             <div class="broadcast-progress-wrap" *ngIf="isBroadcasting">
               <div class="broadcast-progress-bar" [style.width.%]="broadcastProgress"></div>
+            </div>
+          </div>
+
+          <!-- Recipient Preview List -->
+          <div class="col-12" *ngIf="broadcastUsers.length > 0 && showRecipientList">
+            <div class="recipient-panel">
+              <div class="rp-header">
+                <div class="rp-header-left">
+                  <i class="ri-group-line"></i>
+                  <span><strong>{{ broadcastUsers.length }}</strong> recipient{{ broadcastUsers.length !== 1 ? 's' : '' }}</span>
+                  <span class="rp-area-chip">{{ broadcastArea === 'all' ? 'All Areas' : broadcastArea }}</span>
+                </div>
+                <div class="rp-header-right" *ngIf="isBroadcasting">
+                  <span class="rp-progress-text">
+                    {{ broadcastSent }}/{{ broadcastTotal }} queued
+                  </span>
+                </div>
+              </div>
+              <div class="rp-list">
+                <div *ngFor="let user of broadcastUsers; let i = index"
+                     class="rp-item"
+                     [class.rp-item-sending]="getUserStatus(user, i) === 'sending'"
+                     [class.rp-item-done]="getUserStatus(user, i) === 'done'"
+                     [class.rp-item-failed]="getUserStatus(user, i) === 'failed'">
+
+                  <div class="rp-avatar">{{ getUserInitials(user) }}</div>
+
+                  <div class="rp-info">
+                    <div class="rp-name">{{ user.user_name || user.name || 'Unknown' }}</div>
+                    <div class="rp-phone">{{ formatUserPhone(user.mobile_no || user.phone_no) }}</div>
+                  </div>
+
+                  <span class="rp-area-tag">{{ user.sublocality }}</span>
+
+                  <div class="rp-status-icon">
+                    <span *ngIf="getUserStatus(user, i) === 'idle'" class="rp-dot"></span>
+                    <span *ngIf="getUserStatus(user, i) === 'waiting'" class="rp-dot rp-dot-waiting"></span>
+                    <span *ngIf="getUserStatus(user, i) === 'sending'" class="spinner-border" style="width:14px;height:14px;border-width:2px;color:#16a34a"></span>
+                    <span *ngIf="getUserStatus(user, i) === 'done'" class="rp-status-done"><i class="ri-check-line"></i></span>
+                    <span *ngIf="getUserStatus(user, i) === 'failed'" class="rp-status-fail"><i class="ri-close-line"></i></span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
