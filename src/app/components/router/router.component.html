@@ -200,26 +200,21 @@
 
 <!-- ── Delete Confirmation Modal ──────────────────────────────────────────── -->
 <ng-template #deleteModal let-modal>
-  <div class="modal-header">
-    <h5 class="modal-title">
-      <i class="ri-alert-line text-danger me-2"></i>Confirm Deletion
-    </h5>
-    <button type="button" class="btn-close" (click)="modal.dismiss()" [disabled]="isDeleting"></button>
-  </div>
-  <div class="modal-body">
-    <p class="mb-0">
-      Are you sure you want to delete this router record?
-      This action <strong>cannot be undone</strong>.
-    </p>
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()" [disabled]="isDeleting">
-      Cancel
+  <div class="gdm-wrap">
+    <button class="gdm-close" type="button" (click)="modal.dismiss()" [disabled]="isDeleting">
+      <i class="ri-close-line"></i>
     </button>
-    <button type="button" class="btn btn-danger" (click)="confirmDelete(modal)" [disabled]="isDeleting">
-      <span *ngIf="isDeleting" class="spinner-border spinner-border-sm me-1"></span>
-      <i *ngIf="!isDeleting" class="ri-delete-bin-7-line me-1"></i>
-      {{ isDeleting ? 'Deleting...' : 'Delete' }}
-    </button>
+    <div class="gdm-icon"><i class="ri-delete-bin-6-line"></i></div>
+    <h5 class="gdm-title">Delete Router Record?</h5>
+    <p class="gdm-text">This action cannot be undone.</p>
+    <div class="gdm-actions">
+      <button class="gdm-btn gdm-cancel" type="button" (click)="modal.dismiss()" [disabled]="isDeleting">Cancel</button>
+      <button class="gdm-btn gdm-confirm" type="button" (click)="confirmDelete(modal)" [disabled]="isDeleting">
+        <span *ngIf="!isDeleting"><i class="ri-delete-bin-6-line"></i> Delete</span>
+        <span *ngIf="isDeleting" class="d-flex align-items-center gap-2">
+          <span class="spinner-border spinner-border-sm" role="status"></span> Deleting...
+        </span>
+      </button>
+    </div>
   </div>
 </ng-template>

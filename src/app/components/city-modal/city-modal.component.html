@@ -1,70 +1,84 @@
-<div class="modal-header d-flex justify-content-between align-items-center">
-    <h4 class="modal-title">{{ editMode ? 'Update' : 'Add' }} City</h4>
-    <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
-</div>
+<div class="cim-wrapper">
 
-<div *ngIf="isLoading" class="loading-overlay">
-    <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
+  <!-- ── Header ── -->
+  <div class="cim-header">
+    <div class="cim-header-left">
+      <div class="cim-header-icon"><i class="ri-building-2-line"></i></div>
+      <div>
+        <h4 class="cim-title">{{ editMode ? 'Update' : 'Add' }} City</h4>
+        <p class="cim-subtitle">{{ editMode ? 'Edit city details below' : 'Fill in the city details below' }}</p>
+      </div>
     </div>
-</div>
+    <button class="cim-close-btn" type="button" (click)="activeModal.dismiss()">
+      <i class="ri-close-line"></i>
+    </button>
+  </div>
 
-<div class="mx-5">
-    <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
-        <div class="row align-items-center gy-3 mt-4 mx-7">
+  <!-- ── Loading overlay ── -->
+  <div *ngIf="isLoading" class="cim-loading">
+    <div class="spinner-border" style="color:#65a30d" role="status"></div>
+    <span>Loading...</span>
+  </div>
 
+  <!-- ── Body ── -->
+  <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+    <div class="cim-body">
 
-            <div class="col-md-6 m-0">
-                <div class="card-title">Country</div>
-                <div class="card-body">
-                    <select
-                        [ngClass]="{'is-invalid': userForm.get('country')?.invalid && userForm.get('country')?.touched, 'blink-border': userForm.get('country')?.invalid && userForm.get('country')?.touched}"
-                        class="form-control" formControlName="country">
-                        <option value="" disabled>Select a Country</option>
-                        <option value="pakistan">Pakistan</option>
-                    </select>
-                </div>
-                <div class="extra-space">
-                    <ng-container
-                        *ngIf="userForm.get('country')?.hasError('required') && userForm.get('country')?.touched">
-                        <span class="text-danger">Select a Country</span>
-                    </ng-container>
-                </div>
-            </div>
-
-            <div class="col-md-6 m-0">
-                <div class="card-title">City</div>
-                <div class="card-body">
-                    <input type="text" class="form-control" formControlName="city" placeholder="Enter City" [ngClass]="{
-                'is-invalid': userForm.get('city')?.invalid && userForm.get('city')?.touched,
-                'blink-border': userForm.get('city')?.invalid && userForm.get('city')?.touched
-            }" />
-                </div>
-
-                <div class="extra-space">
-                    <ng-container *ngIf="userForm.get('city')?.hasError('required') && userForm.get('city')?.touched">
-                        <span class="text-danger">Enter a City</span>
-                    </ng-container>
-                </div>
-            </div>
-
-
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary-light" (click)="activeModal.close()">
-                    Close
-                </button>
-
-                <button class="btn btn-primary" type="submit" [disabled]="isLoading || isSaving">
-                    <span *ngIf="!isSaving"> {{ editMode ? 'Update' : 'Save' }}</span>
-                    <span *ngIf="isSaving" class="d-flex align-items-center">
-                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        {{ editMode ? 'Updating...' : 'Saving...' }}
-                    </span>
-                </button>
-
-            </div>
+      <!-- Section: City Details -->
+      <div class="cim-section">
+        <div class="cim-section-head">
+          <div class="cim-section-icon si-lime"><i class="ri-building-2-line"></i></div>
+          <span class="cim-section-title">City Details</span>
         </div>
-    </form>
+        <div class="cim-section-body">
+          <div class="row g-3">
+
+            <div class="col-md-6 col-12">
+              <label class="cim-label">Country <span class="req">*</span></label>
+              <select class="cim-input cim-select"
+                [class.cim-invalid]="userForm.get('country')?.invalid && userForm.get('country')?.touched"
+                formControlName="country">
+                <option value="" disabled>Select a Country</option>
+                <option value="pakistan">Pakistan</option>
+              </select>
+              <span class="cim-err"
+                *ngIf="userForm.get('country')?.hasError('required') && userForm.get('country')?.touched">
+                Select a Country
+              </span>
+            </div>
+
+            <div class="col-md-6 col-12">
+              <label class="cim-label">City <span class="req">*</span></label>
+              <input type="text" class="cim-input"
+                [class.cim-invalid]="userForm.get('city')?.invalid && userForm.get('city')?.touched"
+                formControlName="city" placeholder="Enter City">
+              <span class="cim-err"
+                *ngIf="userForm.get('city')?.hasError('required') && userForm.get('city')?.touched">
+                City is required
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Footer ── -->
+    <div class="cim-footer">
+      <button type="button" class="cim-btn cim-btn-cancel" (click)="activeModal.close()">
+        Cancel
+      </button>
+      <button type="submit" class="cim-btn cim-btn-save" [disabled]="isLoading || isSaving">
+        <span *ngIf="!isSaving">
+          <i class="ri-save-line me-1"></i>{{ editMode ? 'Update' : 'Save' }}
+        </span>
+        <span *ngIf="isSaving" class="d-flex align-items-center gap-2">
+          <span class="spinner-border spinner-border-sm" role="status"></span>
+          {{ editMode ? 'Updating...' : 'Saving...' }}
+        </span>
+      </button>
+    </div>
+  </form>
 
 </div>

@@ -368,29 +368,25 @@
 
 <!-- ── Delete Confirm Modal ───────────────────────────────────────────────── -->
 <ng-template #deleteModal let-modal>
-  <div class="modal-header border-0">
-    <h5 class="modal-title text-danger fw-semibold">
-      <i class="ri-delete-bin-line me-2"></i>Delete PPP Secret
-    </h5>
-    <button type="button" class="btn-close" (click)="modal.dismiss()" [disabled]="isDeleting"></button>
-  </div>
-  <div class="modal-body pt-0">
-    <p class="mb-1">
-      Are you sure you want to delete
-      <strong class="text-dark">{{ userToDelete?.name }}</strong>?
-    </p>
-    <p class="text-muted small mb-0">
-      This removes the user from MikroTik <strong>{{ activeServerTab.label }}</strong> immediately. Any active PPPoE session will be dropped.
-    </p>
-  </div>
-  <div class="modal-footer border-0 pt-0">
-    <button type="button" class="btn btn-secondary" (click)="modal.dismiss()" [disabled]="isDeleting">
-      Cancel
+  <div class="gdm-wrap">
+    <button class="gdm-close" type="button" (click)="modal.dismiss()" [disabled]="isDeleting">
+      <i class="ri-close-line"></i>
     </button>
-    <button type="button" class="btn btn-danger" (click)="confirmDelete(modal)" [disabled]="isDeleting">
-      <span *ngIf="isDeleting" class="spinner-border spinner-border-sm me-1"></span>
-      {{ isDeleting ? 'Deleting...' : 'Delete' }}
-    </button>
+    <div class="gdm-icon"><i class="ri-delete-bin-6-line"></i></div>
+    <h5 class="gdm-title">Delete PPP Secret?</h5>
+    <p class="gdm-text">
+      <strong>{{ userToDelete?.name }}</strong> will be permanently removed from MikroTik
+      <strong>{{ activeServerTab.label }}</strong>. Any active PPPoE session will be dropped.
+    </p>
+    <div class="gdm-actions">
+      <button class="gdm-btn gdm-cancel" type="button" (click)="modal.dismiss()" [disabled]="isDeleting">Cancel</button>
+      <button class="gdm-btn gdm-confirm" type="button" (click)="confirmDelete(modal)" [disabled]="isDeleting">
+        <span *ngIf="!isDeleting"><i class="ri-delete-bin-6-line"></i> Delete</span>
+        <span *ngIf="isDeleting" class="d-flex align-items-center gap-2">
+          <span class="spinner-border spinner-border-sm" role="status"></span> Deleting...
+        </span>
+      </button>
+    </div>
   </div>
 </ng-template>
 

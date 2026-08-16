@@ -181,17 +181,20 @@
 
     <!-- Delete Confirm Modal (inside ng-template so #ref works) -->
     <ng-template #deleteModal let-modal>
-      <div class="modal-body text-center p-4">
-        <div class="ud-del-ring mb-3">
-          <i class="ri-user-unfollow-fill"></i>
-        </div>
-        <h6 class="fw-bold mb-1">Delete this user?</h6>
-        <p class="text-muted small mb-4">All bills and records for this subscriber will be permanently removed.</p>
-        <div class="d-flex gap-2 justify-content-center">
-          <button type="button" class="btn btn-outline-secondary px-4" (click)="modal.dismiss()" [disabled]="isDeleting">Cancel</button>
-          <button type="button" class="btn btn-danger px-4" (click)="confirmDelete(modal)" [disabled]="isDeleting">
-            <span *ngIf="!isDeleting">Delete</span>
-            <span *ngIf="isDeleting"><span class="spinner-border spinner-border-sm me-1"></span>Deleting...</span>
+      <div class="gdm-wrap">
+        <button class="gdm-close" type="button" (click)="modal.dismiss()" [disabled]="isDeleting">
+          <i class="ri-close-line"></i>
+        </button>
+        <div class="gdm-icon"><i class="ri-user-unfollow-fill"></i></div>
+        <h5 class="gdm-title">Delete User?</h5>
+        <p class="gdm-text">All bills and records for this subscriber will be permanently removed.</p>
+        <div class="gdm-actions">
+          <button class="gdm-btn gdm-cancel" type="button" (click)="modal.dismiss()" [disabled]="isDeleting">Cancel</button>
+          <button class="gdm-btn gdm-confirm" type="button" (click)="confirmDelete(modal)" [disabled]="isDeleting">
+            <span *ngIf="!isDeleting"><i class="ri-delete-bin-6-line"></i> Delete</span>
+            <span *ngIf="isDeleting" class="d-flex align-items-center gap-2">
+              <span class="spinner-border spinner-border-sm" role="status"></span> Deleting...
+            </span>
           </button>
         </div>
       </div>

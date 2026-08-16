@@ -1,159 +1,169 @@
-<div class="modal-content-wrapper">
-    <div class="modal-header d-flex justify-content-between align-items-center">
-        <h4 class="modal-title">{{ editMode ? 'Update' : 'Add' }} Stock</h4>
-        <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
-    </div>
+<div class="stm-wrapper">
 
-    <div *ngIf="isLoading" class="loading-overlay">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
+  <!-- ── Header ── -->
+  <div class="stm-header">
+    <div class="stm-header-left">
+      <div class="stm-header-icon"><i class="ri-archive-line"></i></div>
+      <div>
+        <h4 class="stm-title">{{ editMode ? 'Update' : 'Add' }} Stock</h4>
+        <p class="stm-subtitle">{{ editMode ? 'Edit stock details below' : 'Fill in the stock details below' }}</p>
+      </div>
+    </div>
+    <button class="stm-close-btn" type="button" (click)="activeModal.dismiss()">
+      <i class="ri-close-line"></i>
+    </button>
+  </div>
+
+  <!-- ── Loading overlay ── -->
+  <div *ngIf="isLoading" class="stm-loading">
+    <div class="spinner-border" style="color:#0d9488" role="status"></div>
+    <span>Loading...</span>
+  </div>
+
+  <!-- ── Body ── -->
+  <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()">
+    <div class="stm-body">
+
+      <!-- Section: Stock Information -->
+      <div class="stm-section">
+        <div class="stm-section-head">
+          <div class="stm-section-icon si-teal"><i class="ri-archive-line"></i></div>
+          <span class="stm-section-title">Stock Information</span>
         </div>
-    </div>
+        <div class="stm-section-body">
+          <div class="row g-3">
 
-    <div class="mx-5">
-        <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()">
-            <div class="row align-items-center gy-3 mt-4 mx-7">
-
-
-                <div class="col-md-4 m-0">
-                    <label for="validationDefault03" class="form-label">Date</label>
-                    <input type="date" class="form-control" formControlName="date"
-                        [ngClass]="{'is-invalid': expenseForm.get('date')?.invalid && expenseForm.get('date')?.touched, 'blink-border': expenseForm.get('date')?.invalid && expenseForm.get('date')?.touched}"
-                        id="validationDefault03" placeholder="Enter Date">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="expenseForm.get('date')?.hasError('required') && expenseForm.get('date')?.touched; ">
-                            <span class="text-danger" id="date">Date is required</span>
-                        </ng-container>
-                    </div>
-                </div>
-
-
-                <div class="col-xl-4 m-0">
-                    <label for="validationDefault01" class="form-label">Stock Name</label>
-                    <input type="text" class="form-control"
-                        [ngClass]="{'is-invalid': expenseForm.get('name')?.invalid && expenseForm.get('name')?.touched, 'blink-border': expenseForm.get('name')?.invalid && expenseForm.get('name')?.touched}"
-                        formControlName="name" id="validationDefault01" placeholder="Enter Stock Name">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="expenseForm.get('name')?.hasError('required') && expenseForm.get('name')?.touched;">
-                            <span class="text-danger">Stock Name is required</span>
-                        </ng-container>
-                    </div>
-
-                </div>
-
-
-                <div class="col-xl-4 m-0">
-                    <label for="validationDefault01" class="form-label">Price</label>
-                    <input type="number" class="form-control"
-                        [ngClass]="{'is-invalid': expenseForm.get('amount')?.invalid && expenseForm.get('amount')?.touched, 'blink-border': expenseForm.get('amount')?.invalid && expenseForm.get('amount')?.touched}"
-                        formControlName="amount" id="validationDefault01" placeholder="Enter Price">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="expenseForm.get('amount')?.hasError('required') && expenseForm.get('amount')?.touched;">
-                            <span class="text-danger">Price is required</span>
-                        </ng-container>
-                    </div>
-
-                </div>
-
-
-                <div class="col-xl-4 m-0">
-                    <label for="validationDefault01" class="form-label">Order By</label>
-                    <input type="text" class="form-control"
-                        [ngClass]="{'is-invalid': expenseForm.get('order_by')?.invalid && expenseForm.get('order_by')?.touched, 'blink-border': expenseForm.get('order_by')?.invalid && expenseForm.get('order_by')?.touched}"
-                        formControlName="order_by" id="validationDefault01" placeholder="Enter Order By">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="expenseForm.get('order_by')?.hasError('required') && expenseForm.get('order_by')?.touched;">
-                            <span class="text-danger">Order By is required</span>
-                        </ng-container>
-                    </div>
-
-                </div>
-
-
-                   <div class="col-md-4 m-0">
-                    <label for="validationDefault03" class="form-label">Recieved Date</label>
-                    <input type="date" class="form-control" formControlName="recieved_date"
-                        [ngClass]="{'is-invalid': expenseForm.get('recieved_date')?.invalid && expenseForm.get('recieved_date')?.touched, 'blink-border': expenseForm.get('recieved_date')?.invalid && expenseForm.get('recieved_date')?.touched}"
-                        id="validationDefault03" placeholder="Enter Date">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="expenseForm.get('recieved_date')?.hasError('required') && expenseForm.get('recieved_date')?.touched; ">
-                            <span class="text-danger" id="date">Date is required</span>
-                        </ng-container>
-                    </div>
-                </div>
-
-                   <div class="col-xl-4 m-0">
-                    <label for="validationDefault01" class="form-label">Recieved By</label>
-                    <input type="text" class="form-control"
-                        [ngClass]="{'is-invalid': expenseForm.get('recieved_by')?.invalid && expenseForm.get('recieved_by')?.touched, 'blink-border': expenseForm.get('recieved_by')?.invalid && expenseForm.get('recieved_by')?.touched}"
-                        formControlName="recieved_by" id="validationDefault01" placeholder="Enter Received By">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="expenseForm.get('recieved_by')?.hasError('required') && expenseForm.get('recieved_by')?.touched;">
-                            <span class="text-danger">Recieved By is required</span>
-                        </ng-container>
-                    </div>
-
-                </div>
-
-
-
-                <div class="col-xl-4 m-0">
-                    <label for="validationDefault01" class="form-label">Payment Amount</label>
-                    <input type="number" class="form-control"
-                        [ngClass]="{'is-invalid': expenseForm.get('payment_amount')?.invalid && expenseForm.get('payment_amount')?.touched, 'blink-border': expenseForm.get('payment_amount')?.invalid && expenseForm.get('payment_amount')?.touched}"
-                        formControlName="payment_amount" id="validationDefault01" placeholder="Enter Amount">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="expenseForm.get('payment_amount')?.hasError('required') && expenseForm.get('payment_amount')?.touched;">
-                            <span class="text-danger">Payment Amount is required</span>
-                        </ng-container>
-                    </div>
-
-                </div>
-
-
-                  <div class="col-xl-4 m-0">
-                    <label for="validationDefault01" class="form-label">Remaining Amount</label>
-                    <input type="number" class="form-control"
-                        [ngClass]="{'is-invalid': expenseForm.get('remaining_amount')?.invalid && expenseForm.get('remaining_amount')?.touched, 'blink-border': expenseForm.get('remaining_amount')?.invalid && expenseForm.get('remaining_amount')?.touched}"
-                        formControlName="remaining_amount" id="validationDefault01" placeholder="Enter Amount">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="expenseForm.get('remaining_amount')?.hasError('required') && expenseForm.get('remaining_amount')?.touched;">
-                            <span class="text-danger">Remaining Amount is required</span>
-                        </ng-container>
-                    </div>
-
-                </div>
-
-
-
-
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary-light" (click)="activeModal.close()">
-                        Close
-                    </button>
-
-                    <button class="btn btn-primary" type="submit" [disabled]="isLoading || isSaving">
-                        <span *ngIf="!isSaving"> {{ editMode ? 'Update' : 'Save' }}</span>
-                        <span *ngIf="isSaving" class="d-flex align-items-center">
-                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            {{ editMode ? 'Updating...' : 'Saving...' }}
-                        </span>
-                    </button>
-
-                </div>
+            <div class="col-md-6 col-12">
+              <label class="stm-label">Date <span class="req">*</span></label>
+              <input type="date" class="stm-input"
+                [class.stm-invalid]="expenseForm.get('date')?.invalid && expenseForm.get('date')?.touched"
+                formControlName="date">
+              <span class="stm-err"
+                *ngIf="expenseForm.get('date')?.hasError('required') && expenseForm.get('date')?.touched">
+                Date is required
+              </span>
             </div>
-        </form>
+
+            <div class="col-md-6 col-12">
+              <label class="stm-label">Stock Name <span class="req">*</span></label>
+              <input type="text" class="stm-input"
+                [class.stm-invalid]="expenseForm.get('name')?.invalid && expenseForm.get('name')?.touched"
+                formControlName="name" placeholder="Enter Stock Name">
+              <span class="stm-err"
+                *ngIf="expenseForm.get('name')?.hasError('required') && expenseForm.get('name')?.touched">
+                Stock Name is required
+              </span>
+            </div>
+
+            <div class="col-md-6 col-12">
+              <label class="stm-label">Price <span class="req">*</span></label>
+              <div class="stm-prefix-wrap">
+                <span class="stm-prefix">Rs</span>
+                <input type="number" class="stm-input stm-prefixed"
+                  [class.stm-invalid]="expenseForm.get('amount')?.invalid && expenseForm.get('amount')?.touched"
+                  formControlName="amount" placeholder="0">
+              </div>
+              <span class="stm-err"
+                *ngIf="expenseForm.get('amount')?.hasError('required') && expenseForm.get('amount')?.touched">
+                Price is required
+              </span>
+            </div>
+
+            <div class="col-md-6 col-12">
+              <label class="stm-label">Order By <span class="req">*</span></label>
+              <input type="text" class="stm-input"
+                [class.stm-invalid]="expenseForm.get('order_by')?.invalid && expenseForm.get('order_by')?.touched"
+                formControlName="order_by" placeholder="Enter Order By">
+              <span class="stm-err"
+                *ngIf="expenseForm.get('order_by')?.hasError('required') && expenseForm.get('order_by')?.touched">
+                Order By is required
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Receipt Details -->
+      <div class="stm-section">
+        <div class="stm-section-head">
+          <div class="stm-section-icon si-cyan"><i class="ri-bill-line"></i></div>
+          <span class="stm-section-title">Receipt Details</span>
+        </div>
+        <div class="stm-section-body">
+          <div class="row g-3">
+
+            <div class="col-md-6 col-12">
+              <label class="stm-label">Received Date <span class="req">*</span></label>
+              <input type="date" class="stm-input"
+                [class.stm-invalid]="expenseForm.get('recieved_date')?.invalid && expenseForm.get('recieved_date')?.touched"
+                formControlName="recieved_date">
+              <span class="stm-err"
+                *ngIf="expenseForm.get('recieved_date')?.hasError('required') && expenseForm.get('recieved_date')?.touched">
+                Received Date is required
+              </span>
+            </div>
+
+            <div class="col-md-6 col-12">
+              <label class="stm-label">Received By <span class="req">*</span></label>
+              <input type="text" class="stm-input"
+                [class.stm-invalid]="expenseForm.get('recieved_by')?.invalid && expenseForm.get('recieved_by')?.touched"
+                formControlName="recieved_by" placeholder="Enter Received By">
+              <span class="stm-err"
+                *ngIf="expenseForm.get('recieved_by')?.hasError('required') && expenseForm.get('recieved_by')?.touched">
+                Received By is required
+              </span>
+            </div>
+
+            <div class="col-md-6 col-12">
+              <label class="stm-label">Payment Amount <span class="req">*</span></label>
+              <div class="stm-prefix-wrap">
+                <span class="stm-prefix">Rs</span>
+                <input type="number" class="stm-input stm-prefixed"
+                  [class.stm-invalid]="expenseForm.get('payment_amount')?.invalid && expenseForm.get('payment_amount')?.touched"
+                  formControlName="payment_amount" placeholder="0">
+              </div>
+              <span class="stm-err"
+                *ngIf="expenseForm.get('payment_amount')?.hasError('required') && expenseForm.get('payment_amount')?.touched">
+                Payment Amount is required
+              </span>
+            </div>
+
+            <div class="col-md-6 col-12">
+              <label class="stm-label">Remaining Amount <span class="req">*</span></label>
+              <div class="stm-prefix-wrap">
+                <span class="stm-prefix">Rs</span>
+                <input type="number" class="stm-input stm-prefixed"
+                  [class.stm-invalid]="expenseForm.get('remaining_amount')?.invalid && expenseForm.get('remaining_amount')?.touched"
+                  formControlName="remaining_amount" placeholder="0">
+              </div>
+              <span class="stm-err"
+                *ngIf="expenseForm.get('remaining_amount')?.hasError('required') && expenseForm.get('remaining_amount')?.touched">
+                Remaining Amount is required
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
 
     </div>
 
+    <!-- ── Footer ── -->
+    <div class="stm-footer">
+      <button type="button" class="stm-btn stm-btn-cancel" (click)="activeModal.close()">
+        Cancel
+      </button>
+      <button type="submit" class="stm-btn stm-btn-save" [disabled]="isLoading || isSaving">
+        <span *ngIf="!isSaving">
+          <i class="ri-save-line me-1"></i>{{ editMode ? 'Update' : 'Save' }}
+        </span>
+        <span *ngIf="isSaving" class="d-flex align-items-center gap-2">
+          <span class="spinner-border spinner-border-sm" role="status"></span>
+          {{ editMode ? 'Updating...' : 'Saving...' }}
+        </span>
+      </button>
+    </div>
+  </form>
 
 </div>

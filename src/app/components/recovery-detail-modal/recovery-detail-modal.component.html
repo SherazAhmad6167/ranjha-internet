@@ -1,178 +1,137 @@
-<div class="modal-content-wrapper">
-    <div class="modal-header d-flex justify-content-between align-items-center">
-        <h4 class="modal-title">{{ editMode ? 'Update' : 'Add' }} Recovery Details</h4>
-        <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
-    </div>
+<div class="rdm-wrapper">
 
-    <div *ngIf="isLoading" class="loading-overlay">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
+  <!-- ── Header ── -->
+  <div class="rdm-header">
+    <div class="rdm-header-left">
+      <div class="rdm-header-icon"><i class="ri-money-dollar-circle-line"></i></div>
+      <div>
+        <h4 class="rdm-title">{{ editMode ? 'Update' : 'Add' }} Recovery Details</h4>
+        <p class="rdm-subtitle">{{ editMode ? 'Edit recovery details below' : 'Fill in the recovery details below' }}</p>
+      </div>
+    </div>
+    <button type="button" class="rdm-close-btn" aria-label="Close" (click)="activeModal.dismiss()">
+      <i class="ri-close-line"></i>
+    </button>
+  </div>
+
+  <!-- ── Loading ── -->
+  <div *ngIf="isLoading" class="rdm-loading">
+    <div class="spinner-border" style="color:#7c3aed" role="status"></div>
+    <span>Loading...</span>
+  </div>
+
+  <!-- ── Body ── -->
+  <div class="rdm-body">
+    <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()">
+
+      <!-- ══ Section 1 — Recovery Info ══ -->
+      <div class="rdm-section">
+        <div class="rdm-section-head">
+          <div class="rdm-section-icon si-green"><i class="ri-calendar-check-line"></i></div>
+          <span class="rdm-section-title">Recovery Information</span>
         </div>
-    </div>
+        <div class="rdm-section-body">
+          <div class="row g-3">
 
-    <div class="mx-5">
-        <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()">
-            <div class="row align-items-center gy-3 mt-4 mx-7">
-
-
-                <div class="col-md-4 m-0">
-                    <label for="validationDefault03" class="form-label">Recovery Date</label>
-                    <input type="date" class="form-control" formControlName="date"
-                        [ngClass]="{'is-invalid': expenseForm.get('date')?.invalid && expenseForm.get('date')?.touched, 'blink-border': expenseForm.get('date')?.invalid && expenseForm.get('date')?.touched}"
-                        id="validationDefault03" placeholder="Enter Date">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="expenseForm.get('date')?.hasError('required') && expenseForm.get('date')?.touched; ">
-                            <span class="text-danger" id="date">Date is required</span>
-                        </ng-container>
-                    </div>
-                </div>
-
-
-                  <div class="col-xl-4 m-0">
-                    <label class="form-label">Operator Name</label>
-
-                    <select class="form-control" formControlName="operator_name" [ngClass]="{
-      'is-invalid': expenseForm.get('operator_name')?.invalid && expenseForm.get('operator_name')?.touched,
-      'blink-border': expenseForm.get('operator_name')?.invalid && expenseForm.get('operator_name')?.touched
-    }">
-                        <option value="" disabled>Select Operator</option>
-
-                        <!-- Optional -->
-                        <!-- <option value="">All</option> -->
-
-                        <option *ngFor="let operator of internetOperators" [value]="operator.operator_name">
-                            {{ operator.operator_name | titlecase }}
-                        </option>
-                    </select>
-
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="expenseForm.get('operator_name')?.hasError('required') && expenseForm.get('operator_name')?.touched">
-                            <span class="text-danger">Operator Name is required</span>
-                        </ng-container>
-                    </div>
-                </div>
-
-
-                  <div class="col-md-4 m-0">
-                    <div class="card-title">Sublocality</div>
-                    <div class="card-body">
-                        <select
-                            [ngClass]="{'is-invalid': expenseForm.get('sublocality')?.invalid && expenseForm.get('sublocality')?.touched, 'blink-border': expenseForm.get('sublocality')?.invalid && expenseForm.get('sublocality')?.touched}"
-                            class="form-control" formControlName="sublocality">
-                            <option value="" disabled>Select a Sublocality</option>
-                            <option *ngFor="let area of internetAreas" [value]="area.sublocality">
-                                {{ area.sublocality | titlecase }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="expenseForm.get('sublocality')?.hasError('required') && expenseForm.get('sublocality')?.touched">
-                            <span class="text-danger">Select a Sublocality</span>
-                        </ng-container>
-                    </div>
-                </div>
-
-
-
-
-                <div class="col-xl-4 m-0">
-                    <label for="validationDefault01" class="form-label">Total Recovery</label>
-                    <input type="number" class="form-control"
-                        [ngClass]="{'is-invalid': expenseForm.get('total_recovery')?.invalid && expenseForm.get('total_recovery')?.touched, 'blink-border': expenseForm.get('total_recovery')?.invalid && expenseForm.get('total_recovery')?.touched}"
-                        formControlName="total_recovery" id="validationDefault01" placeholder="Enter Amount">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="expenseForm.get('total_recovery')?.hasError('required') && expenseForm.get('total_recovery')?.touched;">
-                            <span class="text-danger">Total Recovery is required</span>
-                        </ng-container>
-                    </div>
-
-                </div>
-
-
-
-                  <div class="col-xl-4 m-0">
-                    <label for="validationDefault01" class="form-label">Total Expenses</label>
-                    <input type="number" class="form-control"
-                        [ngClass]="{'is-invalid': expenseForm.get('total_expenses')?.invalid && expenseForm.get('total_expenses')?.touched, 'blink-border': expenseForm.get('total_expenses')?.invalid && expenseForm.get('total_expenses')?.touched}"
-                        formControlName="total_expenses" id="validationDefault01" placeholder="Enter Amount">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="expenseForm.get('total_expenses')?.hasError('required') && expenseForm.get('total_expenses')?.touched;">
-                            <span class="text-danger">Total Expenses is required</span>
-                        </ng-container>
-                    </div>
-
-                </div>
-
-
-                
-                  <div class="col-xl-4 m-0">
-                    <label for="validationDefault01" class="form-label">Remaining Amount</label>
-                    <input type="number" class="form-control"
-                        [ngClass]="{'is-invalid': expenseForm.get('remaining_amount')?.invalid && expenseForm.get('remaining_amount')?.touched, 'blink-border': expenseForm.get('remaining_amount')?.invalid && expenseForm.get('remaining_amount')?.touched}"
-                        formControlName="remaining_amount" id="validationDefault01" placeholder="Enter Amount">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="expenseForm.get('remaining_amount')?.hasError('required') && expenseForm.get('remaining_amount')?.touched;">
-                            <span class="text-danger">Remaining Amount is required</span>
-                        </ng-container>
-                    </div>
-
-                </div>
-
-
-                  <div class="col-xl-4 m-0">
-                    <label class="form-label">Recieved By</label>
-
-                    <select class="form-control" formControlName="recieved_by" [ngClass]="{
-      'is-invalid':
-        expenseForm.get('recieved_by')?.invalid &&
-        expenseForm.get('recieved_by')?.touched,
-      'blink-border':
-        expenseForm.get('recieved_by')?.invalid &&
-        expenseForm.get('recieved_by')?.touched
-    }">
-                        <option value="">Select Recieved By</option>
-
-                        <option *ngFor="let name of recievedByList" [value]="name">
-                            {{ name }}
-                        </option>
-                    </select>
-
-                    <div class="extra-space">
-                        <ng-container *ngIf="
-        expenseForm.get('recieved_by')?.hasError('required') &&
-        expenseForm.get('recieved_by')?.touched
-      ">
-                            <span class="text-danger">Recieved By is required</span>
-                        </ng-container>
-                    </div>
-                </div>
-
-
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary-light" (click)="activeModal.close()">
-                        Close
-                    </button>
-
-                    <button class="btn btn-primary" type="submit" [disabled]="isLoading || isSaving">
-                        <span *ngIf="!isSaving"> {{ editMode ? 'Update' : 'Save' }}</span>
-                        <span *ngIf="isSaving" class="d-flex align-items-center">
-                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            {{ editMode ? 'Updating...' : 'Saving...' }}
-                        </span>
-                    </button>
-
-                </div>
+            <div class="col-md-4">
+              <label class="rdm-label">Recovery Date <span class="req">*</span></label>
+              <input type="date" class="rdm-input"
+                [class.rdm-invalid]="expenseForm.get('date')?.invalid && expenseForm.get('date')?.touched"
+                formControlName="date">
+              <span class="rdm-err" *ngIf="expenseForm.get('date')?.hasError('required') && expenseForm.get('date')?.touched">Date is required</span>
             </div>
-        </form>
 
-    </div>
+            <div class="col-md-4">
+              <label class="rdm-label">Operator Name</label>
+              <select class="rdm-input rdm-select"
+                [class.rdm-invalid]="expenseForm.get('operator_name')?.invalid && expenseForm.get('operator_name')?.touched"
+                formControlName="operator_name">
+                <option value="" disabled>Select operator</option>
+                <option *ngFor="let operator of internetOperators" [value]="operator.operator_name">
+                  {{ operator.operator_name | titlecase }}
+                </option>
+              </select>
+            </div>
 
+            <div class="col-md-4">
+              <label class="rdm-label">Area</label>
+              <select class="rdm-input rdm-select"
+                [class.rdm-invalid]="expenseForm.get('sublocality')?.invalid && expenseForm.get('sublocality')?.touched"
+                formControlName="sublocality">
+                <option value="" disabled>Select area</option>
+                <option *ngFor="let area of internetAreas" [value]="area.sublocality">
+                  {{ area.sublocality | titlecase }}
+                </option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="rdm-label">Received By</label>
+              <select class="rdm-input rdm-select" formControlName="recieved_by">
+                <option value="">Select received by</option>
+                <option *ngFor="let name of recievedByList" [value]="name">{{ name }}</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ Section 2 — Amounts ══ -->
+      <div class="rdm-section">
+        <div class="rdm-section-head">
+          <div class="rdm-section-icon si-emerald"><i class="ri-coins-line"></i></div>
+          <span class="rdm-section-title">Amount Summary</span>
+        </div>
+        <div class="rdm-section-body">
+          <div class="row g-3">
+
+            <div class="col-md-4">
+              <label class="rdm-label">Total Recovery</label>
+              <div class="rdm-prefix-wrap">
+                <span class="rdm-prefix">Rs</span>
+                <input type="number" class="rdm-input rdm-prefixed" formControlName="total_recovery" placeholder="0">
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="rdm-label">Total Expenses</label>
+              <div class="rdm-prefix-wrap">
+                <span class="rdm-prefix">Rs</span>
+                <input type="number" class="rdm-input rdm-prefixed" formControlName="total_expenses" placeholder="0">
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="rdm-label">Remaining Amount</label>
+              <div class="rdm-prefix-wrap">
+                <span class="rdm-prefix">Rs</span>
+                <input type="number" class="rdm-input rdm-prefixed" formControlName="remaining_amount" placeholder="0">
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Footer ── -->
+      <div class="rdm-footer">
+        <button type="button" class="rdm-btn rdm-btn-cancel" (click)="activeModal.close()">
+          <i class="ri-close-line me-1"></i> Cancel
+        </button>
+        <button type="submit" class="rdm-btn rdm-btn-save" [disabled]="isLoading || isSaving">
+          <ng-container *ngIf="!isSaving">
+            <i class="ri-save-line me-1"></i>
+            {{ editMode ? 'Update Recovery' : 'Save Recovery' }}
+          </ng-container>
+          <ng-container *ngIf="isSaving">
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+            {{ editMode ? 'Updating...' : 'Saving...' }}
+          </ng-container>
+        </button>
+      </div>
+
+    </form>
+  </div>
 
 </div>

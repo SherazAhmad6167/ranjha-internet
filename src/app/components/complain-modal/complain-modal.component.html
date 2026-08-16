@@ -1,251 +1,205 @@
-<div class="modal-content-wrapper">
-    <div class="modal-header d-flex justify-content-between align-items-center">
-        <h4 class="modal-title">{{ editMode ? 'Update' : 'Add' }} Complain Details</h4>
-        <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
-    </div>
+<div class="cm-wrapper">
 
-    <div *ngIf="isLoading" class="loading-overlay">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
+  <!-- ── Header ── -->
+  <div class="cm-header">
+    <div class="cm-header-left">
+      <div class="cm-header-icon">
+        <i class="ri-alarm-warning-line"></i>
+      </div>
+      <div>
+        <h4 class="cm-title">{{ editMode ? 'Update' : 'Add' }} Complaint</h4>
+        <p class="cm-subtitle">{{ editMode ? 'Edit the complaint details below' : 'Fill in the complaint details below' }}</p>
+      </div>
+    </div>
+    <button type="button" class="cm-close-btn" aria-label="Close" (click)="activeModal.dismiss()">
+      <i class="ri-close-line"></i>
+    </button>
+  </div>
+
+  <!-- ── Loading ── -->
+  <div *ngIf="isLoading" class="cm-loading">
+    <div class="spinner-border text-primary" role="status"></div>
+    <span>Loading...</span>
+  </div>
+
+  <!-- ── Body ── -->
+  <div class="cm-body">
+    <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+
+      <!-- ══ Section 1 — Customer Information ══ -->
+      <div class="cm-section">
+        <div class="cm-section-head">
+          <div class="cm-section-icon si-blue"><i class="ri-user-3-line"></i></div>
+          <span class="cm-section-title">Customer Information</span>
         </div>
-    </div>
+        <div class="cm-section-body">
+          <div class="row g-3">
 
-    <div class="mx-5">
-        <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
-            <div class="row align-items-center gy-3 mt-4 mx-7">
-
-
-                <div class="col-md-4 m-0">
-                    <label for="validationDefault03" class="form-label">Complain Date</label>
-                    <input type="date" class="form-control" formControlName="complain_date"
-                        [ngClass]="{'is-invalid': userForm.get('complain_date')?.invalid && userForm.get('complain_date')?.touched, 'blink-border': userForm.get('complain_date')?.invalid && userForm.get('complain_date')?.touched}"
-                        id="validationDefault03" placeholder="Enter Complain Date">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="userForm.get('complain_date')?.hasError('required') && userForm.get('complain_date')?.touched; ">
-                            <span class="text-danger" id="close_date">Complain Date is required</span>
-                        </ng-container>
-                    </div>
-                </div>
-
-
-                <div class="col-xl-4 m-0">
-                    <label for="validationDefault01" class="form-label">Customer Name</label>
-                    <input type="text" class="form-control"
-                        [ngClass]="{'is-invalid': userForm.get('user_name')?.invalid && userForm.get('user_name')?.touched, 'blink-border': userForm.get('user_name')?.invalid && userForm.get('user_name')?.touched}"
-                        formControlName="user_name" id="validationDefault01" placeholder="Enter Name">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="userForm.get('user_name')?.hasError('required') && userForm.get('user_name')?.touched;">
-                            <span class="text-danger">User Name is required</span>
-                        </ng-container>
-                    </div>
-
-                </div>
-
-
-                <div class="col-xl-4 m-0">
-                    <label for="validationDefault01" class="form-label">Internet ID</label>
-                    <input type="text" class="form-control"
-                        [ngClass]="{'is-invalid': userForm.get('internet_id')?.invalid && userForm.get('internet_id')?.touched, 'blink-border': userForm.get('internet_id')?.invalid && userForm.get('internet_id')?.touched}"
-                        formControlName="internet_id" id="validationDefault01" placeholder="Enter Internet ID">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="userForm.get('internet_id')?.hasError('required') && userForm.get('internet_id')?.touched;">
-                            <span class="text-danger">Internet ID is required</span>
-                        </ng-container>
-                    </div>
-
-                </div>
-
-
-                <div class="col-md-4 m-0">
-                    <div class="card-title">Sublocality</div>
-                    <div class="card-body">
-                        <select
-                            [ngClass]="{'is-invalid': userForm.get('sublocality')?.invalid && userForm.get('sublocality')?.touched, 'blink-border': userForm.get('sublocality')?.invalid && userForm.get('sublocality')?.touched}"
-                            class="form-control" formControlName="sublocality">
-                            <option value="" disabled>Select a Sublocality</option>
-                            <option *ngFor="let area of internetAreas" [value]="area.sublocality">
-                                {{ area.sublocality | titlecase }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="userForm.get('sublocality')?.hasError('required') && userForm.get('sublocality')?.touched">
-                            <span class="text-danger">Select a Sublocality</span>
-                        </ng-container>
-                    </div>
-                </div>
-
-
-
-
-
-
-
-                <div class="col-xl-4 m-0">
-                    <label for="validationDefault01" class="form-label">Package Name</label>
-                    <input type="text" class="form-control"
-                        [ngClass]="{'is-invalid': userForm.get('package_name')?.invalid && userForm.get('package_name')?.touched, 'blink-border': userForm.get('package_name')?.invalid && userForm.get('package_name')?.touched}"
-                        formControlName="package_name" id="validationDefault01" placeholder="Enter Package">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="userForm.get('package_name')?.hasError('required') && userForm.get('package_name')?.touched;">
-                            <span class="text-danger">Package is required</span>
-                        </ng-container>
-                    </div>
-
-                </div>
-
-                <div class="col-xl-4 m-0">
-                    <label for="validationDefault01" class="form-label">Phone Number</label>
-                    <input type="text" class="form-control"
-                        [ngClass]="{'is-invalid': userForm.get('phone_number')?.invalid && userForm.get('phone_number')?.touched, 'blink-border': userForm.get('phone_number')?.invalid && userForm.get('phone_number')?.touched}"
-                        formControlName="phone_number" id="validationDefault01" placeholder="Enter Phone Number">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="userForm.get('phone_number')?.hasError('required') && userForm.get('phone_number')?.touched;">
-                            <span class="text-danger">Phone Number is required</span>
-                        </ng-container>
-                    </div>
-
-                </div>
-
-
-                <div class="col-md-4 m-0">
-                    <label for="validationDefault03" class="form-label">Address</label>
-                    <input type="text" class="form-control" formControlName="address"
-                        [ngClass]="{'is-invalid': userForm.get('address')?.invalid && userForm.get('address')?.touched, 'blink-border': userForm.get('address')?.invalid && userForm.get('address')?.touched}"
-                        id="validationDefault03" placeholder="Enter Address">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="userForm.get('address')?.hasError('required') && userForm.get('address')?.touched; ">
-                            <span class="text-danger" id="address">Address is required</span>
-                        </ng-container>
-                    </div>
-                </div>
-
-
-
-
-
-                <div class="col-md-4 m-0">
-                    <div class="card-title">Connection Status</div>
-                    <div class="card-body">
-                        <select
-                            [ngClass]="{'is-invalid': userForm.get('status')?.invalid && userForm.get('status')?.touched, 'blink-border': userForm.get('status')?.invalid && userForm.get('status')?.touched}"
-                            class="form-control" formControlName="status">
-                            <option value="" disabled>Status</option>
-                            <option value="pending">Pending</option>
-                            <option value="close">Close</option>
-
-                        </select>
-                    </div>
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="userForm.get('status')?.hasError('required') && userForm.get('status')?.touched">
-                            <span class="text-danger">Select a Status</span>
-                        </ng-container>
-                    </div>
-                </div>
-
-
-                <div class="col-md-4 m-0">
-                    <label for="validationDefault03" class="form-label">Complain Close Date</label>
-                    <input type="date" class="form-control" formControlName="complain_close_date"
-                        [ngClass]="{'is-invalid': userForm.get('complain_close_date')?.invalid && userForm.get('complain_close_date')?.touched, 'blink-border': userForm.get('complain_close_date')?.invalid && userForm.get('complain_close_date')?.touched}"
-                        id="validationDefault03" placeholder="Enter Complain Close Date">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="userForm.get('complain_close_date')?.hasError('required') && userForm.get('complain_close_date')?.touched; ">
-                            <span class="text-danger" id="close_date">Complain Close Date is required</span>
-                        </ng-container>
-                    </div>
-                </div>
-
-
-                 <div class="col-xl-4 m-0">
-                    <label class="form-label">Operator Name</label>
-
-                    <select class="form-control" formControlName="operator_name" [ngClass]="{
-      'is-invalid': userForm.get('operator_name')?.invalid && userForm.get('operator_name')?.touched,
-      'blink-border': userForm.get('operator_name')?.invalid && userForm.get('operator_name')?.touched
-    }">
-                        <option value="" disabled>Select Operator</option>
-
-                        <!-- Optional -->
-                        <!-- <option value="">All</option> -->
-
-                        <option *ngFor="let operator of internetOperators" [value]="operator.operator_name">
-                            {{ operator.operator_name | titlecase }}
-                        </option>
-                    </select>
-
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="userForm.get('operator_name')?.hasError('required') && userForm.get('operator_name')?.touched">
-                            <span class="text-danger">Operator Name is required</span>
-                        </ng-container>
-                    </div>
-                </div>
-
-
-
-                 <div class="col-xl-4 m-0">
-                    <label for="validationDefault01" class="form-label">Operator Phone Number</label>
-                    <input type="text" class="form-control"
-                        [ngClass]="{'is-invalid': userForm.get('operator_phone_number')?.invalid && userForm.get('operator_phone_number')?.touched, 'blink-border': userForm.get('operator_phone_number')?.invalid && userForm.get('operator_phone_number')?.touched}"
-                        formControlName="operator_phone_number" id="validationDefault01" placeholder="Enter Phone Number">
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="userForm.get('operator_phone_number')?.hasError('required') && userForm.get('operator_phone_number')?.touched;">
-                            <span class="text-danger">Phone Number is required</span>
-                        </ng-container>
-                    </div>
-
-                </div>
-
-
-                <div class="col-md-12 m-0">
-                    <label for="complainField" class="form-label">Complain</label>
-
-                    <textarea class="form-control" formControlName="complain" id="complainField" rows="3"
-                        placeholder="Enter Complain" [ngClass]="{
-            'is-invalid': userForm.get('complain')?.invalid && userForm.get('complain')?.touched,
-            'blink-border': userForm.get('complain')?.invalid && userForm.get('complain')?.touched
-        }">
-    </textarea>
-
-                    <div class="extra-space">
-                        <ng-container
-                            *ngIf="userForm.get('complain')?.hasError('required') && userForm.get('complain')?.touched">
-                            <span class="text-danger">Complain is required</span>
-                        </ng-container>
-                    </div>
-                </div>
-
-
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary-light" (click)="activeModal.close()">
-                        Close
-                    </button>
-
-                    <button class="btn btn-primary" type="submit" [disabled]="isLoading || isSaving">
-                        <span *ngIf="!isSaving"> {{ editMode ? 'Update' : 'Save' }}</span>
-                        <span *ngIf="isSaving" class="d-flex align-items-center">
-                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            {{ editMode ? 'Updating...' : 'Saving...' }}
-                        </span>
-                    </button>
-
-                </div>
+            <div class="col-md-4">
+              <label class="cm-label">Complaint Date <span class="req">*</span></label>
+              <input type="date" class="cm-input"
+                [class.cm-invalid]="userForm.get('complain_date')?.invalid && userForm.get('complain_date')?.touched"
+                formControlName="complain_date">
+              <span class="cm-err" *ngIf="userForm.get('complain_date')?.hasError('required') && userForm.get('complain_date')?.touched">
+                Date is required
+              </span>
             </div>
-        </form>
 
-    </div>
+            <div class="col-md-4">
+              <label class="cm-label">Customer Name <span class="req">*</span></label>
+              <input type="text" class="cm-input"
+                [class.cm-invalid]="userForm.get('user_name')?.invalid && userForm.get('user_name')?.touched"
+                formControlName="user_name" placeholder="Full name">
+              <span class="cm-err" *ngIf="userForm.get('user_name')?.hasError('required') && userForm.get('user_name')?.touched">
+                Name is required
+              </span>
+            </div>
 
+            <div class="col-md-4">
+              <label class="cm-label">Internet ID <span class="req">*</span></label>
+              <input type="text" class="cm-input"
+                [class.cm-invalid]="userForm.get('internet_id')?.invalid && userForm.get('internet_id')?.touched"
+                formControlName="internet_id" placeholder="e.g. 0042">
+              <span class="cm-err" *ngIf="userForm.get('internet_id')?.hasError('required') && userForm.get('internet_id')?.touched">
+                Internet ID is required
+              </span>
+            </div>
+
+            <div class="col-md-4">
+              <label class="cm-label">Area <span class="req">*</span></label>
+              <select class="cm-input cm-select"
+                [class.cm-invalid]="userForm.get('sublocality')?.invalid && userForm.get('sublocality')?.touched"
+                formControlName="sublocality">
+                <option value="" disabled>Select area</option>
+                <option *ngFor="let area of internetAreas" [value]="area.sublocality">
+                  {{ area.sublocality | titlecase }}
+                </option>
+              </select>
+              <span class="cm-err" *ngIf="userForm.get('sublocality')?.hasError('required') && userForm.get('sublocality')?.touched">
+                Area is required
+              </span>
+            </div>
+
+            <div class="col-md-4">
+              <label class="cm-label">Package <span class="req">*</span></label>
+              <input type="text" class="cm-input"
+                [class.cm-invalid]="userForm.get('package_name')?.invalid && userForm.get('package_name')?.touched"
+                formControlName="package_name" placeholder="Package name">
+              <span class="cm-err" *ngIf="userForm.get('package_name')?.hasError('required') && userForm.get('package_name')?.touched">
+                Package is required
+              </span>
+            </div>
+
+            <div class="col-md-4">
+              <label class="cm-label">Phone Number <span class="req">*</span></label>
+              <input type="text" class="cm-input"
+                [class.cm-invalid]="userForm.get('phone_number')?.invalid && userForm.get('phone_number')?.touched"
+                formControlName="phone_number" placeholder="03XX-XXXXXXX">
+              <span class="cm-err" *ngIf="userForm.get('phone_number')?.hasError('required') && userForm.get('phone_number')?.touched">
+                Phone number is required
+              </span>
+            </div>
+
+            <div class="col-md-8">
+              <label class="cm-label">Address <span class="req">*</span></label>
+              <input type="text" class="cm-input"
+                [class.cm-invalid]="userForm.get('address')?.invalid && userForm.get('address')?.touched"
+                formControlName="address" placeholder="Street, area, city">
+              <span class="cm-err" *ngIf="userForm.get('address')?.hasError('required') && userForm.get('address')?.touched">
+                Address is required
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ Section 2 — Complaint Details ══ -->
+      <div class="cm-section">
+        <div class="cm-section-head">
+          <div class="cm-section-icon si-red"><i class="ri-error-warning-line"></i></div>
+          <span class="cm-section-title">Complaint Details</span>
+        </div>
+        <div class="cm-section-body">
+          <div class="row g-3">
+
+            <div class="col-md-4">
+              <label class="cm-label">Status <span class="req">*</span></label>
+              <select class="cm-input cm-select"
+                [class.cm-invalid]="userForm.get('status')?.invalid && userForm.get('status')?.touched"
+                formControlName="status">
+                <option value="" disabled>Select status</option>
+                <option value="pending">Pending</option>
+                <option value="close">Resolved</option>
+              </select>
+              <span class="cm-err" *ngIf="userForm.get('status')?.hasError('required') && userForm.get('status')?.touched">
+                Status is required
+              </span>
+            </div>
+
+            <div class="col-md-4">
+              <label class="cm-label">Close Date</label>
+              <input type="date" class="cm-input" formControlName="complain_close_date">
+            </div>
+
+            <div class="col-md-4">
+              <label class="cm-label">Operator Name <span class="req">*</span></label>
+              <select class="cm-input cm-select"
+                [class.cm-invalid]="userForm.get('operator_name')?.invalid && userForm.get('operator_name')?.touched"
+                formControlName="operator_name">
+                <option value="" disabled>Select operator</option>
+                <option *ngFor="let op of internetOperators" [value]="op.operator_name">
+                  {{ op.operator_name | titlecase }}
+                </option>
+              </select>
+              <span class="cm-err" *ngIf="userForm.get('operator_name')?.hasError('required') && userForm.get('operator_name')?.touched">
+                Operator is required
+              </span>
+            </div>
+
+            <div class="col-md-4">
+              <label class="cm-label">Operator Phone <span class="req">*</span></label>
+              <input type="text" class="cm-input"
+                [class.cm-invalid]="userForm.get('operator_phone_number')?.invalid && userForm.get('operator_phone_number')?.touched"
+                formControlName="operator_phone_number" placeholder="03XX-XXXXXXX">
+              <span class="cm-err" *ngIf="userForm.get('operator_phone_number')?.hasError('required') && userForm.get('operator_phone_number')?.touched">
+                Operator phone is required
+              </span>
+            </div>
+
+            <div class="col-12">
+              <label class="cm-label">Complaint Description <span class="req">*</span></label>
+              <textarea class="cm-input cm-textarea"
+                [class.cm-invalid]="userForm.get('complain')?.invalid && userForm.get('complain')?.touched"
+                formControlName="complain" rows="4"
+                placeholder="Describe the complaint in detail..."></textarea>
+              <span class="cm-err" *ngIf="userForm.get('complain')?.hasError('required') && userForm.get('complain')?.touched">
+                Complaint description is required
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Footer ── -->
+      <div class="cm-footer">
+        <button type="button" class="cm-btn cm-btn-cancel" (click)="activeModal.close()">
+          <i class="ri-close-line me-1"></i> Cancel
+        </button>
+        <button type="submit" class="cm-btn cm-btn-save" [disabled]="isLoading || isSaving">
+          <ng-container *ngIf="!isSaving">
+            <i class="ri-save-line me-1"></i>
+            {{ editMode ? 'Update Complaint' : 'Save Complaint' }}
+          </ng-container>
+          <ng-container *ngIf="isSaving">
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+            {{ editMode ? 'Updating...' : 'Saving...' }}
+          </ng-container>
+        </button>
+      </div>
+
+    </form>
+  </div>
 
 </div>

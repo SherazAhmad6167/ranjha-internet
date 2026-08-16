@@ -1379,11 +1379,6 @@ export class UsersCollectionsComponent {
       const newPackage = this.userForm.value.select_package;
       const newFee = Number(this.userForm.value.internet_package_fee);
 
-      const oldFee = Number(this.selectedRow.internet_package_fee);
-
-      // 🔥 Difference calculate karo
-      const difference = newFee - oldFee;
-
       const userRef = doc(this.firestore, 'users', this.selectedRow.docId);
       const userSnap = await getDoc(userRef);
 
@@ -1392,35 +1387,47 @@ export class UsersCollectionsComponent {
       const userData = userSnap.data();
       const bills = userData['bills'] || [];
 
-      // Bill find karo
+      // Read oldFee from fresh Firestore data, not from the potentially stale UI row
+      const oldFee = Number(userData['internet_package_fee'] || 0);
+      const difference = newFee - oldFee;
+
       const updatedBills = bills.map((bill: any) => {
         if (bill.bill_id === this.selectedRow.bills[0].bill_id) {
+          const newAmount = Number(bill.amount) + difference;
+          const newRemaining = Number(bill.remaining_amount ?? bill.amount) + difference;
           return {
             ...bill,
-            amount: Number(bill.amount) + difference,
-            remaining_amount: Number(bill.remaining_amount) + difference,
+            amount: newAmount,
+            remaining_amount: newRemaining,
           };
         }
         return bill;
       });
 
-      // 🔥 Firestore Update
-      updateDoc(userRef, {
+      await updateDoc(userRef, {
         select_package: newPackage,
         internet_package_fee: newFee,
         bills: updatedBills,
       });
 
+      // Keep newConnection in sync
+      const newConnRef = doc(this.firestore, 'newConnection', this.selectedRow.docId);
+      const newConnSnap = await getDoc(newConnRef);
+      if (newConnSnap.exists()) {
+        await updateDoc(newConnRef, {
+          select_package: newPackage,
+          internet_package_fee: newFee,
+        });
+      }
+
       if (!navigator.onLine) {
-        this.toastr.info(
-          'Saved offline. Will sync when connection is restored.',
-        );
+        this.toastr.info('Saved offline. Will sync when connection is restored.');
       } else {
         this.toastr.success('Bill updated successfully');
       }
 
       this.showUpdateModal = false;
-      this.loadUsers(); // reload list
+      this.loadUsers();
     } catch (error) {
       console.error(error);
       this.toastr.error('Update failed');

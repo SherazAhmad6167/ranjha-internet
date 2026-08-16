@@ -297,6 +297,10 @@
                     (click)="toggleBulkSelection(row)" title="Select">
                     <i class="ri-check-line"></i>
                   </button>
+                  <button class="uc-action-btn update-btn" *ngIf="row.status === 'unpaid'"
+                    (click)="openUpdateModal(row)" title="Update Bill">
+                    <i class="ri-pencil-line"></i>
+                  </button>
                 </ng-container>
 
                 <!-- Normal Actions -->

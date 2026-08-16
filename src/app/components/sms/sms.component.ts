@@ -248,7 +248,16 @@ export class SmsComponent {
       ? this.allUsers
       : this.allUsers.filter(u => (u as any).sublocality === this.broadcastArea);
 
-    this.broadcastUsers = source.filter(u => !!this.formatUserPhone((u as any).mobile_no || (u as any).phone_no));
+    let filtered = source.filter(u => !!this.formatUserPhone((u as any).mobile_no || (u as any).phone_no));
+
+    if (this.broadcastTemplateId === 'paymentReminder') {
+      filtered = filtered.filter(u => {
+        const bills: any[] = (u as any).bills || [];
+        return bills.some((b: any) => b.status === 'unpaid');
+      });
+    }
+
+    this.broadcastUsers = filtered;
     this.broadcastUserStatuses = {};
     this.broadcastCurrentIndex = -1;
     if (this.broadcastUsers.length > 0) this.showRecipientList = true;
@@ -271,6 +280,7 @@ export class SmsComponent {
   onBroadcastTemplateChange() {
     const tmpl = this.smsTemplates.find(t => t.id === this.broadcastTemplateId);
     if (tmpl) this.broadcastMessage = tmpl.message;
+    this.onBroadcastAreaChange();
   }
 
   formatUserPhone(raw: string): string | null {
@@ -284,10 +294,10 @@ export class SmsComponent {
   }
 
   mapTemplate(message: string, user: any): string {
-    // Broadcast has no bill context, so amounts fall back to the monthly fee.
+    const unpaidBill = (user?.bills || []).find((b: any) => b.status === 'unpaid');
     return this.templateMapper.map(message, user, {
-      amount: user?.internet_package_fee,
-      overdueAmount: user?.internet_package_fee,
+      amount: unpaidBill?.amount ?? unpaidBill?.remaining_amount ?? user?.internet_package_fee,
+      overdueAmount: unpaidBill?.remaining_amount ?? unpaidBill?.amount ?? user?.internet_package_fee,
     });
   }
 

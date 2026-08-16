@@ -90,6 +90,13 @@ export class ComplainModalComponent {
     this.editForm();
     this.loadInternetAreas();
     this.loadOperatorName();
+
+    this.userForm.get('operator_name')?.valueChanges.subscribe((selectedName) => {
+      const op = this.internetOperators.find((o) => o.operator_name === selectedName);
+      if (op?.operator_phone) {
+        this.userForm.patchValue({ operator_phone_number: op.operator_phone });
+      }
+    });
   }
 
   async loadInternetAreas() {

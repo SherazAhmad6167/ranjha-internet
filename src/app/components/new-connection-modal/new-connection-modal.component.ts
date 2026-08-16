@@ -71,28 +71,23 @@ export class NewConnectionModalComponent implements OnDestroy {
     this.userForm = this.fb.group({
       installation_date: [''],
       address: [''],
-      user_name: [''],
+      user_name: ['', [Validators.required]],
       father_name: [''],
       cnic: [''],
-      mobile_no: [''],
+      mobile_no: ['', [Validators.required]],
       alter_mobile_no: [''],
-      sublocality: [''],
-      internet_id: [''],
+      sublocality: ['', [Validators.required]],
+      internet_id: ['', [Validators.required]],
       package_name: [''],
       installation_amount: [null],
       advance_paid: [null],
       balance: [null],
-      // router_no: [''],
       monthly_fee: [null],
       operator_name: [''],
       recieved_by: [''],
       recieved_date: [''],
-      // expenses: [null],
       recieved_amount: [null],
       isRecieved: [false],
-      // mac_address: [''],
-      // wifi: [''],
-      // wifi_password: [''],
       remarks: [''],
       bank_name: [''],
       payment_method: [''],
@@ -101,13 +96,13 @@ export class NewConnectionModalComponent implements OnDestroy {
       cnic_back: [''],
       connection_provider: [''],
       connection_type: ['', [Validators.required]],
-      pkg_cable: [null, [Validators.required]],
-      cable_discount: [null, [Validators.required]],
-      internet_discount: [null, [Validators.required]],
-      select_package: [null, [Validators.required]],
-      internet_package_fee: [null, [Validators.required]],
-      cable_package_fee: [null, [Validators.required]],
-      sub_area: [null, [Validators.required]],
+      pkg_cable: [null],
+      cable_discount: [null],
+      internet_discount: [null],
+      select_package: [null],
+      internet_package_fee: [null],
+      cable_package_fee: [null],
+      sub_area: [null],
       createdAt: [new Date()],
     });
   }
@@ -432,8 +427,10 @@ export class NewConnectionModalComponent implements OnDestroy {
 
  async onSubmit() {
   if (this.userForm.invalid) {
-    this.toastr.error('Please fill all required fields');
     this.userForm.markAllAsTouched();
+    setTimeout(() => {
+      document.querySelector('.is-invalid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
     return;
   }
 

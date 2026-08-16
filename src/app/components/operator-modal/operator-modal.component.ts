@@ -47,11 +47,8 @@ export class OperatorModalComponent {
       private modalService: NgbModal,
     ) {
       this.userForm = this.fb.group({
-        // country: ['', [Validators.required]],
-        // city: ['', [Validators.required]],
-       
-        // sublocality: ['', [Validators.required]],
         operator_name: ['', [Validators.required]],
+        operator_phone: [''],
         createdAt: [new Date()],
       });
     }
@@ -60,11 +57,8 @@ export class OperatorModalComponent {
       // this.loadCities();
       if (this.editMode && this.userData) {
         this.userForm.patchValue({
-          // country: this.userData.country,
-          // city: this.userData.city,
-          
-          // sublocality: this.userData.sublocality,
           operator_name: this.userData.operator_name,
+          operator_phone: this.userData.operator_phone ?? '',
           createdAt: this.userData.createdAt ?? new Date(),
         });
       }
@@ -125,52 +119,38 @@ export class OperatorModalComponent {
   }
   
   async saveInternetArea(newName: string, oldName?: string) {
-  const ref = doc(this.firestore, 'operatorName', 'operatorNameDoc');
+    const ref = doc(this.firestore, 'operatorName', 'operatorNameDoc');
+    const snap = await getDoc(ref);
+    let operatorNames: any[] = snap.exists() ? (snap.data()?.['operatorNames'] || []) : [];
+    const phone = this.userForm.get('operator_phone')?.value || '';
 
-  const snap = await getDoc(ref);
+    if (oldName) {
+      const index = operatorNames.findIndex((item) => item.operator_name === oldName);
+      if (index > -1) {
+        operatorNames[index] = {
+          ...operatorNames[index],
+          operator_name: newName,
+          operator_phone: phone,
+          updatedAt: new Date(),
+        };
+      }
+    } else {
+      const exists = operatorNames.some((item) => item.operator_name === newName);
+      if (!exists) {
+        operatorNames.push({
+          operator_name: newName,
+          operator_phone: phone,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+    }
 
-  let operatorNames: any[] = [];
-
-  if (snap.exists()) {
-    operatorNames = snap.data()?.['operatorNames'] || [];
-  }
-
-  // 🔁 UPDATE CASE
-  if (oldName) {
-    const index = operatorNames.findIndex(
-      (item) => item.operator_name === oldName
-    );
-
-    if (index > -1) {
-      operatorNames[index] = {
-        ...operatorNames[index],
-        operator_name: newName,
-        updatedAt: new Date(),
-      };
+    if (snap.exists()) {
+      await updateDoc(ref, { operatorNames });
+    } else {
+      await setDoc(ref, { operatorNames });
     }
   }
-
-  // ➕ ADD CASE
-  else {
-    const exists = operatorNames.some(
-      (item) => item.operator_name === newName
-    );
-
-    if (!exists) {
-      operatorNames.push({
-        operator_name: newName,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-    }
-  }
-
-  // 💾 SAVE
-  if (snap.exists()) {
-    await updateDoc(ref, { operatorNames });
-  } else {
-    await setDoc(ref, { operatorNames });
-  }
-}
 
 }
