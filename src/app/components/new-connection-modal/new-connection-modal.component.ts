@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, Input, OnDestroy, ViewChild } from '@angular/core';
+import { SearchSelectComponent } from '../../shared/search-select/search-select.component';
+import { Component, ElementRef, HostListener, Input, OnDestroy, ViewChild } from '@angular/core';
 import {
   addDoc,
   collection,
@@ -21,7 +22,7 @@ import { ToastrModule, ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-new-connection-modal',
-  imports: [FormsModule, ReactiveFormsModule, CommonModule, ToastrModule],
+  imports: [FormsModule, ReactiveFormsModule, CommonModule, ToastrModule, SearchSelectComponent],
   templateUrl: './new-connection-modal.component.html',
   styleUrl: './new-connection-modal.component.scss',
 })
@@ -31,6 +32,7 @@ export class NewConnectionModalComponent implements OnDestroy {
   @Input() userData: any;
 
   @ViewChild('cameraVideo') cameraVideoRef?: ElementRef<HTMLVideoElement>;
+  @ViewChild('cropImageContainer') cropContainerRef?: ElementRef<HTMLDivElement>;
 
   // Camera state
   showCamera = false;
@@ -38,6 +40,17 @@ export class NewConnectionModalComponent implements OnDestroy {
   cameraStream: MediaStream | null = null;
   capturedPhoto: string | null = null;
   cameraError: string | null = null;
+
+  // Crop state
+  showCropOverlay = false;
+  cropTarget: 'front' | 'back' | null = null;
+  cropSourceImage: string | null = null;
+  cropBox = { x: 0.05, y: 0.05, w: 0.9, h: 0.9 };
+  private cropDrag: null | {
+    mode: 'move' | 'tl' | 'tr' | 'bl' | 'br';
+    startX: number; startY: number;
+    startBox: { x: number; y: number; w: number; h: number };
+  } = null;
 
   // OCR state
   isExtracting = false;
@@ -74,6 +87,7 @@ export class NewConnectionModalComponent implements OnDestroy {
       user_name: ['', [Validators.required]],
       father_name: [''],
       cnic: [''],
+      date_of_birth: [''],
       mobile_no: ['', [Validators.required]],
       alter_mobile_no: [''],
       sublocality: ['', [Validators.required]],
@@ -115,6 +129,7 @@ export class NewConnectionModalComponent implements OnDestroy {
         user_name: this.userData.user_name || '',
         father_name: this.userData.father_name || '',
         cnic: this.userData.cnic || '',
+        date_of_birth: this.userData.date_of_birth || '',
         mobile_no: this.userData.mobile_no || '',
         alter_mobile_no: this.userData.alter_mobile_no || '',
         sublocality: this.userData.sublocality || '',
@@ -570,14 +585,7 @@ export class NewConnectionModalComponent implements OnDestroy {
     const target = this.cameraTarget;
     const photo = this.capturedPhoto;
     this.closeCamera();
-    if (target === 'front') {
-      this.cnicFrontPreview = photo;
-      this.extractionDone = false;
-      this.userForm.patchValue({ cnic_front: photo });
-    } else {
-      this.cnicBackPreview = photo;
-      this.userForm.patchValue({ cnic_back: photo });
-    }
+    this.openCrop(photo, target);
   }
 
   closeCamera() {
@@ -728,35 +736,177 @@ export class NewConnectionModalComponent implements OnDestroy {
     return null;
   }
 
+  // ── Crop methods ──────────────────────────────────────────────────────────
+
+  openCrop(source: string, target: 'front' | 'back') {
+    this.cropSourceImage = source;
+    this.cropTarget = target;
+    this.cropBox = { x: 0.05, y: 0.05, w: 0.9, h: 0.9 };
+    this.cropDrag = null;
+    this.showCropOverlay = true;
+  }
+
+  cancelCrop() {
+    this.showCropOverlay = false;
+    this.cropSourceImage = null;
+    this.cropDrag = null;
+  }
+
+  resetCrop() {
+    this.cropBox = { x: 0.05, y: 0.05, w: 0.9, h: 0.9 };
+  }
+
+  get cropSelectionStyle(): Record<string, string> {
+    return {
+      left: (this.cropBox.x * 100) + '%',
+      top: (this.cropBox.y * 100) + '%',
+      width: (this.cropBox.w * 100) + '%',
+      height: (this.cropBox.h * 100) + '%',
+    };
+  }
+
+  get cropMaskTop(): Record<string, string> {
+    return { position: 'absolute', top: '0', left: '0', right: '0', height: (this.cropBox.y * 100) + '%' };
+  }
+  get cropMaskBottom(): Record<string, string> {
+    return { position: 'absolute', bottom: '0', left: '0', right: '0', height: ((1 - this.cropBox.y - this.cropBox.h) * 100) + '%' };
+  }
+  get cropMaskLeft(): Record<string, string> {
+    return { position: 'absolute', top: (this.cropBox.y * 100) + '%', left: '0', width: (this.cropBox.x * 100) + '%', height: (this.cropBox.h * 100) + '%' };
+  }
+  get cropMaskRight(): Record<string, string> {
+    return { position: 'absolute', top: (this.cropBox.y * 100) + '%', right: '0', width: ((1 - this.cropBox.x - this.cropBox.w) * 100) + '%', height: (this.cropBox.h * 100) + '%' };
+  }
+
+  onCropBoxMouseDown(event: MouseEvent) {
+    event.stopPropagation();
+    event.preventDefault();
+    this.startCropDrag('move', event.clientX, event.clientY);
+  }
+
+  onHandleMouseDown(event: MouseEvent, mode: 'tl' | 'tr' | 'bl' | 'br') {
+    event.stopPropagation();
+    event.preventDefault();
+    this.startCropDrag(mode, event.clientX, event.clientY);
+  }
+
+  onCropBoxTouchStart(event: TouchEvent) {
+    event.stopPropagation();
+    event.preventDefault();
+    const t = event.touches[0];
+    this.startCropDrag('move', t.clientX, t.clientY);
+  }
+
+  onHandleTouchStart(event: TouchEvent, mode: 'tl' | 'tr' | 'bl' | 'br') {
+    event.stopPropagation();
+    event.preventDefault();
+    const t = event.touches[0];
+    this.startCropDrag(mode, t.clientX, t.clientY);
+  }
+
+  private startCropDrag(mode: 'move' | 'tl' | 'tr' | 'bl' | 'br', x: number, y: number) {
+    this.cropDrag = { mode, startX: x, startY: y, startBox: { ...this.cropBox } };
+  }
+
+  onCropMouseMove(event: MouseEvent) {
+    if (!this.cropDrag) return;
+    event.preventDefault();
+    this.updateCropDrag(event.clientX, event.clientY);
+  }
+
+  onCropTouchMove(event: TouchEvent) {
+    if (!this.cropDrag) return;
+    event.preventDefault();
+    this.updateCropDrag(event.touches[0].clientX, event.touches[0].clientY);
+  }
+
+  onCropPointerUp() {
+    this.cropDrag = null;
+  }
+
+  @HostListener('document:mouseup')
+  onDocumentMouseUp() {
+    if (this.cropDrag) this.cropDrag = null;
+  }
+
+  private updateCropDrag(clientX: number, clientY: number) {
+    const container = this.cropContainerRef?.nativeElement;
+    if (!container || !this.cropDrag) return;
+    const rect = container.getBoundingClientRect();
+    const dx = (clientX - this.cropDrag.startX) / rect.width;
+    const dy = (clientY - this.cropDrag.startY) / rect.height;
+    const b = this.cropDrag.startBox;
+    const MIN = 0.08;
+    switch (this.cropDrag.mode) {
+      case 'move':
+        this.cropBox = { ...b, x: Math.max(0, Math.min(1 - b.w, b.x + dx)), y: Math.max(0, Math.min(1 - b.h, b.y + dy)) };
+        break;
+      case 'tl': {
+        const nx = Math.max(0, Math.min(b.x + b.w - MIN, b.x + dx));
+        const ny = Math.max(0, Math.min(b.y + b.h - MIN, b.y + dy));
+        this.cropBox = { x: nx, y: ny, w: b.w + (b.x - nx), h: b.h + (b.y - ny) };
+        break;
+      }
+      case 'tr': {
+        const ny = Math.max(0, Math.min(b.y + b.h - MIN, b.y + dy));
+        this.cropBox = { x: b.x, y: ny, w: Math.max(MIN, Math.min(1 - b.x, b.w + dx)), h: b.h + (b.y - ny) };
+        break;
+      }
+      case 'bl': {
+        const nx = Math.max(0, Math.min(b.x + b.w - MIN, b.x + dx));
+        this.cropBox = { x: nx, y: b.y, w: b.w + (b.x - nx), h: Math.max(MIN, Math.min(1 - b.y, b.h + dy)) };
+        break;
+      }
+      case 'br':
+        this.cropBox = { x: b.x, y: b.y, w: Math.max(MIN, Math.min(1 - b.x, b.w + dx)), h: Math.max(MIN, Math.min(1 - b.y, b.h + dy)) };
+        break;
+    }
+  }
+
+  applyCrop() {
+    if (!this.cropSourceImage || !this.cropTarget) return;
+    const img = new Image();
+    img.onload = () => {
+      const sx = Math.round(this.cropBox.x * img.naturalWidth);
+      const sy = Math.round(this.cropBox.y * img.naturalHeight);
+      const sw = Math.round(this.cropBox.w * img.naturalWidth);
+      const sh = Math.round(this.cropBox.h * img.naturalHeight);
+      const canvas = document.createElement('canvas');
+      canvas.width = sw;
+      canvas.height = sh;
+      canvas.getContext('2d')!.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+      const cropped = canvas.toDataURL('image/jpeg', 0.88);
+      const target = this.cropTarget!;
+      this.cancelCrop();
+      if (target === 'front') {
+        this.cnicFrontPreview = cropped;
+        this.cnicFrontOcrSource = cropped;
+        this.extractionDone = false;
+        this.userForm.patchValue({ cnic_front: cropped });
+      } else {
+        this.cnicBackPreview = cropped;
+        this.userForm.patchValue({ cnic_back: cropped });
+      }
+    };
+    img.src = this.cropSourceImage;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+
   cnicFrontPreview: string | null = null;
   cnicBackPreview: string | null = null;
 
   onImageSelect(event: any, type: 'front' | 'back') {
     const file = event.target.files[0];
     if (!file) return;
-
     if (!file.type.startsWith('image/')) {
       this.toastr.error('Only image files allowed');
       return;
     }
-
-    // Keep a full-resolution copy for OCR on the front side
-    if (type === 'front') {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => { this.cnicFrontOcrSource = reader.result as string; };
-    }
-
-    this.resizeAndConvertToBase64(file, 800, 600).then((base64) => {
-      if (type === 'front') {
-        this.cnicFrontPreview = base64;
-        this.extractionDone = false;
-        this.userForm.patchValue({ cnic_front: base64 });
-      } else {
-        this.cnicBackPreview = base64;
-        this.userForm.patchValue({ cnic_back: base64 });
-      }
-    });
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => { this.openCrop(reader.result as string, type); };
+    event.target.value = '';
   }
 
   resizeAndConvertToBase64(

@@ -16,6 +16,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
 import { ExpenseModalComponent } from '../expense-modal/expense-modal.component';
 import { RecoveryDetailModalComponent } from '../recovery-detail-modal/recovery-detail-modal.component';
+import { TemplateMapperService } from '../../shared/template-mapper.service';
 
 @Component({
   selector: 'app-recovery-details',
@@ -43,6 +44,8 @@ export class RecoveryDetailsComponent {
   remainingAmount: number = 0;
   operatorName: string = '';
   internetOperators: any[] = [];
+  selectedMsgUser: any = null;
+  recoveryTemplate: string = '';
   selectedMonth: string | null = null;
   monthMap: any = {
   january: '01',
@@ -63,11 +66,62 @@ export class RecoveryDetailsComponent {
     private modalService: NgbModal,
     private firestore: Firestore,
     private toastr: ToastrService,
+    private templateMapper: TemplateMapperService,
   ) {}
 
   ngOnInit(): void {
     this.loadExpenses();
     this.loadOperatorName();
+    this.loadRecoveryTemplate();
+  }
+
+  async loadRecoveryTemplate() {
+    try {
+      const snap = await getDoc(doc(this.firestore, 'messageTemplates/recovery'));
+      if (snap.exists()) this.recoveryTemplate = snap.data()['message'] || '';
+    } catch {}
+  }
+
+  openMsgModal(user: any, modal: any) {
+    this.selectedMsgUser = user;
+    this.modalService.open(modal, { centered: true, size: 'sm' });
+  }
+
+  formatPhoneForSms(phone: string): string | null {
+    if (!phone) return null;
+    const cleaned = phone.toString().trim().replace(/[\s\-()]/g, '');
+    if (cleaned.startsWith('+92') && cleaned.length === 13) return cleaned;
+    if (cleaned.startsWith('92')  && cleaned.length === 12) return '+' + cleaned;
+    if (cleaned.startsWith('0')   && cleaned.length === 11) return '+92' + cleaned.slice(1);
+    if (cleaned.length === 10) return '+92' + cleaned;
+    return null;
+  }
+
+  formatPhoneNumber(phone: string): string {
+    phone = (phone || '').replace(/\D/g, '');
+    if (phone.startsWith('03'))  return '92' + phone.substring(1);
+    if (phone.startsWith('3'))   return '92' + phone;
+    if (phone.startsWith('92'))  return phone;
+    if (phone.startsWith('+92')) return phone.substring(1);
+    return phone;
+  }
+
+  async sendSms(user: any) {
+    const phone = this.formatPhoneForSms(user.operator_phone);
+    if (!phone) { this.toastr.error('No valid operator phone number'); return; }
+    if (!this.recoveryTemplate) { this.toastr.error('Recovery template not configured in Settings'); return; }
+    const message = this.templateMapper.map(this.recoveryTemplate, user);
+    try {
+      await addDoc(collection(this.firestore, 'sms'), { phone, message, status: 'pending', createdAt: new Date().toISOString() });
+      this.toastr.success('SMS queued successfully');
+    } catch { this.toastr.error('Failed to queue SMS'); }
+  }
+
+  sendWhatsapp(user: any) {
+    if (!this.recoveryTemplate) { this.toastr.error('Recovery template not configured in Settings'); return; }
+    const phone = this.formatPhoneNumber(user.operator_phone || '');
+    const message = this.templateMapper.map(this.recoveryTemplate, user);
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
   }
 
   async loadOperatorName() {

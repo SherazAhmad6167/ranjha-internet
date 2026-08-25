@@ -6,6 +6,7 @@ import {
   doc,
   Firestore,
   getDoc,
+  getDocs,
   updateDoc,
 } from '@angular/fire/firestore';
 import {
@@ -32,6 +33,7 @@ export class MaterialFormComponent {
   @Input() userData: any;
   userForm: FormGroup;
   internetAreas: any[] = [];
+  internetOperators: any[] = [];
   constructor(
     public activeModal: NgbActiveModal,
     private fb: FormBuilder,
@@ -72,6 +74,15 @@ export class MaterialFormComponent {
   }
 
   ngOnInit() {
+    this.loadOperatorName();
+
+    this.userForm.get('name')?.valueChanges.subscribe((selectedName) => {
+      const op = this.internetOperators.find((o) => o.operator_name === selectedName);
+      if (op?.operator_phone) {
+        this.userForm.patchValue({ phone: op.operator_phone });
+      }
+    });
+
     if (this.editMode && this.userData) {
       this.userForm.patchValue({
         issue_no: this.userData.issue_no,
@@ -104,6 +115,21 @@ export class MaterialFormComponent {
         osaka: this.userData.osaka ?? '',
         packingTape: this.userData.packingTape ?? ''
       });
+    }
+  }
+
+  async loadOperatorName() {
+    try {
+      const ref = doc(this.firestore, 'operatorName', 'operatorNameDoc');
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        this.internetOperators = snap.data()?.['operatorNames'] || [];
+        this.internetOperators.sort((a: any, b: any) =>
+          a.operator_name.localeCompare(b.operator_name)
+        );
+      }
+    } catch (error) {
+      console.error('Error loading operators', error);
     }
   }
 

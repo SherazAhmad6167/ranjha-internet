@@ -1,3 +1,36 @@
+// ── Status Selector ───────────────────────────────────────────────────────────
+.status-btn-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+
+  .status-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    height: 44px;
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #6b7280;
+    background: #f9fafb;
+    transition: all 0.15s;
+    user-select: none;
+
+    i { font-size: 1rem; }
+
+    &:hover { border-color: #9ca3af; background: #f3f4f6; }
+
+    &.active-available { border-color: #16a34a; background: #f0fdf4; color: #15803d; }
+    &.active-installed { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
+    &.active-returned  { border-color: #d97706; background: #fffbeb; color: #b45309; }
+    &.active-faulty    { border-color: #dc2626; background: #fef2f2; color: #dc2626; }
+  }
+}
+
 // ── Field Labels ─────────────────────────────────────────────────────────────
 .field-label {
   font-weight: 600;

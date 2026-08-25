@@ -43,22 +43,30 @@
 
         <div class="ud-filter-item">
           <label class="ud-filter-label"><i class="ri-map-pin-2-line"></i> Area</label>
-          <select class="form-select ud-select" [(ngModel)]="sublocality" (change)="onFilterChange()">
-            <option value="">All Areas</option>
-            <option *ngFor="let area of internetAreas" [value]="area.sublocality">
-              {{ area.sublocality | titlecase }}
-            </option>
-          </select>
+          <app-search-select
+            [(ngModel)]="sublocality"
+            (selectionChange)="onAreaChange()"
+            [options]="areaOptions"
+            valueKey="sublocality"
+            displayKey="sublocality"
+            placeholder="All Areas"
+            emptyLabel="All Areas"
+            [allowEmpty]="true">
+          </app-search-select>
         </div>
 
         <div class="ud-filter-item">
           <label class="ud-filter-label"><i class="ri-map-pin-line"></i> Sub Area</label>
-          <select class="form-select ud-select" [(ngModel)]="subArea" (change)="onFilterChange()">
-            <option value="">All Sub Areas</option>
-            <option *ngFor="let area of subInternetArea" [value]="area.sub_area">
-              {{ area.sub_area | titlecase }}
-            </option>
-          </select>
+          <app-search-select
+            [(ngModel)]="subArea"
+            (selectionChange)="onFilterChange()"
+            [options]="filteredSubAreas"
+            valueKey="sub_area"
+            displayKey="sub_area"
+            placeholder="All Sub Areas"
+            emptyLabel="All Sub Areas"
+            [allowEmpty]="true">
+          </app-search-select>
         </div>
 
         <div class="ud-filter-item ud-search-item">
@@ -90,10 +98,11 @@
         <thead>
           <tr>
             <th style="width:52px">#</th>
-            <th><i class="ri-id-card-line me-1"></i>ID</th>
             <th><i class="ri-user-line me-1"></i>Name</th>
+            <th><i class="ri-id-card-line me-1"></i>ID</th>
             <th><i class="ri-phone-line me-1"></i>Contact</th>
             <th><i class="ri-map-pin-2-line me-1"></i>Area</th>
+            <th><i class="ri-map-pin-line me-1"></i>Sub Area</th>
             <th><i class="ri-box-3-line me-1"></i>Package</th>
             <th><i class="ri-links-line me-1"></i>Connection</th>
             <th><i class="ri-money-rupee-circle-line me-1"></i>Fee</th>
@@ -106,17 +115,16 @@
             <td class="ud-row-index">{{ (currentPage - 1) * pageSize + i + 1 }}</td>
 
             <td>
-              <span class="ud-id-badge">{{ user.internet_id }}</span>
-            </td>
-
-            <td>
               <div class="ud-user-cell">
                 <div class="ud-avatar">{{ userInitial(user) }}</div>
                 <div>
                   <div class="ud-user-name">{{ user.user_name | titlecase }}</div>
-                  <div class="ud-user-sub" *ngIf="user.sub_area">{{ user.sub_area | titlecase }}</div>
                 </div>
               </div>
+            </td>
+
+            <td>
+              <span class="ud-id-badge">{{ user.internet_id }}</span>
             </td>
 
             <td>
@@ -127,6 +135,11 @@
               <div class="ud-area-cell">
                 <span class="ud-area-tag">{{ user.sublocality | titlecase }}</span>
               </div>
+            </td>
+
+            <td>
+              <span class="ud-area-tag" *ngIf="user.sub_area">{{ user.sub_area | titlecase }}</span>
+              <span *ngIf="!user.sub_area">—</span>
             </td>
 
             <td>
@@ -167,7 +180,7 @@
           </tr>
 
           <tr *ngIf="!isLoading && pagedUsers.length === 0">
-            <td colspan="10" class="ud-empty-state">
+            <td colspan="11" class="ud-empty-state">
               <i class="ri-group-line"></i>
               <div class="ud-empty-title">No users found</div>
               <div class="ud-empty-sub">
@@ -683,8 +696,8 @@
               <div class="payment-terms">
                 <strong>Payment Method</strong>
                 <p>Bank Transfer / JazzCash / EasyPaisa</p>
-                <p class="bank-details">IBAN: PK36HABB0012345678901</p>
-                <p class="bank-details">Account Title: Ranjha7Star (Pvt) Ltd.</p>
+                <p class="bank-details">Phone: 0300-8800263</p>
+                <p class="bank-details">Name: Saqib Abbas Ranjha</p>
               </div>
             </div>
             <div class="summary-right">

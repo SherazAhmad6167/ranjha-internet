@@ -26,14 +26,9 @@ export class StockModalComponent {
       private modalService: NgbModal,
     ) {
       this.expenseForm = this.fb.group({
-        date: [''],
-        name: [''],
-        amount: [],
-        order_by: [],
-        recieved_date: [],
-        recieved_by: [],
-        payment_amount: [''],
-        remaining_amount: [''],
+        date: ['', Validators.required],
+        name: ['', Validators.required],
+        quantity: [null, [Validators.required, Validators.min(1)]],
         createdAt: [new Date()],
       });
   
@@ -49,12 +44,7 @@ export class StockModalComponent {
         this.expenseForm.patchValue({
           date: this.userData.date,
           name: this.userData.name,
-          amount: this.userData.amount,
-          order_by: this.userData.order_by,
-          recieved_date: this.userData.recieved_date,
-          recieved_by: this.userData.recieved_by,
-          payment_amount: this.userData.payment_amount,
-          remaining_amount: this.userData.remaining_amount,
+          quantity: this.userData.quantity ?? null,
           createdAt: this.userData.createdAt ?? new Date(),
         });
        

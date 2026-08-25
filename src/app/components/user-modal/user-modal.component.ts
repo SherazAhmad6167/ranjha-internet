@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
+import { SearchSelectComponent } from '../../shared/search-select/search-select.component';
 import {
   addDoc,
   collection,
@@ -21,7 +22,7 @@ import { whatsappConfig } from '../../../environment/environment';
 
 @Component({
   selector: 'app-user-modal',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, ToastrModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ToastrModule, SearchSelectComponent],
   templateUrl: './user-modal.component.html',
   styleUrl: './user-modal.component.scss',
 })
@@ -59,6 +60,7 @@ export class UserModalComponent {
     this.userForm = this.fb.group({
       internet_id: ['', [Validators.required]],
       user_name: ['', [Validators.required]],
+      date_of_birth: [''],
       address: ['', Validators.required],
       mobile_no: ['', [Validators.required]],
       sublocality: ['', [Validators.required]],
@@ -211,6 +213,7 @@ export class UserModalComponent {
       this.userForm.patchValue({
         internet_id: this.userData.internet_id ?? '',
         user_name: this.userData.user_name ?? '',
+        date_of_birth: this.userData.date_of_birth ?? '',
         address: this.userData.address ?? '',
         mobile_no: this.userData?.mobile_no || this.userData?.phone_no,
         sublocality: this.userData.sublocality ?? '',

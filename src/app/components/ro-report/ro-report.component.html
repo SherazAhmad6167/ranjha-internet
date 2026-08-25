@@ -27,12 +27,15 @@
       </div>
       <div class="ror-field-group">
         <label class="ror-filter-label"><i class="ri-map-pin-2-line"></i> Sublocality</label>
-        <select class="ror-select" [(ngModel)]="filters.sublocality">
-          <option value="">All</option>
-          <option *ngFor="let area of internetAreas" [value]="area.sublocality">
-            {{ area.sublocality | titlecase }}
-          </option>
-        </select>
+        <app-search-select
+          [(ngModel)]="filters.sublocality"
+          [options]="internetAreas"
+          valueKey="sublocality"
+          displayKey="sublocality"
+          placeholder="All"
+          emptyLabel="All"
+          [allowEmpty]="true">
+        </app-search-select>
       </div>
       <div class="ror-field-group">
         <label class="ror-filter-label"><i class="ri-wifi-line"></i> Connection Type</label>

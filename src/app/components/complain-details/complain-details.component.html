@@ -34,12 +34,16 @@
     <div class="cd-filter-bar">
       <div class="cd-filter-group">
         <label class="cd-filter-label"><i class="ri-map-pin-line"></i> Area</label>
-        <select class="cd-select" [(ngModel)]="sublocality" (change)="onFilterChange()">
-          <option value="">All Areas</option>
-          <option *ngFor="let area of internetAreas" [value]="area.sublocality">
-            {{ area.sublocality | titlecase }}
-          </option>
-        </select>
+        <app-search-select
+          [(ngModel)]="sublocality"
+          (selectionChange)="onFilterChange()"
+          [options]="internetAreas"
+          valueKey="sublocality"
+          displayKey="sublocality"
+          placeholder="All Areas"
+          emptyLabel="All Areas"
+          [allowEmpty]="true">
+        </app-search-select>
       </div>
       <div class="cd-filter-group cd-search-group">
         <label class="cd-filter-label"><i class="ri-search-line"></i> Search</label>
@@ -112,8 +116,8 @@
                 <button class="cd-action-btn edit-btn" (click)="editUser(user)" title="Edit">
                   <i class="ri-pencil-line"></i>
                 </button>
-                <button class="cd-action-btn wa-btn" (click)="sendWhatsapp(user)" title="WhatsApp">
-                  <i class="ri-whatsapp-line"></i>
+                <button class="cd-action-btn msg-btn" (click)="openMsgModal(user, msgModal)" title="Send Message">
+                  <i class="ri-send-plane-line"></i>
                 </button>
                 <button class="cd-action-btn del-btn" (click)="openDeleteModal(user.id, deleteModal)" title="Delete">
                   <i class="ri-delete-bin-7-line"></i>
@@ -147,6 +151,82 @@
 
 </div>
 
+
+<!-- ── Message Modal ── -->
+<ng-template #msgModal let-modal>
+  <div class="msg-modal-wrap">
+    <!-- Header -->
+    <div class="msg-modal-header">
+      <div class="msg-modal-title-row">
+        <div class="msg-modal-icon"><i class="ri-send-plane-line"></i></div>
+        <div>
+          <div class="msg-modal-title">Send Message</div>
+          <div class="msg-modal-sub">{{ selectedMsgUser?.user_name }}</div>
+        </div>
+      </div>
+      <button class="msg-modal-close" (click)="modal.dismiss()"><i class="ri-close-line"></i></button>
+    </div>
+
+    <!-- Status pill -->
+    <div class="msg-status-row">
+      <span class="cd-status-badge" [class.resolved]="selectedMsgUser?.status === 'close'" [class.pending]="selectedMsgUser?.status !== 'close'">
+        <i class="ri-checkbox-circle-line" *ngIf="selectedMsgUser?.status === 'close'"></i>
+        <i class="ri-time-line" *ngIf="selectedMsgUser?.status !== 'close'"></i>
+        {{ selectedMsgUser?.status === 'close' ? 'Resolved' : 'Pending' }}
+      </span>
+      <span class="msg-status-hint">{{ selectedMsgUser?.status === 'close' ? 'Resolve SMS available' : 'Operator SMS available' }}</span>
+    </div>
+
+    <!-- Cards -->
+    <div class="msg-cards">
+
+      <!-- WhatsApp -->
+      <button class="msg-card wa" (click)="sendWhatsapp(selectedMsgUser); modal.dismiss()"
+        [disabled]="selectedMsgUser?.status === 'close'">
+        <div class="msg-card-icon"><i class="ri-whatsapp-line"></i></div>
+        <div class="msg-card-body">
+          <div class="msg-card-title">WhatsApp</div>
+          <div class="msg-card-desc">Send complaint acknowledgment to customer via WhatsApp</div>
+        </div>
+        <i class="ri-arrow-right-s-line msg-card-arrow"></i>
+      </button>
+
+      <!-- Operator SMS -->
+      <button class="msg-card sms" (click)="sendSms(selectedMsgUser); modal.dismiss()"
+        [disabled]="selectedMsgUser?.status === 'close'">
+        <div class="msg-card-icon"><i class="ri-message-2-line"></i></div>
+        <div class="msg-card-body">
+          <div class="msg-card-title">Operator SMS</div>
+          <div class="msg-card-desc">Send complaint SMS to operator · {{ selectedMsgUser?.operator_phone_number }}</div>
+        </div>
+        <i class="ri-arrow-right-s-line msg-card-arrow"></i>
+      </button>
+
+      <!-- Resolve WhatsApp -->
+      <button class="msg-card resolve-wa" (click)="sendResolveWhatsapp(selectedMsgUser); modal.dismiss()"
+        [disabled]="selectedMsgUser?.status !== 'close'">
+        <div class="msg-card-icon"><i class="ri-whatsapp-line"></i></div>
+        <div class="msg-card-body">
+          <div class="msg-card-title">Resolve WhatsApp</div>
+          <div class="msg-card-desc">Send resolution message to customer via WhatsApp · {{ selectedMsgUser?.phone_number }}</div>
+        </div>
+        <i class="ri-arrow-right-s-line msg-card-arrow"></i>
+      </button>
+
+      <!-- Resolve SMS -->
+      <button class="msg-card resolve" (click)="resolveComplain(selectedMsgUser); modal.dismiss()"
+        [disabled]="selectedMsgUser?.status !== 'close'">
+        <div class="msg-card-icon"><i class="ri-message-2-line"></i></div>
+        <div class="msg-card-body">
+          <div class="msg-card-title">Resolve SMS</div>
+          <div class="msg-card-desc">Send resolution notification to customer · {{ selectedMsgUser?.phone_number }}</div>
+        </div>
+        <i class="ri-arrow-right-s-line msg-card-arrow"></i>
+      </button>
+
+    </div>
+  </div>
+</ng-template>
 
 <!-- ── Delete Modal ── -->
 <ng-template #deleteModal let-modal>

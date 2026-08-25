@@ -57,9 +57,14 @@
 
             <div class="col-md-4 col-12">
               <label class="mfm-label">Employee Name <span class="req">*</span></label>
-              <input type="text" class="mfm-input"
+              <select class="mfm-input"
                 [class.mfm-invalid]="userForm.get('name')?.invalid && userForm.get('name')?.touched"
-                formControlName="name" placeholder="Enter Name">
+                formControlName="name">
+                <option value="">-- Select Employee --</option>
+                <option *ngFor="let op of internetOperators" [value]="op.operator_name">
+                  {{ op.operator_name }}
+                </option>
+              </select>
               <span class="mfm-err"
                 *ngIf="userForm.get('name')?.hasError('required') && userForm.get('name')?.touched">
                 Name is required
@@ -70,7 +75,7 @@
               <label class="mfm-label">Mobile No <span class="req">*</span></label>
               <input type="text" class="mfm-input"
                 [class.mfm-invalid]="userForm.get('phone')?.invalid && userForm.get('phone')?.touched"
-                formControlName="phone" placeholder="Enter Phone">
+                formControlName="phone" placeholder="Auto-filled on selection" readonly>
               <span class="mfm-err"
                 *ngIf="userForm.get('phone')?.hasError('required') && userForm.get('phone')?.touched">
                 Mobile No is required

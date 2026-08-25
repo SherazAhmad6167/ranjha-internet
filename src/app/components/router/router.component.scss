@@ -1,3 +1,62 @@
+// ── Stock Stat Cards ─────────────────────────────────────────────────────────
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  background: #fff;
+
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    i { font-size: 1.5rem; }
+  }
+
+  .stat-body {
+    .stat-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 2px;
+      white-space: nowrap;
+    }
+  }
+
+  &.stat-total     { .stat-icon { background: #e0e7ff; i { color: #4f46e5; } } .stat-value { color: #4f46e5; } }
+  &.stat-available { .stat-icon { background: #dcfce7; i { color: #16a34a; } } .stat-value { color: #16a34a; } }
+  &.stat-installed { .stat-icon { background: #dbeafe; i { color: #2563eb; } } .stat-value { color: #2563eb; } }
+  &.stat-returned  { .stat-icon { background: #fef3c7; i { color: #d97706; } } .stat-value { color: #d97706; } }
+  &.stat-faulty    { .stat-icon { background: #fee2e2; i { color: #dc2626; } } .stat-value { color: #dc2626; } }
+}
+
+// ── Status Badges ─────────────────────────────────────────────────────────────
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 6px;
+  white-space: nowrap;
+
+  &.st-available { background: #dcfce7; color: #15803d; }
+  &.st-installed  { background: #dbeafe; color: #1d4ed8; }
+  &.st-returned   { background: #fef3c7; color: #b45309; }
+  &.st-faulty     { background: #fee2e2; color: #dc2626; }
+  &.st-none       { background: #f3f4f6; color: #6b7280; }
+}
+
 // ── Table ────────────────────────────────────────────────────────────────────
 .barcode-badge {
   display: inline-block;

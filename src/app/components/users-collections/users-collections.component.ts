@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { SearchSelectComponent } from '../../shared/search-select/search-select.component';
 import { Component, TemplateRef, ViewChild } from '@angular/core';
 import {
   addDoc,
@@ -25,7 +26,7 @@ import { TemplateMapperService } from '../../shared/template-mapper.service';
 
 @Component({
   selector: 'app-users-collections',
-  imports: [CommonModule, FormsModule, ToastrModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ToastrModule, ReactiveFormsModule, SearchSelectComponent],
   templateUrl: './users-collections.component.html',
   styleUrl: './users-collections.component.scss',
 })
@@ -47,6 +48,8 @@ export class UsersCollectionsComponent {
   userName: string = '';
   role: any;
   sublocality: string = '';
+  subArea: string = '';
+  subInternetArea: any[] = [];
   internetAreas: any[] = [];
   collectionForm = {
     method: '',
@@ -59,6 +62,11 @@ export class UsersCollectionsComponent {
   selectedStatus: 'paid' | 'unpaid' | 'advance' | 'remaining' = 'paid';
   nextMonths: { month: string; year: string }[] = [];
   operatorSublocalities: string[] = [];
+
+  get areaOptions(): { sublocality: string }[] {
+    if (this.role === 'admin') return this.internetAreas;
+    return this.operatorSublocalities.map((s) => ({ sublocality: s }));
+  }
   summary = {
     totalUsers: 0,
     totalBillAmount: 0,
@@ -114,6 +122,7 @@ export class UsersCollectionsComponent {
     }
 
     this.loadInternetAreas();
+    this.loadSubInternetAreas();
     this.loadUsers();
     this.loadCompanyDetails();
     this.loadInternetPackages();
@@ -179,6 +188,39 @@ export class UsersCollectionsComponent {
     }
   }
 
+  async loadSubInternetAreas() {
+    try {
+      const ref = doc(this.firestore, 'internetSubArea', 'internetSubAreaDoc');
+      const snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        this.subInternetArea = snap.data()?.['internetSubAreas'] || [];
+        this.subInternetArea.sort((a: any, b: any) =>
+          a.sub_area.localeCompare(b.sub_area),
+        );
+      }
+    } catch (error) {
+      console.error('Error loading sub internet areas', error);
+    }
+  }
+
+  get filteredSubAreas(): { sub_area: string }[] {
+    if (!this.sublocality) return this.subInternetArea;
+
+    const subAreasInArea = new Set(
+      this.users
+        .filter((u) => u.sublocality === this.sublocality && u.sub_area)
+        .map((u) => u.sub_area as string),
+    );
+
+    return this.subInternetArea.filter((s) => subAreasInArea.has(s.sub_area));
+  }
+
+  onAreaChange() {
+    this.subArea = '';
+    this.onFilterChange();
+  }
+
   get pagedUsers() {
     const start = (this.currentPage - 1) * this.pageSize;
     const end = start + this.pageSize;
@@ -211,6 +253,7 @@ export class UsersCollectionsComponent {
             docId: userDocId,
             address: user['address'],
             sublocality: user['sublocality'] || '',
+            sub_area: user['sub_area'] || '',
             connection_type: bill.type,
             createdAt: bill.createdAt,
             installationDate: user['installation_date'],
@@ -219,6 +262,7 @@ export class UsersCollectionsComponent {
             internet_package_fee: user['internet_package_fee'],
             extra_advance: user['extra_advance'] || 0,
             phone_no: user['phone_no'],
+            mobile_no: user['mobile_no'],
           };
 
           if (bill.status === 'paid') {
@@ -238,6 +282,7 @@ export class UsersCollectionsComponent {
               collected_bank: bill.collected_bank,
               advancePayments: advances || [],
               phone_no: user['phone_no'],
+              mobile_no: user['mobile_no'],
             });
           } else {
             const key = `${user['internet_id']}_${bill.month}_${bill.year}`;
@@ -289,9 +334,11 @@ export class UsersCollectionsComponent {
             docId: userDocId,
             address: user['address'],
             sublocality: user['sublocality'] || '',
+            sub_area: user['sub_area'] || '',
             connection_type: user['connection_type'],
             createdAt: adv.collected_date,
             phone_no: user['phone_no'],
+            mobile_no: user['mobile_no'],
 
             month: advanceMonthText,
             year: '',
@@ -427,7 +474,8 @@ export class UsersCollectionsComponent {
           : [];
 
       const matchesMonth =
-        !this.selectedMonth || user.month?.toLowerCase() === this.selectedMonth;
+        !this.selectedMonth || user.month?.toLowerCase().includes(this.selectedMonth);
+      const matchesSubArea = !this.subArea || user.sub_area === this.subArea;
       let matchesSublocality = true;
 
       if (this.role === 'operator') {
@@ -450,7 +498,7 @@ export class UsersCollectionsComponent {
       }
 
       return (
-        matchesSearch && matchesStatus && matchesSublocality && matchesMonth
+        matchesSearch && matchesStatus && matchesSublocality && matchesMonth && matchesSubArea
       );
     });
 
@@ -1031,6 +1079,7 @@ export class UsersCollectionsComponent {
 
     this.isSubmitting = true;
     try {
+      const collectedNow = Number(this.collectionForm.collected_amount || 0);
       const userDocRef = doc(
         this.firestore,
         'users',
@@ -1238,13 +1287,24 @@ export class UsersCollectionsComponent {
       this.showCollectModal = false;
       this.prepareReceipt();
       this.showReceiptModal = true;
+
+      // Queued online and offline alike — the SMS doc syncs with the bill.
+      const smsQueued = this.autoSendPaymentSms(this.selectedBill, collectedNow);
+
       if (!navigator.onLine) {
         this.toastr.info(
           'Saved offline. Will sync when connection is restored.',
         );
       } else {
         this.toastr.success('Bill collected successfully');
-        this.autoSendPaymentSms(this.selectedBill);
+      }
+
+      if (smsQueued) {
+        this.toastr.info('Payment SMS queued');
+      } else {
+        this.toastr.warning(
+          'Payment SMS not sent — check the customer number and the Payment Received template',
+        );
       }
       const page = this.currentPage;
       console.log('before save', page);
@@ -1266,6 +1326,9 @@ export class UsersCollectionsComponent {
     this.isBulkSubmitting = true;
 
     try {
+      // Rows that really got money collected, so only they get an SMS.
+      const collected: { row: any; amount: number }[] = [];
+
       for (const row of this.selectedBulkBills) {
         const userDocRef = doc(this.firestore, 'users', row.docId);
         const userSnap = await getDoc(userDocRef);
@@ -1273,6 +1336,7 @@ export class UsersCollectionsComponent {
 
         const userData = userSnap.data();
         const bills = userData['bills'] || [];
+        let rowCollected = 0;
 
         bills.forEach((bill: any) => {
           const match = row.bills?.some(
@@ -1296,6 +1360,8 @@ export class UsersCollectionsComponent {
             bill.collected_method = 'cash';
             bill.collected_id = '';
             bill.collected_bank = null;
+
+            rowCollected += paidNow;
 
             // 🔹 Same adjustment logic as submitCollection
             let adjustAmount = paidNow;
@@ -1329,7 +1395,18 @@ export class UsersCollectionsComponent {
         });
 
         updateDoc(userDocRef, { bills });
+
+        if (rowCollected > 0) {
+          collected.push({ row, amount: rowCollected });
+        }
       }
+
+      // One SMS per user, queued one by one, online and offline alike.
+      let smsQueued = 0;
+      for (const entry of collected) {
+        if (this.autoSendPaymentSms(entry.row, entry.amount)) smsQueued++;
+      }
+      const smsSkipped = collected.length - smsQueued;
 
       if (!navigator.onLine) {
         this.toastr.info(
@@ -1337,9 +1414,16 @@ export class UsersCollectionsComponent {
         );
       } else {
         this.toastr.success('Selected bills collected successfully');
-        for (const row of this.selectedBulkBills) {
-          this.autoSendPaymentSms(row);
-        }
+      }
+
+      if (smsQueued) {
+        this.toastr.info(`Payment SMS queued for ${smsQueued} user(s)`);
+      }
+
+      if (smsSkipped) {
+        this.toastr.warning(
+          `No SMS for ${smsSkipped} user(s) — missing number or template`,
+        );
       }
 
       this.isBulkMode = false;
@@ -1436,20 +1520,45 @@ export class UsersCollectionsComponent {
     }
   }
 
+  /**
+   * Reads a template and keeps a copy in localStorage, so the screen still has
+   * one after an offline cold start where Firestore cannot serve the document
+   * from its own cache either.
+   */
   async getTemplate(type: string): Promise<string> {
-    const ref = doc(this.firestore, `messageTemplates/${type}`);
-    const snap = await getDoc(ref);
+    const cacheKey = `messageTemplate_${type}`;
 
-    if (snap.exists()) {
-      return snap.data()['message'] || '';
+    try {
+      const ref = doc(this.firestore, `messageTemplates/${type}`);
+      const snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        const message = snap.data()['message'] || '';
+        localStorage.setItem(cacheKey, message);
+        return message;
+      }
+
+      return localStorage.getItem(cacheKey) || '';
+    } catch {
+      return localStorage.getItem(cacheKey) || '';
     }
-
-    return '';
   }
 
   openWhatsappModal(user: any) {
     this.selectedWhatsappUser = user;
     this.modalService.open(this.whatsappModal, { centered: true });
+  }
+
+  /**
+   * The contact number to text for a row.
+   *
+   * `mobile_no` is the field the user form actually requires; `phone_no` is a
+   * legacy field that is often absent or literally '0'. Same precedence the
+   * new-connection and user-details screens use.
+   */
+  private resolveUserPhone(user: any): string {
+    const phoneNo = user?.phone_no;
+    return phoneNo && phoneNo !== '0' ? phoneNo : user?.mobile_no || '';
   }
 
   formatPhoneForSms(phone: string): string | null {
@@ -1463,7 +1572,7 @@ export class UsersCollectionsComponent {
   }
 
   async sendSmsReminder(user: any) {
-    const phone = this.formatPhoneForSms(user.phone_no);
+    const phone = this.formatPhoneForSms(this.resolveUserPhone(user));
     if (!phone) { this.toastr.error('No valid phone number'); return; }
     const message = this.mapReminderTemplate(this.paymentReminderTemplate, user);
     if (!message) { this.toastr.error('Template not loaded'); return; }
@@ -1474,7 +1583,7 @@ export class UsersCollectionsComponent {
   }
 
   async sendSmsDisconnection(user: any) {
-    const phone = this.formatPhoneForSms(user.phone_no);
+    const phone = this.formatPhoneForSms(this.resolveUserPhone(user));
     if (!phone) { this.toastr.error('No valid phone number'); return; }
     const message = this.mapOverdueTemplate(this.overdue, user);
     if (!message) { this.toastr.error('Template not loaded'); return; }
@@ -1485,7 +1594,7 @@ export class UsersCollectionsComponent {
   }
 
   async sendSmsPaymentReceived(user: any) {
-    const phone = this.formatPhoneForSms(user.phone_no);
+    const phone = this.formatPhoneForSms(this.resolveUserPhone(user));
     if (!phone) { this.toastr.error('No valid phone number'); return; }
     const message = this.mapTemplate(this.paymentRecievedTemplate, user);
     if (!message) { this.toastr.error('Template not loaded'); return; }
@@ -1495,19 +1604,59 @@ export class UsersCollectionsComponent {
     } catch { this.toastr.error('Failed to queue SMS'); }
   }
 
-  private async autoSendPaymentSms(billData: any) {
-    const phone = this.formatPhoneForSms(billData.phone_no);
-    if (!phone || !this.paymentRecievedTemplate) return;
-    const message = this.mapTemplate(this.paymentRecievedTemplate, billData);
-    if (!message) return;
-    try {
-      await addDoc(collection(this.firestore, 'sms'), { phone, message, status: 'pending', createdAt: new Date().toISOString() });
-      this.toastr.info('Payment SMS queued automatically');
-    } catch { console.error('Auto SMS failed for', phone); }
+  /**
+   * Queues the "Payment Received" SMS for one collected bill.
+   *
+   * Nothing is awaited on purpose: while offline Firestore never settles a
+   * write promise until the server acknowledges it, so awaiting here would
+   * stall the collection flow. The doc is written to the local cache
+   * immediately and the SDK syncs it once the connection is back.
+   *
+   * Returns whether a message was actually queued.
+   */
+  private autoSendPaymentSms(billData: any, collectedAmount?: any): boolean {
+    const phone = this.formatPhoneForSms(this.resolveUserPhone(billData));
+
+    if (!phone) {
+      console.warn(
+        'Payment SMS skipped — no usable number for',
+        billData?.user_name,
+        billData?.internet_id,
+      );
+      return false;
+    }
+
+    if (!this.paymentRecievedTemplate) {
+      console.warn(
+        'Payment SMS skipped — the "Payment Received" template is empty in Settings',
+      );
+      return false;
+    }
+
+    const message = this.templateMapper.map(
+      this.paymentRecievedTemplate,
+      billData,
+      {
+        ...this.templateCtx(),
+        amount:
+          collectedAmount ?? billData?.collected_amount ?? billData?.amount,
+        paymentDate: new Date(),
+      },
+    );
+    if (!message) return false;
+
+    addDoc(collection(this.firestore, 'sms'), {
+      phone,
+      message,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    }).catch((err) => console.error('Auto payment SMS failed for', phone, err));
+
+    return true;
   }
 
   disconnectionWarning(user: any){
-    const formattedPhone = this.formatPhoneNumber(user.phone_no);
+    const formattedPhone = this.formatPhoneNumber(this.resolveUserPhone(user));
 
     const message = this.mapOverdueTemplate(this.overdue, user);
     if (!message) {
@@ -1519,7 +1668,7 @@ export class UsersCollectionsComponent {
   }
 
   paymentRemainder(user: any){
-     const formattedPhone = this.formatPhoneNumber(user.phone_no);
+     const formattedPhone = this.formatPhoneNumber(this.resolveUserPhone(user));
 
     const message = this.mapReminderTemplate(this.paymentReminderTemplate, user);
     if (!message) {
@@ -1531,7 +1680,7 @@ export class UsersCollectionsComponent {
   }
 
   async sendWhatsapp(user: any) {
-    const formattedPhone = this.formatPhoneNumber(user.phone_no);
+    const formattedPhone = this.formatPhoneNumber(this.resolveUserPhone(user));
 
     const message = this.mapTemplate(this.paymentRecievedTemplate, user);
     if (!message) {

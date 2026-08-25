@@ -54,15 +54,23 @@
             </div>
 
             <div class="col-md-4">
+              <label class="rdm-label">Operator Mobile No</label>
+              <input type="text" class="rdm-input" formControlName="operator_phone"
+                placeholder="Auto-filled on selection" readonly>
+            </div>
+
+            <div class="col-md-4">
               <label class="rdm-label">Area</label>
-              <select class="rdm-input rdm-select"
-                [class.rdm-invalid]="expenseForm.get('sublocality')?.invalid && expenseForm.get('sublocality')?.touched"
-                formControlName="sublocality">
-                <option value="" disabled>Select area</option>
-                <option *ngFor="let area of internetAreas" [value]="area.sublocality">
-                  {{ area.sublocality | titlecase }}
-                </option>
-              </select>
+              <app-search-select
+                formControlName="sublocality"
+                [options]="internetAreas"
+                valueKey="sublocality"
+                displayKey="sublocality"
+                placeholder="Select area"
+                [allowEmpty]="true"
+                emptyLabel="All Areas"
+                [isInvalid]="!!(expenseForm.get('sublocality')?.invalid && expenseForm.get('sublocality')?.touched)">
+              </app-search-select>
             </div>
 
             <div class="col-md-4">

@@ -9,6 +9,7 @@ export interface TemplateContext {
   supportNumber?: string;
   complaintNumber?: string;
   complaintDate?: any;
+  resolvedDate?: any;
   amount?: any;
   overdueAmount?: any;
   dueDate?: any;
@@ -73,9 +74,10 @@ export class TemplateMapperService {
 
     const complaintNo = ctx.complaintNumber || d.complain_no || customerId;
     const complaintDate = this.date(ctx.complaintDate ?? d.complain_date);
+    const resolvedDate = this.date(ctx.resolvedDate ?? d.complain_close_date) || this.date(new Date());
     const complaintDetails = d.complain || d.complaint || '';
     const technicianName = d.operator_name || '';
-    const technicianNumber = d.operator_phone_number || d.operator_no || '';
+    const technicianNumber = d.operator_phone_number || d.operator_phone || d.operator_no || '';
 
     const areaName =
       ctx.areaName || d.sublocality || d.area || d.sub_area || '';
@@ -104,9 +106,17 @@ export class TemplateMapperService {
       ['Payment Date', paymentDate],
       ['Complaint No', String(complaintNo)],
       ['Complaint Date', complaintDate],
+      ['Resolved Date', resolvedDate],
       ['Complaint Details', complaintDetails],
       ['Technician Name', technicianName],
       ['Technician Number', technicianNumber],
+      ['Operator Name', technicianName],
+      ['Operator Phone', technicianNumber],
+      ['Total Recovery', this.num(d.total_recovery)],
+      ['Total Expenses', this.num(d.total_expenses)],
+      ['Remaining Amount', this.num(d.remaining_amount ?? d.remainingAmount)],
+      ['Received By', d.recieved_by || d.received_by || ''],
+      ['Recovery Date', this.date(d.date) || String(d.date || '')],
       ['Maintenance Date', maintenanceDate],
       ['Start Time', startTime],
       ['End Time', endTime],

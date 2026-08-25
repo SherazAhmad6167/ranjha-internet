@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { SearchSelectComponent } from '../../shared/search-select/search-select.component';
 import { Component } from '@angular/core';
 import {
   addDoc,
@@ -19,7 +20,7 @@ import { CustomerStatusModalComponent } from '../customer-status-modal/customer-
 
 @Component({
   selector: 'app-customer-status',
-  imports: [FormsModule, CommonModule, ReactiveFormsModule, ToastrModule],
+  imports: [FormsModule, CommonModule, ReactiveFormsModule, ToastrModule, SearchSelectComponent],
   templateUrl: './customer-status.component.html',
   styleUrl: './customer-status.component.scss'
 })

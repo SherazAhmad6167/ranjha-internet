@@ -85,13 +85,17 @@
                 <!-- Sublocality -->
                 <div class="col-lg-3 col-md-6">
                     <label class="gc-label"><i class="ri-map-pin-2-line me-1"></i> Area</label>
-                    <select class="form-select gc-select" [(ngModel)]="sublocality" [disabled]="isLoading">
-                        <option value="" disabled>Select Area</option>
-                        <option value="all">All Areas</option>
-                        <option *ngFor="let area of internetAreas" [value]="area.sublocality">
-                            {{ area.sublocality | titlecase }}
-                        </option>
-                    </select>
+                    <app-search-select
+                      [(ngModel)]="sublocality"
+                      [options]="internetAreas"
+                      valueKey="sublocality"
+                      displayKey="sublocality"
+                      placeholder="Select Area"
+                      emptyLabel="All Areas"
+                      emptyValue="all"
+                      [allowEmpty]="true"
+                      [disabled]="isLoading">
+                    </app-search-select>
                 </div>
 
                 <!-- Summary bar + actions -->

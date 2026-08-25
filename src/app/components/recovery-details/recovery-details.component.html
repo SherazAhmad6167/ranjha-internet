@@ -110,6 +110,9 @@
                 <button class="rd-action-btn edit-btn" title="Edit" (click)="editUser(user)">
                   <i class="ri-pencil-line"></i>
                 </button>
+                <button class="rd-action-btn msg-btn" title="Send Message" (click)="openMsgModal(user, msgModal)">
+                  <i class="ri-send-plane-line"></i>
+                </button>
                 <button class="rd-action-btn del-btn" title="Delete" (click)="openDeleteModal(user.id, deleteModal)">
                   <i class="ri-delete-bin-7-line"></i>
                 </button>
@@ -126,6 +129,40 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Message Modal -->
+    <ng-template #msgModal let-modal>
+      <div class="msg-modal-wrap">
+        <div class="msg-modal-header">
+          <div class="msg-modal-title-row">
+            <div class="msg-modal-icon"><i class="ri-send-plane-line"></i></div>
+            <div>
+              <div class="msg-modal-title">Send Message</div>
+              <div class="msg-modal-sub">{{ selectedMsgUser?.operator_name }}</div>
+            </div>
+          </div>
+          <button class="msg-modal-close" (click)="modal.dismiss()"><i class="ri-close-line"></i></button>
+        </div>
+        <div class="msg-cards">
+          <button class="msg-card wa" (click)="sendWhatsapp(selectedMsgUser); modal.dismiss()">
+            <div class="msg-card-icon"><i class="ri-whatsapp-line"></i></div>
+            <div class="msg-card-body">
+              <div class="msg-card-title">WhatsApp</div>
+              <div class="msg-card-desc">Send recovery details via WhatsApp · {{ selectedMsgUser?.operator_phone }}</div>
+            </div>
+            <i class="ri-arrow-right-s-line msg-card-arrow"></i>
+          </button>
+          <button class="msg-card sms" (click)="sendSms(selectedMsgUser); modal.dismiss()">
+            <div class="msg-card-icon"><i class="ri-message-2-line"></i></div>
+            <div class="msg-card-body">
+              <div class="msg-card-title">SMS</div>
+              <div class="msg-card-desc">Send recovery SMS to operator · {{ selectedMsgUser?.operator_phone }}</div>
+            </div>
+            <i class="ri-arrow-right-s-line msg-card-arrow"></i>
+          </button>
+        </div>
+      </div>
+    </ng-template>
 
     <!-- Delete Modal -->
     <ng-template #deleteModal let-modal>

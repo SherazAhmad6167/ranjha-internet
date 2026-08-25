@@ -71,7 +71,7 @@ $accent-border: #ddd6fe;
 .close-tab.active .cs-tab-badge  { background: #fee2e2; color: #b91c1c; }
 
 .cs-filter-bar {
-  display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap;
+  display: flex; gap: 12px; flex-wrap: wrap;
   padding: 14px 20px; border-bottom: 1px solid #f1f5f9; background: #fafbfc;
 }
 .cs-filter-group { display: flex; flex-direction: column; gap: 4px; }

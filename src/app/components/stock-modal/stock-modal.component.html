@@ -56,90 +56,17 @@
             </div>
 
             <div class="col-md-6 col-12">
-              <label class="stm-label">Price <span class="req">*</span></label>
-              <div class="stm-prefix-wrap">
-                <span class="stm-prefix">Rs</span>
-                <input type="number" class="stm-input stm-prefixed"
-                  [class.stm-invalid]="expenseForm.get('amount')?.invalid && expenseForm.get('amount')?.touched"
-                  formControlName="amount" placeholder="0">
-              </div>
+              <label class="stm-label">Total Quantity <span class="req">*</span></label>
+              <input type="number" class="stm-input" min="1"
+                [class.stm-invalid]="expenseForm.get('quantity')?.invalid && expenseForm.get('quantity')?.touched"
+                formControlName="quantity" placeholder="0">
               <span class="stm-err"
-                *ngIf="expenseForm.get('amount')?.hasError('required') && expenseForm.get('amount')?.touched">
-                Price is required
+                *ngIf="expenseForm.get('quantity')?.hasError('required') && expenseForm.get('quantity')?.touched">
+                Total Quantity is required
               </span>
-            </div>
-
-            <div class="col-md-6 col-12">
-              <label class="stm-label">Order By <span class="req">*</span></label>
-              <input type="text" class="stm-input"
-                [class.stm-invalid]="expenseForm.get('order_by')?.invalid && expenseForm.get('order_by')?.touched"
-                formControlName="order_by" placeholder="Enter Order By">
               <span class="stm-err"
-                *ngIf="expenseForm.get('order_by')?.hasError('required') && expenseForm.get('order_by')?.touched">
-                Order By is required
-              </span>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-      <!-- Section: Receipt Details -->
-      <div class="stm-section">
-        <div class="stm-section-head">
-          <div class="stm-section-icon si-cyan"><i class="ri-bill-line"></i></div>
-          <span class="stm-section-title">Receipt Details</span>
-        </div>
-        <div class="stm-section-body">
-          <div class="row g-3">
-
-            <div class="col-md-6 col-12">
-              <label class="stm-label">Received Date <span class="req">*</span></label>
-              <input type="date" class="stm-input"
-                [class.stm-invalid]="expenseForm.get('recieved_date')?.invalid && expenseForm.get('recieved_date')?.touched"
-                formControlName="recieved_date">
-              <span class="stm-err"
-                *ngIf="expenseForm.get('recieved_date')?.hasError('required') && expenseForm.get('recieved_date')?.touched">
-                Received Date is required
-              </span>
-            </div>
-
-            <div class="col-md-6 col-12">
-              <label class="stm-label">Received By <span class="req">*</span></label>
-              <input type="text" class="stm-input"
-                [class.stm-invalid]="expenseForm.get('recieved_by')?.invalid && expenseForm.get('recieved_by')?.touched"
-                formControlName="recieved_by" placeholder="Enter Received By">
-              <span class="stm-err"
-                *ngIf="expenseForm.get('recieved_by')?.hasError('required') && expenseForm.get('recieved_by')?.touched">
-                Received By is required
-              </span>
-            </div>
-
-            <div class="col-md-6 col-12">
-              <label class="stm-label">Payment Amount <span class="req">*</span></label>
-              <div class="stm-prefix-wrap">
-                <span class="stm-prefix">Rs</span>
-                <input type="number" class="stm-input stm-prefixed"
-                  [class.stm-invalid]="expenseForm.get('payment_amount')?.invalid && expenseForm.get('payment_amount')?.touched"
-                  formControlName="payment_amount" placeholder="0">
-              </div>
-              <span class="stm-err"
-                *ngIf="expenseForm.get('payment_amount')?.hasError('required') && expenseForm.get('payment_amount')?.touched">
-                Payment Amount is required
-              </span>
-            </div>
-
-            <div class="col-md-6 col-12">
-              <label class="stm-label">Remaining Amount <span class="req">*</span></label>
-              <div class="stm-prefix-wrap">
-                <span class="stm-prefix">Rs</span>
-                <input type="number" class="stm-input stm-prefixed"
-                  [class.stm-invalid]="expenseForm.get('remaining_amount')?.invalid && expenseForm.get('remaining_amount')?.touched"
-                  formControlName="remaining_amount" placeholder="0">
-              </div>
-              <span class="stm-err"
-                *ngIf="expenseForm.get('remaining_amount')?.hasError('required') && expenseForm.get('remaining_amount')?.touched">
-                Remaining Amount is required
+                *ngIf="expenseForm.get('quantity')?.hasError('min') && expenseForm.get('quantity')?.touched">
+                Quantity must be at least 1
               </span>
             </div>
 

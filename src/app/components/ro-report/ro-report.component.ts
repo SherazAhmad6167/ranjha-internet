@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { SearchSelectComponent } from '../../shared/search-select/search-select.component';
 import { Component } from '@angular/core';
 import {
   collection,
@@ -48,7 +49,7 @@ interface User {
 
 @Component({
   selector: 'app-ro-report',
-  imports: [CommonModule, FormsModule, ToastrModule],
+  imports: [CommonModule, FormsModule, ToastrModule, SearchSelectComponent],
   templateUrl: './ro-report.component.html',
   styleUrl: './ro-report.component.scss',
 })

@@ -67,14 +67,15 @@
 
             <div class="col-md-4">
               <label class="cm-label">Area <span class="req">*</span></label>
-              <select class="cm-input cm-select"
-                [class.cm-invalid]="userForm.get('sublocality')?.invalid && userForm.get('sublocality')?.touched"
-                formControlName="sublocality">
-                <option value="" disabled>Select area</option>
-                <option *ngFor="let area of internetAreas" [value]="area.sublocality">
-                  {{ area.sublocality | titlecase }}
-                </option>
-              </select>
+              <app-search-select
+                formControlName="sublocality"
+                [options]="internetAreas"
+                valueKey="sublocality"
+                displayKey="sublocality"
+                placeholder="Select area"
+                [allowEmpty]="false"
+                [isInvalid]="!!(userForm.get('sublocality')?.invalid && userForm.get('sublocality')?.touched)">
+              </app-search-select>
               <span class="cm-err" *ngIf="userForm.get('sublocality')?.hasError('required') && userForm.get('sublocality')?.touched">
                 Area is required
               </span>

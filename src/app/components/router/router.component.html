@@ -13,6 +13,55 @@
     </button>
   </div>
 
+  <!-- ── Stock Stats ─────────────────────────────────────────────────────── -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-xl">
+      <div class="stat-card stat-total">
+        <div class="stat-icon"><i class="ri-router-line"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ totalRouters }}</div>
+          <div class="stat-label">Total Routers</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl">
+      <div class="stat-card stat-available">
+        <div class="stat-icon"><i class="ri-checkbox-circle-line"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ countByStatus('Available') }}</div>
+          <div class="stat-label">Available</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl">
+      <div class="stat-card stat-installed">
+        <div class="stat-icon"><i class="ri-home-wifi-line"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ countByStatus('Installed') }}</div>
+          <div class="stat-label">Installed</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-6 col-xl">
+      <div class="stat-card stat-returned">
+        <div class="stat-icon"><i class="ri-arrow-go-back-line"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ countByStatus('Returned') }}</div>
+          <div class="stat-label">Returned</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-6 col-xl">
+      <div class="stat-card stat-faulty">
+        <div class="stat-icon"><i class="ri-error-warning-line"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ countByStatus('Faulty') }}</div>
+          <div class="stat-label">Faulty</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Loading ─────────────────────────────────────────────────────────── -->
   <div *ngIf="isLoading" class="loading-overlay">
     <div class="spinner-border text-primary" role="status">
@@ -69,6 +118,8 @@
               <th style="width:50px">#</th>
               <th>Date</th>
               <th>Barcode / Serial No.</th>
+              <th class="text-center" style="width:110px">Status</th>
+              <th class="text-center" style="width:80px">Qty</th>
               <th>Operator</th>
               <th>Given By</th>
               <th>Recorded At</th>
@@ -84,6 +135,12 @@
                   <i class="ri-barcode-line me-1"></i>{{ r.barcode }}
                 </span>
               </td>
+              <td class="text-center">
+                <span class="status-badge" [ngClass]="statusClass(r.status)">
+                  <i class="me-1" [ngClass]="statusIcon(r.status)"></i>{{ r.status || '—' }}
+                </span>
+              </td>
+              <td class="text-center fw-semibold">{{ r.quantity || '—' }}</td>
               <td>{{ r.operator }}</td>
               <td>{{ r.givenBy }}</td>
               <td>

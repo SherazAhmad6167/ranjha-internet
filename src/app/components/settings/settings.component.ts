@@ -26,6 +26,9 @@ export class SettingsComponent {
     { id: 'maintenance', title: 'Maintenance Notice', message: '' },
     { id: 'upgrade', title: 'Upgrade Offer', message: '' },
     { id: 'restoration', title: 'Service Restoration', message: '' },
+    { id: 'complainResolve', title: 'Complaint Resolved', message: '' },
+    { id: 'birthday',  title: 'Birthday Wish',     message: '' },
+    { id: 'recovery',  title: 'Recovery Details',  message: '' },
   ];
 
   constructor(
@@ -73,7 +76,10 @@ export class SettingsComponent {
       overdue:      'ri-error-warning-line',
       maintenance:  'ri-tools-line',
       upgrade:      'ri-rocket-line',
-      restoration:  'ri-wifi-line',
+      restoration:     'ri-wifi-line',
+      complainResolve: 'ri-checkbox-circle-line',
+      birthday:        'ri-cake-line',
+      recovery:        'ri-money-dollar-circle-line',
     };
     return map[id] || 'ri-message-2-line';
   }

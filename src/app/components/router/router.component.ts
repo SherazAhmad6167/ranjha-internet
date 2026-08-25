@@ -9,12 +9,17 @@ import { ToastrService } from 'ngx-toastr';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { RouterModalComponent } from '../router-modal/router-modal.component';
 
+export type RouterStatus = 'Available' | 'Installed' | 'Returned' | 'Faulty';
+
 interface RouterRecord {
   id: string;
   date: string;
   barcode: string;
   operator: string;
   givenBy: string;
+  status: RouterStatus;
+  quantity: number;
+  notes?: string;
   createdAt: any;
   updatedAt: any;
 }
@@ -278,6 +283,35 @@ export class RouterComponent implements OnInit {
 </body>
 </html>`);
     win.document.close();
+  }
+
+  // ── Stock Stats ──────────────────────────────────────────────────────────────
+
+  /** Drives both the summary cards and the status badge colours. */
+  readonly statusList: { key: RouterStatus; icon: string; cls: string }[] = [
+    { key: 'Available', icon: 'ri-checkbox-circle-line', cls: 'st-available' },
+    { key: 'Installed', icon: 'ri-home-wifi-line',       cls: 'st-installed' },
+    { key: 'Returned',  icon: 'ri-arrow-go-back-line',   cls: 'st-returned'  },
+    { key: 'Faulty',    icon: 'ri-error-warning-line',   cls: 'st-faulty'    },
+  ];
+
+  /** Total units carrying the given status. */
+  countByStatus(status: string): number {
+    return this.records
+      .filter(r => r.status === status)
+      .reduce((s, r) => s + (Number(r.quantity) || 0), 0);
+  }
+
+  get totalRouters(): number {
+    return this.records.reduce((s, r) => s + (Number(r.quantity) || 0), 0);
+  }
+
+  statusClass(status: string): string {
+    return this.statusList.find(s => s.key === status)?.cls || 'st-none';
+  }
+
+  statusIcon(status: string): string {
+    return this.statusList.find(s => s.key === status)?.icon || 'ri-question-line';
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────────

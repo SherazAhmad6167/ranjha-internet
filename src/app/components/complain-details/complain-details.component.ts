@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { SearchSelectComponent } from '../../shared/search-select/search-select.component';
 import { Component } from '@angular/core';
 import {
   addDoc,
@@ -9,6 +10,7 @@ import {
   getDoc,
   getDocs,
   query,
+  updateDoc,
   where,
 } from '@angular/fire/firestore';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -19,7 +21,7 @@ import { TemplateMapperService } from '../../shared/template-mapper.service';
 
 @Component({
   selector: 'app-complain-details',
-  imports: [CommonModule, FormsModule, ToastrModule],
+  imports: [CommonModule, FormsModule, ToastrModule, SearchSelectComponent],
   templateUrl: './complain-details.component.html',
   styleUrl: './complain-details.component.scss',
 })
@@ -30,6 +32,7 @@ export class ComplainDetailsComponent {
   users: any[] = [];
   filteredUsers: any[] = [];
   selectedDeleteId: string | null = null;
+  selectedMsgUser: any = null;
   currentPage = 1;
   pageSize = 10;
   totalPages = 1;
@@ -59,6 +62,7 @@ export class ComplainDetailsComponent {
     this.loadExpenses();
     this.loadInternetAreas();
     this.complainTemplate = await this.getTemplate('complaint');
+    this.resolveTemplate = await this.getTemplate('complainResolve');
   }
 
   async getTemplate(type: string): Promise<string> {
@@ -201,6 +205,11 @@ export class ComplainDetailsComponent {
     this.openComplainModal(user);
   }
 
+  openMsgModal(user: any, modal: any) {
+    this.selectedMsgUser = user;
+    this.modalService.open(modal, { centered: true, size: 'sm' });
+  }
+
   openDeleteModal(id: string, modal: any) {
     this.selectedDeleteId = id;
     this.modalService.open(modal, { centered: true });
@@ -255,16 +264,71 @@ export class ComplainDetailsComponent {
   }
 
   complainTemplate: any;
+  resolveTemplate: any;
+
+  formatPhoneForSms(phone: string): string | null {
+    if (!phone) return null;
+    const cleaned = phone.toString().trim().replace(/[\s\-()]/g, '');
+    if (cleaned.startsWith('+92') && cleaned.length === 13) return cleaned;
+    if (cleaned.startsWith('92') && cleaned.length === 12) return '+' + cleaned;
+    if (cleaned.startsWith('0') && cleaned.length === 11) return '+92' + cleaned.slice(1);
+    if (cleaned.length === 10) return '+92' + cleaned;
+    return null;
+  }
+
+  async sendSms(user: any) {
+    const phone = this.formatPhoneForSms(user.operator_phone_number);
+    if (!phone) { this.toastr.error('No valid operator phone number'); return; }
+    const message = this.mapTemplate(this.complainTemplate, user);
+    if (!message) { this.toastr.error('Message template not loaded'); return; }
+    try {
+      await addDoc(collection(this.firestore, 'sms'), { phone, message, status: 'pending', createdAt: new Date().toISOString() });
+      this.toastr.success('SMS queued successfully');
+    } catch { this.toastr.error('Failed to queue SMS'); }
+  }
+
+  async resolveComplain(user: any) {
+    try {
+      const ref = doc(this.firestore, 'complainDetails', user.id);
+      const closeDate = new Date().toLocaleDateString('en-PK');
+      await updateDoc(ref, { status: 'close', complain_close_date: closeDate, updatedAt: new Date() });
+
+      const phone = this.formatPhoneForSms(user.phone_number);
+      if (phone && this.resolveTemplate) {
+        const message = this.templateMapper.map(this.resolveTemplate, user, {
+          supportNumber: this.companyDetail?.complain_no1 || undefined,
+          complaintDate: user.complain_date,
+          resolvedDate: closeDate,
+        });
+        if (message) {
+          await addDoc(collection(this.firestore, 'sms'), { phone, message, status: 'pending', createdAt: new Date().toISOString() });
+        }
+      }
+
+      this.toastr.success('Complaint resolved & SMS queued');
+      this.loadExpenses();
+    } catch {
+      this.toastr.error('Failed to resolve complaint');
+    }
+  }
 
   async sendWhatsapp(user: any) {
     const formattedPhone = this.formatPhoneNumber(user.phone_number);
-
     const message = this.mapTemplate(this.complainTemplate, user);
-    if (!message) {
-      this.toastr.error('Message template not loaded');
-      return;
-    }
+    if (!message) { this.toastr.error('Message template not loaded'); return; }
+    this.sendWelcomeMessage(formattedPhone, message);
+  }
 
+  sendResolveWhatsapp(user: any) {
+    const formattedPhone = this.formatPhoneNumber(user.phone_number);
+    if (!this.resolveTemplate) { this.toastr.error('Resolve template not loaded'); return; }
+    const closeDate = user.complain_close_date || new Date().toLocaleDateString('en-PK');
+    const message = this.templateMapper.map(this.resolveTemplate, user, {
+      supportNumber: this.companyDetail?.complain_no1 || undefined,
+      complaintDate: user.complain_date,
+      resolvedDate: closeDate,
+    });
+    if (!message) { this.toastr.error('Resolve template is empty'); return; }
     this.sendWelcomeMessage(formattedPhone, message);
   }
 

@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { SearchSelectComponent } from '../../shared/search-select/search-select.component';
 import { Component, Input } from '@angular/core';
 import {
   addDoc,
@@ -19,7 +20,7 @@ import { ToastrModule, ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-recovery-detail-modal',
-  imports: [CommonModule, ReactiveFormsModule, ToastrModule],
+  imports: [CommonModule, ReactiveFormsModule, ToastrModule, SearchSelectComponent],
   templateUrl: './recovery-detail-modal.component.html',
   styleUrl: './recovery-detail-modal.component.scss',
 })
@@ -48,6 +49,7 @@ export class RecoveryDetailModalComponent {
     this.expenseForm = this.fb.group({
       date: ['', Validators.required],
       operator_name: ['', [Validators.required]],
+      operator_phone: [''],
       total_recovery: [, Validators.required],
       total_expenses: [''],
       remaining_amount: [''],
@@ -56,12 +58,32 @@ export class RecoveryDetailModalComponent {
       // isActive: [true],
       createdAt: [new Date()],
     });
+
+    // Auto-calculate remaining = recovery - expenses whenever either changes.
+    const calcRemaining = () => {
+      const recovery = Number(this.expenseForm.get('total_recovery')?.value || 0);
+      const expenses = Number(this.expenseForm.get('total_expenses')?.value || 0);
+      this.expenseForm.get('remaining_amount')?.setValue(
+        recovery - expenses,
+        { emitEvent: false },
+      );
+    };
+
+    this.expenseForm.get('total_recovery')?.valueChanges.subscribe(calcRemaining);
+    this.expenseForm.get('total_expenses')?.valueChanges.subscribe(calcRemaining);
   }
 
   ngOnInit() {
     this.editForm();
     this.loadInternetAreas();
     this.loadOperatorName();
+
+    this.expenseForm.get('operator_name')?.valueChanges.subscribe((selectedName) => {
+      const op = this.internetOperators.find((o) => o.operator_name === selectedName);
+      if (op?.operator_phone) {
+        this.expenseForm.patchValue({ operator_phone: op.operator_phone });
+      }
+    });
   }
 
   async loadOperatorName() {
@@ -103,6 +125,7 @@ export class RecoveryDetailModalComponent {
       this.expenseForm.patchValue({
         date: this.userData.date,
         operator_name: this.userData.operator_name,
+        operator_phone: this.userData.operator_phone || '',
         sublocality: this.userData.sublocality,
         total_recovery: this.userData.total_recovery,
         total_expenses: this.userData.total_expenses,

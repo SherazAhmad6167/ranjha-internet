@@ -231,6 +231,61 @@
     <!-- Main Content -->
     <main class="main-content flex-grow-1" [class.full-width]="!sidebarVisible"
           [ngClass]="{'no-padding': isDashboard}">
+
+        <!-- ── Birthday Notification Banner ── -->
+        <div class="bday-banner" *ngIf="birthdayUsers.length > 0 && !birthdayDismissed">
+
+          <!-- decorative layers -->
+          <div class="bday-shimmer"></div>
+          <span class="bday-confetti c1"></span>
+          <span class="bday-confetti c2"></span>
+          <span class="bday-confetti c3"></span>
+          <span class="bday-confetti c4"></span>
+          <span class="bday-confetti c5"></span>
+
+          <div class="bday-inner">
+
+            <div class="bday-left">
+
+              <!-- icon badge -->
+              <div class="bday-badge">
+                <span class="bday-ring"></span>
+                <i class="ri-cake-3-fill"></i>
+              </div>
+
+              <div class="bday-text">
+                <div class="bday-label">
+                  <span class="bday-dot"></span>
+                  Birthday Today
+                  <span class="bday-count" *ngIf="birthdayUsers.length > 1">{{ birthdayUsers.length }}</span>
+                </div>
+                <div class="bday-headline">
+                  <ng-container *ngFor="let u of birthdayUsers; let last = last">
+                    <span class="bday-name-chip">
+                      <span class="bday-avatar">{{ (u.user_name || '?').charAt(0) | uppercase }}</span>
+                      {{ u.user_name | titlecase }}
+                    </span>
+                  </ng-container>
+                  <span class="bday-suffix">
+                    {{ birthdayUsers.length > 1 ? 'are celebrating today' : 'is celebrating today' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bday-right">
+              <button class="bday-wish-btn" (click)="goWishBirthdays()">
+                <i class="ri-send-plane-fill"></i>
+                <span>Send Wishes</span>
+              </button>
+              <button class="bday-close-btn" (click)="birthdayDismissed = true" title="Dismiss">
+                <i class="ri-close-line"></i>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
         <router-outlet></router-outlet>
     </main>
 

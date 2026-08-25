@@ -27,24 +27,10 @@
   <!-- ── Summary Cards ── -->
   <div class="sk-summary-row mb-4">
     <div class="sk-summary-card total">
-      <div class="sk-summary-icon"><i class="ri-money-dollar-circle-line"></i></div>
+      <div class="sk-summary-icon"><i class="ri-stack-line"></i></div>
       <div>
-        <div class="sk-summary-label">Total Amount</div>
-        <div class="sk-summary-value">Rs. {{ totalAmount | number }}</div>
-      </div>
-    </div>
-    <div class="sk-summary-card received">
-      <div class="sk-summary-icon"><i class="ri-checkbox-circle-line"></i></div>
-      <div>
-        <div class="sk-summary-label">Total Received</div>
-        <div class="sk-summary-value">Rs. {{ totalRecieved | number }}</div>
-      </div>
-    </div>
-    <div class="sk-summary-card remaining">
-      <div class="sk-summary-icon"><i class="ri-time-line"></i></div>
-      <div>
-        <div class="sk-summary-label">Total Remaining</div>
-        <div class="sk-summary-value">Rs. {{ totalRemaining | number }}</div>
+        <div class="sk-summary-label">Total Quantity</div>
+        <div class="sk-summary-value">{{ totalQuantity | number }}</div>
       </div>
     </div>
     <div class="sk-summary-card entries">
@@ -65,7 +51,7 @@
         <label class="sk-filter-label"><i class="ri-search-2-line"></i> Search</label>
         <div class="sk-search-wrap">
           <i class="ri-search-line sk-search-icon"></i>
-          <input type="text" class="sk-search-input" placeholder="Search by name, ordered by..."
+          <input type="text" class="sk-search-input" placeholder="Search by stock name or date..."
             [(ngModel)]="searchTerm" (input)="onFilterChange()">
         </div>
       </div>
@@ -88,12 +74,7 @@
             <th>#</th>
             <th>Date</th>
             <th>Stock Name</th>
-            <th>Price</th>
-            <th>Order By</th>
-            <th>Received Date</th>
-            <th>Received By</th>
-            <th>Payment</th>
-            <th>Remaining</th>
+            <th>Total Quantity</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -108,18 +89,8 @@
               </div>
             </td>
             <td>
-              <span class="sk-amount-badge">Rs. {{ user.amount | number }}</span>
-            </td>
-            <td class="sk-meta">{{ user.order_by || '—' }}</td>
-            <td class="sk-date">{{ user.recieved_date | date: 'dd-MM-yyyy' }}</td>
-            <td class="sk-meta">{{ user.recieved_by || '—' }}</td>
-            <td>
-              <span *ngIf="user.payment_amount" class="sk-paid-badge">Rs. {{ user.payment_amount | number }}</span>
-              <span *ngIf="!user.payment_amount" class="sk-nil">—</span>
-            </td>
-            <td>
-              <span *ngIf="user.remaining_amount" class="sk-remaining-badge">Rs. {{ user.remaining_amount | number }}</span>
-              <span *ngIf="!user.remaining_amount" class="sk-nil">—</span>
+              <span *ngIf="user.quantity" class="sk-amount-badge">{{ user.quantity | number }}</span>
+              <span *ngIf="!user.quantity" class="sk-nil">—</span>
             </td>
             <td>
               <div class="sk-actions">
@@ -133,7 +104,7 @@
             </td>
           </tr>
           <tr *ngIf="pagedUsers.length === 0">
-            <td colspan="10" class="sk-empty">
+            <td colspan="5" class="sk-empty">
               <i class="ri-archive-line"></i>
               <div class="sk-empty-title">No stock records found</div>
               <div class="sk-empty-sub">Try adjusting your search or add a new stock entry</div>

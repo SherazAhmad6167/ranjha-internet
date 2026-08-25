@@ -84,6 +84,13 @@
             </div>
           </div>
 
+          <div class="col-md-4">
+            <div class="um-field">
+              <label class="um-label">Date of Birth</label>
+              <input type="date" class="um-input" formControlName="date_of_birth" />
+            </div>
+          </div>
+
           <div class="col-md-8">
             <div class="um-field">
               <label class="um-label">Address <span class="req">*</span></label>
@@ -120,13 +127,16 @@
           <div class="col-md-4">
             <div class="um-field">
               <label class="um-label">Area <span class="req">*</span></label>
-              <select class="um-input um-select" formControlName="sublocality"
-                [class.um-invalid]="userForm.get('sublocality')?.invalid && userForm.get('sublocality')?.touched">
-                <option value="" disabled>Select area</option>
-                <option *ngFor="let area of internetAreas" [value]="area.sublocality">
-                  {{ area.sublocality | titlecase }}
-                </option>
-              </select>
+              <app-search-select
+                formControlName="sublocality"
+                [options]="internetAreas"
+                valueKey="sublocality"
+                displayKey="sublocality"
+                placeholder="Select area"
+                emptyLabel="Select area"
+                [allowEmpty]="false"
+                [isInvalid]="!!(userForm.get('sublocality')?.invalid && userForm.get('sublocality')?.touched)">
+              </app-search-select>
               <span class="um-err" *ngIf="userForm.get('sublocality')?.hasError('required') && userForm.get('sublocality')?.touched">
                 Area is required
               </span>
@@ -136,12 +146,15 @@
           <div class="col-md-4">
             <div class="um-field">
               <label class="um-label">Sub Area</label>
-              <select class="um-input um-select" formControlName="sub_area">
-                <option value="">Select sub area (optional)</option>
-                <option *ngFor="let area of internetSubAreas" [value]="area.name">
-                  {{ area.name | titlecase }}
-                </option>
-              </select>
+              <app-search-select
+                formControlName="sub_area"
+                [options]="internetSubAreas"
+                valueKey="name"
+                displayKey="name"
+                placeholder="Select sub area (optional)"
+                emptyLabel="None (optional)"
+                [allowEmpty]="true">
+              </app-search-select>
             </div>
           </div>
 

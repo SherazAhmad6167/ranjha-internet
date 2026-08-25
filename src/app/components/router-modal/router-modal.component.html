@@ -40,6 +40,43 @@
         <div class="invalid-feedback">Please select an operator.</div>
       </div>
 
+      <!-- Status -->
+      <div class="col-md-6">
+        <label class="form-label field-label">
+          <i class="ri-checkbox-multiple-line"></i> Status <span class="text-danger">*</span>
+        </label>
+        <div class="status-btn-group">
+          <label class="status-btn" [class.active-available]="routerForm.get('status')?.value === 'Available'">
+            <input type="radio" formControlName="status" value="Available" hidden>
+            <i class="ri-checkbox-circle-line"></i> Available
+          </label>
+          <label class="status-btn" [class.active-installed]="routerForm.get('status')?.value === 'Installed'">
+            <input type="radio" formControlName="status" value="Installed" hidden>
+            <i class="ri-home-wifi-line"></i> Installed
+          </label>
+          <label class="status-btn" [class.active-returned]="routerForm.get('status')?.value === 'Returned'">
+            <input type="radio" formControlName="status" value="Returned" hidden>
+            <i class="ri-arrow-go-back-line"></i> Returned
+          </label>
+          <label class="status-btn" [class.active-faulty]="routerForm.get('status')?.value === 'Faulty'">
+            <input type="radio" formControlName="status" value="Faulty" hidden>
+            <i class="ri-error-warning-line"></i> Faulty
+          </label>
+        </div>
+        <div class="text-danger small mt-1" *ngIf="isInvalid('status')">Please select a status.</div>
+      </div>
+
+      <!-- Quantity -->
+      <div class="col-md-6">
+        <label class="form-label field-label">
+          <i class="ri-stack-line"></i> Quantity <span class="text-danger">*</span>
+        </label>
+        <input type="number" class="form-control form-control-lg" formControlName="quantity"
+          min="1" placeholder="1"
+          [ngClass]="{'is-invalid': isInvalid('quantity')}">
+        <div class="invalid-feedback">Enter a quantity of at least 1.</div>
+      </div>
+
       <!-- Barcode -->
       <div class="col-12">
         <label class="form-label field-label">
@@ -67,7 +104,7 @@
       </div>
 
       <!-- Given By -->
-      <div class="col-12">
+      <div class="col-md-6">
         <label class="form-label field-label">
           <i class="ri-account-pin-circle-line"></i> Given By <span class="text-danger">*</span>
         </label>
@@ -75,6 +112,15 @@
           placeholder="Name of person who issued this router"
           [ngClass]="{'is-invalid': isInvalid('givenBy')}">
         <div class="invalid-feedback">This field is required.</div>
+      </div>
+
+      <!-- Notes -->
+      <div class="col-md-6">
+        <label class="form-label field-label">
+          <i class="ri-file-text-line"></i> Notes <span class="text-muted small">(optional)</span>
+        </label>
+        <textarea class="form-control" formControlName="notes" rows="2"
+          placeholder="Any additional info..."></textarea>
       </div>
 
     </div>

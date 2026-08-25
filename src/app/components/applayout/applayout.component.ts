@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, HostListener, TemplateRef, ViewChild } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { Firestore, collection, getDocs } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-applayout',
@@ -12,6 +13,8 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 export class ApplayoutComponent {
   sidebarVisible = true;
   role: string | null = '';
+  birthdayUsers: any[] = [];
+  birthdayDismissed = false;
   @ViewChild('sidebar') sidebar!: ElementRef;
   @ViewChild('toggleBtn') toggleBtn!: ElementRef;
   isDashboard = false;
@@ -27,7 +30,7 @@ export class ApplayoutComponent {
 
   @ViewChild('logoutModal') logoutModal!: TemplateRef<any>;
 
-  constructor(private route: Router, private modalService: NgbModal) {
+  constructor(private route: Router, private modalService: NgbModal, private firestore: Firestore) {
     this.route.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
         this.isDashboard = this.route.url === '/dashboard';
@@ -38,6 +41,28 @@ export class ApplayoutComponent {
 
   ngOnInit() {
     this.role = localStorage.getItem('role');
+    this.checkBirthdays();
+  }
+
+  async checkBirthdays() {
+    try {
+      const today = new Date();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const snap = await getDocs(collection(this.firestore, 'users'));
+      this.birthdayUsers = snap.docs
+        .map(d => ({ id: d.id, ...(d.data() as any) }))
+        .filter(u => {
+          const dob: string = u.date_of_birth || '';
+          if (!dob) return false;
+          const parts = dob.split('-');
+          return parts.length === 3 && parts[1] === mm && parts[2] === dd;
+        });
+    } catch {}
+  }
+
+  goWishBirthdays() {
+    this.route.navigate(['/sms'], { queryParams: { template: 'birthday' } });
   }
 
   toggleSection(key: string) {

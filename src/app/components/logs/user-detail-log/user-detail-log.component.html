@@ -14,13 +14,16 @@
       <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="col-md-3">
                     <label >Sublocality</label>
-                        <select class="form-control" [(ngModel)]="sublocality" (change)="onFilterChange()">
-                            <option value="" disabled>Select Sublocality</option>
-                            <option value="">All</option>
-                            <option *ngFor="let area of internetAreas" [value]="area.sublocality">
-                                {{ area.sublocality | titlecase }}
-                            </option>
-                        </select>
+                        <app-search-select
+                          [(ngModel)]="sublocality"
+                          (selectionChange)="onFilterChange()"
+                          [options]="internetAreas"
+                          valueKey="sublocality"
+                          displayKey="sublocality"
+                          placeholder="All Areas"
+                          emptyLabel="All"
+                          [allowEmpty]="true">
+                        </app-search-select>
                 </div>
                 <div class="col-md-3">
                     <input type="text" class="form-control" placeholder="Search Here" [(ngModel)]="searchTerm"

@@ -65,11 +65,18 @@
           <div class="bc-controls-col">
             <div class="bc-field-group">
               <label class="bc-field-label"><i class="ri-map-pin-2-line"></i> Area</label>
-              <select class="bc-select" [(ngModel)]="broadcastArea"
-                      (change)="onBroadcastAreaChange()" [disabled]="isBroadcasting">
-                <option value="all">All Areas</option>
-                <option *ngFor="let a of areas" [value]="a.sublocality">{{ a.sublocality }}</option>
-              </select>
+              <app-search-select
+                [(ngModel)]="broadcastArea"
+                (selectionChange)="onBroadcastAreaChange()"
+                [options]="areas"
+                valueKey="sublocality"
+                displayKey="sublocality"
+                placeholder="All Areas"
+                emptyLabel="All Areas"
+                emptyValue="all"
+                [allowEmpty]="true"
+                [isInvalid]="false">
+              </app-search-select>
             </div>
 
             <div class="bc-field-group">

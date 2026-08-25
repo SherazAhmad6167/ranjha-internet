@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { SearchSelectComponent } from '../../shared/search-select/search-select.component';
 import {
   ChangeDetectorRef,
   Component,
@@ -31,7 +32,7 @@ import { TemplateMapperService } from '../../shared/template-mapper.service';
 
 @Component({
   selector: 'app-user-details',
-  imports: [CommonModule, FormsModule, ToastrModule],
+  imports: [CommonModule, FormsModule, ToastrModule, SearchSelectComponent],
   templateUrl: './user-details.component.html',
   styleUrl: './user-details.component.scss',
 })
@@ -51,6 +52,13 @@ export class UserDetailsComponent {
   subArea: string = '';
   subInternetArea: any[] = [];
   internetAreas: any[] = [];
+  role: string = '';
+  operatorSublocalities: string[] = [];
+
+  get areaOptions(): { sublocality: string }[] {
+    if (this.role === 'admin') return this.internetAreas;
+    return this.operatorSublocalities.map((s) => ({ sublocality: s }));
+  }
   showReceiptModal = false;
   companyDetail: any = {};
   welcomeTemplate: any;
@@ -72,6 +80,12 @@ export class UserDetailsComponent {
   ) {}
 
   async ngOnInit() {
+    this.role = localStorage.getItem('role') || '';
+    if (this.role === 'operator') {
+      this.operatorSublocalities = JSON.parse(
+        localStorage.getItem('sublocality') || '[]',
+      );
+    }
     this.loadUsers();
     this.loadInternetAreas();
     this.loadSubInternetAreas();
@@ -190,6 +204,27 @@ export class UserDetailsComponent {
     this.updateTotalPages();
   }
 
+  get filteredSubAreas(): { sub_area: string }[] {
+    const baseUsers = this.role === 'operator'
+      ? this.users.filter((u) => this.operatorSublocalities.includes(u.sublocality))
+      : this.users;
+
+    const filterByArea = this.sublocality
+      ? baseUsers.filter((u) => u.sublocality === this.sublocality)
+      : baseUsers;
+
+    const subAreasInArea = new Set(
+      filterByArea.filter((u) => u.sub_area).map((u) => u.sub_area as string),
+    );
+
+    return this.subInternetArea.filter((s) => subAreasInArea.has(s.sub_area));
+  }
+
+  onAreaChange() {
+    this.subArea = '';
+    this.onFilterChange();
+  }
+
   onFilterChange() {
     const term = this.searchTerm.toLowerCase();
 
@@ -201,10 +236,16 @@ export class UserDetailsComponent {
         user.sublocality?.toLowerCase().includes(term) ||
         user.phone_no?.includes(term);
 
-      const matchesSublocality =
-        !this.sublocality || user.sublocality === this.sublocality;
-
       const matchesSubArea = !this.subArea || user.sub_area === this.subArea;
+
+      let matchesSublocality = true;
+
+      if (this.role === 'operator') {
+        if (!this.operatorSublocalities.includes(user.sublocality)) return false;
+        matchesSublocality = !this.sublocality || user.sublocality === this.sublocality;
+      } else {
+        matchesSublocality = !this.sublocality || user.sublocality === this.sublocality;
+      }
 
       return matchesSearch && matchesSublocality && matchesSubArea;
     });

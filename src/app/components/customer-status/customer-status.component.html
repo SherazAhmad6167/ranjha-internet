@@ -55,12 +55,16 @@
     <div class="cs-filter-bar">
       <div class="cs-filter-group">
         <label class="cs-filter-label"><i class="ri-map-pin-line"></i> Area</label>
-        <select class="cs-select" [(ngModel)]="sublocality" (change)="onFilterChange()">
-          <option value="">All Areas</option>
-          <option *ngFor="let area of internetAreas" [value]="area.sublocality">
-            {{ area.sublocality | titlecase }}
-          </option>
-        </select>
+        <app-search-select
+          [(ngModel)]="sublocality"
+          (selectionChange)="onFilterChange()"
+          [options]="internetAreas"
+          valueKey="sublocality"
+          displayKey="sublocality"
+          placeholder="All Areas"
+          emptyLabel="All Areas"
+          [allowEmpty]="true">
+        </app-search-select>
       </div>
       <div class="cs-filter-group cs-search-group">
         <label class="cs-filter-label"><i class="ri-search-line"></i> Search</label>

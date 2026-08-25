@@ -60,6 +60,11 @@
             </div>
 
             <div class="col-md-4">
+              <label class="form-label">Date of Birth</label>
+              <input type="date" class="form-control" formControlName="date_of_birth">
+            </div>
+
+            <div class="col-md-4">
               <label class="form-label">Internet ID <span class="req">*</span></label>
               <input type="text" class="form-control"
                 [class.is-invalid]="userForm.get('internet_id')?.invalid && userForm.get('internet_id')?.touched"
@@ -83,25 +88,29 @@
 
             <div class="col-md-4">
               <label class="form-label">Area <span class="req">*</span></label>
-              <select class="form-control"
-                [class.is-invalid]="userForm.get('sublocality')?.invalid && userForm.get('sublocality')?.touched"
-                formControlName="sublocality">
-                <option value="" disabled>Select area</option>
-                <option *ngFor="let area of internetAreas" [value]="area.sublocality">
-                  {{ area.sublocality | titlecase }}
-                </option>
-              </select>
+              <app-search-select
+                formControlName="sublocality"
+                [options]="internetAreas"
+                valueKey="sublocality"
+                displayKey="sublocality"
+                placeholder="Select area"
+                [allowEmpty]="false"
+                [isInvalid]="!!(userForm.get('sublocality')?.invalid && userForm.get('sublocality')?.touched)">
+              </app-search-select>
               <div class="invalid-feedback">Select an area</div>
             </div>
 
             <div class="col-md-4">
               <label class="form-label">Sub Area</label>
-              <select class="form-control" formControlName="sub_area">
-                <option value="" disabled>Select sub area (optional)</option>
-                <option *ngFor="let area of internetSubAreas" [value]="area.name">
-                  {{ area.name | titlecase }}
-                </option>
-              </select>
+              <app-search-select
+                formControlName="sub_area"
+                [options]="internetSubAreas"
+                valueKey="name"
+                displayKey="name"
+                placeholder="Select sub area (optional)"
+                emptyLabel="None (optional)"
+                [allowEmpty]="true">
+              </app-search-select>
             </div>
 
             <div class="col-md-4">
@@ -426,6 +435,9 @@
                   <div class="cnic-preview-wrap">
                     <img [src]="cnicFrontPreview" class="cnic-preview-img" (click)="openImageModal('front')" />
                     <div class="cnic-preview-actions">
+                      <button type="button" class="cnic-action-icon-btn" title="Crop" (click)="openCrop(cnicFrontPreview!, 'front')">
+                        <i class="ri-crop-line"></i>
+                      </button>
                       <button type="button" class="cnic-action-icon-btn" title="Retake" (click)="openCamera('front')">
                         <i class="ri-camera-fill"></i>
                       </button>
@@ -487,6 +499,9 @@
                   <div class="cnic-preview-wrap">
                     <img [src]="cnicBackPreview" class="cnic-preview-img" (click)="openImageModal('back')" />
                     <div class="cnic-preview-actions">
+                      <button type="button" class="cnic-action-icon-btn" title="Crop" (click)="openCrop(cnicBackPreview!, 'back')">
+                        <i class="ri-crop-line"></i>
+                      </button>
                       <button type="button" class="cnic-action-icon-btn" title="Retake" (click)="openCamera('back')">
                         <i class="ri-camera-fill"></i>
                       </button>
@@ -549,6 +564,56 @@
     </button>
     <img [src]="selectedImage" class="modal-image" />
   </div>
+</div>
+
+<!-- ── Crop Overlay ── -->
+<div class="crop-overlay" *ngIf="showCropOverlay"
+  (mousemove)="onCropMouseMove($event)"
+  (mouseup)="onCropPointerUp()"
+  (mouseleave)="onCropPointerUp()"
+  (touchmove)="onCropTouchMove($event)"
+  (touchend)="onCropPointerUp()">
+
+  <div class="crop-header">
+    <div class="crop-title">
+      <i class="ri-crop-line me-2"></i>
+      Crop CNIC {{ cropTarget === 'front' ? 'Front' : 'Back' }}
+    </div>
+    <button type="button" class="cam-close" (click)="cancelCrop()">
+      <i class="ri-close-line"></i>
+    </button>
+  </div>
+
+  <div class="crop-workspace">
+    <div class="crop-image-container" #cropImageContainer>
+      <img [src]="cropSourceImage" class="crop-source-img" (dragstart)="$event.preventDefault()" />
+      <div class="crop-mask" [ngStyle]="cropMaskTop"></div>
+      <div class="crop-mask" [ngStyle]="cropMaskBottom"></div>
+      <div class="crop-mask" [ngStyle]="cropMaskLeft"></div>
+      <div class="crop-mask" [ngStyle]="cropMaskRight"></div>
+      <div class="crop-selection" [ngStyle]="cropSelectionStyle"
+        (mousedown)="onCropBoxMouseDown($event)"
+        (touchstart)="onCropBoxTouchStart($event)">
+        <div class="crop-handle crop-tl" (mousedown)="onHandleMouseDown($event,'tl')" (touchstart)="onHandleTouchStart($event,'tl')"></div>
+        <div class="crop-handle crop-tr" (mousedown)="onHandleMouseDown($event,'tr')" (touchstart)="onHandleTouchStart($event,'tr')"></div>
+        <div class="crop-handle crop-bl" (mousedown)="onHandleMouseDown($event,'bl')" (touchstart)="onHandleTouchStart($event,'bl')"></div>
+        <div class="crop-handle crop-br" (mousedown)="onHandleMouseDown($event,'br')" (touchstart)="onHandleTouchStart($event,'br')"></div>
+        <div class="crop-thirds-h"></div>
+        <div class="crop-thirds-v"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="crop-footer">
+    <button type="button" class="btn btn-outline-light btn-sm" (click)="resetCrop()">
+      <i class="ri-refresh-line me-1"></i>Reset
+    </button>
+    <span class="crop-hint">Drag corners to resize · Drag to move</span>
+    <button type="button" class="btn btn-success btn-sm crop-use-btn" (click)="applyCrop()">
+      <i class="ri-crop-line me-1"></i>Crop &amp; Use
+    </button>
+  </div>
+
 </div>
 
 <!-- ── Camera Overlay ── -->

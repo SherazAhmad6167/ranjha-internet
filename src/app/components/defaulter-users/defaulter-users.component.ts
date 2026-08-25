@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { SearchSelectComponent } from '../../shared/search-select/search-select.component';
 import { Component } from '@angular/core';
 import {
   addDoc,
@@ -20,7 +21,7 @@ import {
 } from '@ng-bootstrap/ng-bootstrap';
 @Component({
   selector: 'app-defaulter-users',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SearchSelectComponent],
   templateUrl: './defaulter-users.component.html',
   styleUrl: './defaulter-users.component.scss',
 })

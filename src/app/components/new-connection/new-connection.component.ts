@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { SearchSelectComponent } from '../../shared/search-select/search-select.component';
 import { Component, ElementRef, TemplateRef, ViewChild } from '@angular/core';
 import {
   addDoc,
@@ -23,7 +24,7 @@ import html2canvas from 'html2canvas';
 
 @Component({
   selector: 'app-new-connection',
-  imports: [FormsModule, CommonModule, ReactiveFormsModule, ToastrModule],
+  imports: [FormsModule, CommonModule, ReactiveFormsModule, ToastrModule, SearchSelectComponent],
   templateUrl: './new-connection.component.html',
   styleUrl: './new-connection.component.scss',
 })

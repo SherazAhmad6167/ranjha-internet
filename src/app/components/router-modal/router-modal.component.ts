@@ -72,9 +72,12 @@ export class RouterModalComponent implements OnInit, OnDestroy {
     if (this.editMode && this.routerData) {
       this.routerForm.patchValue({
         date:     this.routerData.date,
+        status:   this.routerData.status   || 'Available',
+        quantity: this.routerData.quantity || 1,
         barcode:  this.routerData.barcode,
         operator: this.routerData.operator,
-        givenBy:  this.routerData.givenBy
+        givenBy:  this.routerData.givenBy,
+        notes:    this.routerData.notes    || ''
       });
     } else if (this.prefillBarcode) {
       this.routerForm.get('barcode')?.setValue(this.prefillBarcode);
@@ -89,9 +92,12 @@ export class RouterModalComponent implements OnInit, OnDestroy {
     const today = new Date().toISOString().split('T')[0];
     this.routerForm = this.fb.group({
       date:     [today, Validators.required],
+      status:   ['Available', Validators.required],
+      quantity: [{value: 1, disabled: true}, [Validators.required, Validators.min(1)]],
       barcode:  ['',    Validators.required],
       operator: ['',    Validators.required],
-      givenBy:  ['',    Validators.required]
+      givenBy:  ['',    Validators.required],
+      notes:    ['']
     });
   }
 
@@ -334,7 +340,7 @@ export class RouterModalComponent implements OnInit, OnDestroy {
     if (isDup) return;
 
     this.isSubmitting = true;
-    const payload = { ...this.routerForm.value, updatedAt: new Date() };
+    const payload = { ...this.routerForm.getRawValue(), updatedAt: new Date() };
     try {
       if (this.editMode && this.routerData?.id) {
         await updateDoc(doc(this.firestore, 'router', this.routerData.id), payload);

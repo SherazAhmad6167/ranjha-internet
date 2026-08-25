@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { SearchSelectComponent } from '../../shared/search-select/search-select.component';
 import { Component, Input } from '@angular/core';
 import {
   addDoc,
@@ -20,7 +21,7 @@ import { ToastrModule, ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-complain-modal',
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, ToastrModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, ToastrModule, SearchSelectComponent],
   templateUrl: './complain-modal.component.html',
   styleUrl: './complain-modal.component.scss',
 })

@@ -142,19 +142,29 @@
     <div class="uc-filter-bar">
       <div class="uc-filter-group">
         <label class="uc-filter-label"><i class="ri-map-pin-line"></i> Area</label>
-        <select class="uc-select" [(ngModel)]="sublocality" (change)="onFilterChange()">
-          <option value="">All Areas</option>
-          <ng-container *ngIf="role === 'admin'">
-            <option *ngFor="let area of internetAreas" [value]="area.sublocality">
-              {{ area.sublocality | titlecase }}
-            </option>
-          </ng-container>
-          <ng-container *ngIf="role === 'operator'">
-            <option *ngFor="let area of operatorSublocalities" [value]="area">
-              {{ area | titlecase }}
-            </option>
-          </ng-container>
-        </select>
+        <app-search-select
+          [(ngModel)]="sublocality"
+          (selectionChange)="onAreaChange()"
+          [options]="areaOptions"
+          valueKey="sublocality"
+          displayKey="sublocality"
+          placeholder="All Areas"
+          emptyLabel="All Areas"
+          [allowEmpty]="true">
+        </app-search-select>
+      </div>
+      <div class="uc-filter-group">
+        <label class="uc-filter-label"><i class="ri-map-pin-2-line"></i> Sub Area</label>
+        <app-search-select
+          [(ngModel)]="subArea"
+          (selectionChange)="onFilterChange()"
+          [options]="filteredSubAreas"
+          valueKey="sub_area"
+          displayKey="sub_area"
+          placeholder="All Sub Areas"
+          emptyLabel="All Sub Areas"
+          [allowEmpty]="true">
+        </app-search-select>
       </div>
       <div class="uc-filter-group">
         <label class="uc-filter-label"><i class="ri-calendar-line"></i> Month</label>
@@ -200,6 +210,7 @@
           <tr>
             <th>#</th>
             <th>User</th>
+            <th>ID</th>
             <th>Area</th>
             <th>Period</th>
             <th>Package</th>
@@ -215,7 +226,7 @@
         <tbody>
           <!-- Empty state -->
           <tr *ngIf="!pagedUsers.length">
-            <td [attr.colspan]="(selectedStatus === 'paid' || selectedStatus === 'remaining') ? 12 : 8"
+            <td [attr.colspan]="(selectedStatus === 'paid' || selectedStatus === 'remaining') ? 13 : 9"
               class="uc-empty">
               <i class="ri-inbox-2-line"></i>
               <div class="uc-empty-title">No records found</div>
@@ -231,12 +242,11 @@
             <td>
               <div class="uc-user-cell">
                 <div class="uc-avatar">{{ row.user_name?.charAt(0)?.toUpperCase() }}</div>
-                <div>
-                  <div class="uc-user-name">{{ row.user_name }}</div>
-                  <div class="uc-user-id">{{ row.internet_id }}</div>
-                </div>
+                <div class="uc-user-name">{{ row.user_name }}</div>
               </div>
             </td>
+
+            <td><span class="uc-user-id">{{ row.internet_id }}</span></td>
 
             <td><span class="uc-area-tag">{{ row.sublocality | titlecase }}</span></td>
 

@@ -38,12 +38,7 @@ export class StockDetailsComponent {
     showReceiptModal = false;
     companyDetail: any = {};
     selectedDate: string = '';
-    totalAmount: number = 0;
-    totalRecieved: number = 0;
-    totalRemaining: number = 0;
-    totalRecovery: number = 0;
-    totalExpenses: number = 0;
-    totalProfit: number = 0;
+    totalQuantity: number = 0;
   
     constructor(
       private modalService: NgbModal,
@@ -134,15 +129,14 @@ export class StockDetailsComponent {
       this.filteredUsers = this.users.filter((user) => {
         const matchesSearch =
           user.name?.toLowerCase().includes(term) ||
-          user.order_by?.toLowerCase().includes(term) ||
-          user.recieved_by?.toLowerCase().includes(term) ||
           user.date?.includes(term);
-  
+
         return matchesSearch;
       });
-  
+
       this.currentPage = 1;
       this.updateTotalPages();
+      this.calculateTotals(this.filteredUsers);
     }
   
     openExpenseModal(userData?: any) {
@@ -266,15 +260,8 @@ export class StockDetailsComponent {
     }
   
     calculateTotals(data: any[]) {
-      this.totalAmount = data.reduce((sum, item) => sum + (item.amount || 0), 0);
-  
-      this.totalRecieved = data.reduce(
-        (sum, item) => sum + (item.recieved_amount || 0),
-        0,
-      );
-  
-      this.totalRemaining = data.reduce(
-        (sum, item) => sum + (item.amount - item.recieved_amount || 0),
+      this.totalQuantity = data.reduce(
+        (sum, item) => sum + (Number(item.quantity) || 0),
         0,
       );
     }

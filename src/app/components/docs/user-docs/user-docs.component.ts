@@ -77,13 +77,34 @@ export class UserDocsComponent {
     });
   }
 
+  downloadSampleCsv() {
+    const headers = [
+      'Internet ID','User Name','Phone No','Sublocality','Connection Type',
+      'Address','Static IP','Installation Date','Connection Provider',
+      'Select Internet Package','Internet Package Fee','Installation Amount',
+      'Other Amount','Discount','Select Cable Package','Cable Package Fee',
+      'Sub Area','Wire','Latitude','Longitude'
+    ];
+    const rows = [
+      ['INT-001','Ali Khan','03001234567','Gulberg','internet','House 12 Street 5','','2024-01-15','PTCL','N-10mbps','2000','5000','0','no_discount','','','Block A','fiber','31.5204','74.3587'],
+      ['INT-002','Sara Ahmed','03211234567','DHA Phase 5','both','Flat 3B Sector 7','192.168.1.10','2024-02-20','Fiberlink','Fs-12mbps','3000','7000','0','no_discount','cable_basic','1000','Block C','fiber','31.5496','74.3436'],
+      ['INT-003','Bilal Raza','03451234567','Johar Town','internet','Shop 5 Main Market','','2024-03-10','Zong','Zong-8mbps','2500','6000','0','no_discount','','','','copper','31.4697','74.2728'],
+    ];
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'sample_users.csv'; a.click();
+    URL.revokeObjectURL(url);
+  }
+
   async uploadToFirestore() {
     if (this.csvData.length === 0) return;
 
     this.loading = true;
 
     try {
-      const usersRef = collection(this.firestore, 'testingUser');
+      const usersRef = collection(this.firestore, 'users');
 
       for (const row of this.csvData) {
         await addDoc(usersRef, {

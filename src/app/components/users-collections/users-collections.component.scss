@@ -278,7 +278,6 @@
 /* ── Filter Toolbar ── */
 .uc-filter-bar {
   display: flex;
-  align-items: flex-end;
   gap: 12px;
   flex-wrap: wrap;
   padding: 14px 20px;
@@ -416,9 +415,17 @@
 }
 
 .uc-user-id {
+  display: inline-block;
+  margin-top: 3px;
   font-size: 11px;
-  color: #94a3b8;
+  font-weight: 600;
   font-family: monospace;
+  color: #0f766e;
+  background: #f0fdfb;
+  border: 1px solid #99f6e4;
+  border-radius: 4px;
+  padding: 1px 6px;
+  letter-spacing: 0.3px;
 }
 
 .uc-area-tag {

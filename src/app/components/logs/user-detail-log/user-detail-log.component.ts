@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { SearchSelectComponent } from '../../../shared/search-select/search-select.component';
 import { Component } from '@angular/core';
 import {
   addDoc,
@@ -20,7 +21,7 @@ import {
 } from '@ng-bootstrap/ng-bootstrap';
 @Component({
   selector: 'app-user-detail-log',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SearchSelectComponent],
   templateUrl: './user-detail-log.component.html',
   styleUrl: './user-detail-log.component.scss',
 })

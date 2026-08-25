@@ -129,18 +129,18 @@
 /* ── Filter Bar ── */
 .ud-filter-bar {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  padding: 16px 20px;
+  padding: 14px 20px;
   border-bottom: 1px solid #f1f5f9;
   background: #fcfdfe;
 }
 
 .ud-filter-group {
   display: flex;
-  align-items: flex-end;
+  // align-items: center;
   flex-wrap: wrap;
   gap: 10px;
   flex: 1;
@@ -150,7 +150,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 140px;
+  min-width: 150px;
 
   &.ud-search-item { min-width: 220px; flex: 1 1 220px; }
 }
@@ -169,17 +169,52 @@
   i { font-size: 12px; }
 }
 
+/* Shared control height — all filter controls must match */
+$ctrl-h: 36px;
+$ctrl-pad: 7px 12px;
+$ctrl-border: #dde2e8;
+$ctrl-radius: 8px;
+$ctrl-focus-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
+
 .ud-select {
   font-size: 13px;
-  border-radius: 8px;
-  border-color: #dde2e8;
-  padding: 7px 12px;
+  border-radius: $ctrl-radius;
+  border-color: $ctrl-border;
+  padding: $ctrl-pad;
+  height: $ctrl-h;
   transition: border-color 0.15s, box-shadow 0.15s;
 
   &:focus {
     border-color: #0d6efd;
-    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
+    box-shadow: $ctrl-focus-shadow;
   }
+}
+
+/* Override search-select trigger to match the shared control size */
+.ud-filter-item ::ng-deep .ss-trigger {
+  padding: $ctrl-pad;
+  min-height: $ctrl-h;
+  height: $ctrl-h;
+  border-color: $ctrl-border;
+  border-radius: $ctrl-radius;
+  font-size: 13px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:hover { border-color: darken($ctrl-border, 6%); }
+}
+
+.ud-filter-item ::ng-deep .ss-open .ss-trigger,
+.ud-filter-item ::ng-deep .ss-wrapper.ss-open .ss-trigger {
+  border-color: #0d6efd;
+  box-shadow: $ctrl-focus-shadow;
+}
+
+.ud-filter-item ::ng-deep .ss-value {
+  font-size: 13px;
+}
+
+.ud-filter-item ::ng-deep .ss-chevron {
+  font-size: 16px;
 }
 
 .ud-search-wrap { position: relative; }
@@ -197,13 +232,14 @@
 .ud-search-input {
   padding: 7px 12px 7px 32px;
   font-size: 13px;
-  border-radius: 8px;
-  border-color: #dde2e8;
+  border-radius: $ctrl-radius;
+  border-color: $ctrl-border;
+  height: $ctrl-h;
   width: 100%;
 
   &:focus {
     border-color: #0d6efd;
-    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
+    box-shadow: $ctrl-focus-shadow;
   }
 }
 
@@ -212,6 +248,7 @@
   flex-direction: column;
   gap: 4px;
   flex-shrink: 0;
+  align-self: flex-end;
 }
 
 /* ── Table ── */

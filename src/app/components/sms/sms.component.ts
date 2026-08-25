@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { SearchSelectComponent } from '../../shared/search-select/search-select.component';
 import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
@@ -15,11 +16,12 @@ import {
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
 import { TemplateMapperService } from '../../shared/template-mapper.service';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-sms',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, ToastrModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ToastrModule, SearchSelectComponent],
   templateUrl: './sms.component.html',
   styleUrl: './sms.component.scss',
 })
@@ -64,6 +66,7 @@ export class SmsComponent {
     private toastr: ToastrService,
     private modalService: NgbModal,
     private templateMapper: TemplateMapperService,
+    private route: ActivatedRoute,
   ) {
     this.smsForm = this.fb.group({
       phone: ['+92', [Validators.required, Validators.pattern(/^\+92\d{10}$/)]],
@@ -74,7 +77,13 @@ export class SmsComponent {
 
   ngOnInit() {
     this.loadSms();
-    this.loadBroadcastData();
+    this.loadBroadcastData().then(() => {
+      const tmpl = this.route.snapshot.queryParamMap.get('template');
+      if (tmpl) {
+        this.broadcastTemplateId = tmpl;
+        this.onBroadcastTemplateChange();
+      }
+    });
   }
 
   switchTab(tab: 'compose' | 'inbox') {
@@ -254,6 +263,18 @@ export class SmsComponent {
       filtered = filtered.filter(u => {
         const bills: any[] = (u as any).bills || [];
         return bills.some((b: any) => b.status === 'unpaid');
+      });
+    }
+
+    if (this.broadcastTemplateId === 'birthday') {
+      const today = new Date();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      filtered = filtered.filter(u => {
+        const dob: string = (u as any).date_of_birth || '';
+        if (!dob) return false;
+        const parts = dob.split('-');
+        return parts.length === 3 && parts[1] === mm && parts[2] === dd;
       });
     }
 
