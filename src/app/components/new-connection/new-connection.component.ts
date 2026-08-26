@@ -38,9 +38,18 @@ export class NewConnectionComponent {
   currentPage = 1;
   pageSize = 10;
   totalPages = 1;
+  role: string = '';
+  operatorSublocalities: string[] = [];
   sublocality: string = '';
+  subArea: string = '';
+  subInternetArea: any[] = [];
   internetAreas: any[] = [];
   operatorName: string = '';
+
+  get areaOptions(): { sublocality: string }[] {
+    if (this.role === 'admin') return this.internetAreas;
+    return this.operatorSublocalities.map((s) => ({ sublocality: s }));
+  }
   internetOperators: any[] = [];
   showReceiptModal = false;
   companyDetail: any = {};
@@ -109,8 +118,13 @@ export class NewConnectionComponent {
   ) {}
 
   async ngOnInit() {
+    this.role = localStorage.getItem('role') || '';
+    if (this.role === 'operator') {
+      this.operatorSublocalities = JSON.parse(localStorage.getItem('sublocality') || '[]');
+    }
     this.loadExpenses();
     this.loadInternetAreas();
+    this.loadSubInternetAreas();
     this.loadOperatorName();
     this.welcomeTemplate = await this.getTemplate('welcome');
   }
@@ -141,6 +155,37 @@ export class NewConnectionComponent {
     } catch (error) {
       console.error('Error loading internet areas', error);
     }
+  }
+
+  async loadSubInternetAreas() {
+    try {
+      const ref = doc(this.firestore, 'internetSubArea', 'internetSubAreaDoc');
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        this.subInternetArea = snap.data()?.['internetSubAreas'] || [];
+        this.subInternetArea.sort((a: any, b: any) => a.sub_area.localeCompare(b.sub_area));
+      }
+    } catch (error) {
+      console.error('Error loading sub internet areas', error);
+    }
+  }
+
+  get filteredSubAreas(): { sub_area: string }[] {
+    const baseUsers = this.role === 'operator'
+      ? this.users.filter((u) => this.operatorSublocalities.includes(u.sublocality))
+      : this.users;
+    const filterByArea = this.sublocality
+      ? baseUsers.filter((u) => u.sublocality === this.sublocality)
+      : baseUsers;
+    const subAreasInArea = new Set(
+      filterByArea.filter((u) => u.sub_area).map((u) => u.sub_area as string),
+    );
+    return this.subInternetArea.filter((s) => subAreasInArea.has(s.sub_area));
+  }
+
+  onAreaChange() {
+    this.subArea = '';
+    this.onFilterChange();
   }
 
   async loadOperatorName() {
@@ -451,6 +496,11 @@ export class NewConnectionComponent {
     const term = this.searchTerm?.toLowerCase() || '';
 
     this.filteredUsers = this.users.filter((user: any) => {
+      // 👷 Operator restriction: only show assigned sublocalities
+      if (this.role === 'operator' && !this.operatorSublocalities.includes(user.sublocality)) {
+        return false;
+      }
+
       const userDate = user.installation_date
         ? new Date(user.installation_date)
         : null;
@@ -468,6 +518,9 @@ export class NewConnectionComponent {
       // 📍 Sublocality
       const matchesSublocality =
         !this.sublocality || user.sublocality === this.sublocality;
+
+      // 📍 Sub Area
+      const matchesSubArea = !this.subArea || user.sub_area === this.subArea;
 
       // 👤 Recieved By
       const matchesRecievedBy =
@@ -509,6 +562,7 @@ export class NewConnectionComponent {
       return (
         matchesSearch &&
         matchesSublocality &&
+        matchesSubArea &&
         matchesRecievedBy &&
         matchesOperator &&
         matchesStatus &&

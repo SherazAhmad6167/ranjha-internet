@@ -57,12 +57,25 @@
         <label class="nc-filter-label"><i class="ri-map-pin-line"></i> Area</label>
         <app-search-select
           [(ngModel)]="sublocality"
-          (selectionChange)="onFilterChange()"
-          [options]="internetAreas"
+          (selectionChange)="onAreaChange()"
+          [options]="areaOptions"
           valueKey="sublocality"
           displayKey="sublocality"
           placeholder="All Areas"
           emptyLabel="All Areas"
+          [allowEmpty]="true">
+        </app-search-select>
+      </div>
+      <div class="nc-filter-group">
+        <label class="nc-filter-label"><i class="ri-map-pin-line"></i> Sub Area</label>
+        <app-search-select
+          [(ngModel)]="subArea"
+          (selectionChange)="onFilterChange()"
+          [options]="filteredSubAreas"
+          valueKey="sub_area"
+          displayKey="sub_area"
+          placeholder="All Sub Areas"
+          emptyLabel="All Sub Areas"
           [allowEmpty]="true">
         </app-search-select>
       </div>
@@ -126,7 +139,9 @@
           <tr>
             <th>#</th>
             <th>User</th>
+            <th>ID</th>
             <th>Area</th>
+            <th>Sub Area</th>
             <th>Package</th>
             <th>Install Date</th>
             <th>Install Amt</th>
@@ -142,7 +157,7 @@
         </thead>
         <tbody>
           <tr *ngIf="!pagedUsers.length">
-            <td colspan="14" class="nc-empty">
+            <td colspan="16" class="nc-empty">
               <i class="ri-inbox-2-line"></i>
               <div class="nc-empty-title">No connections found</div>
               <div class="nc-empty-sub">Try adjusting your filters</div>
@@ -155,11 +170,12 @@
                 <div class="nc-avatar">{{ user.user_name?.charAt(0)?.toUpperCase() }}</div>
                 <div>
                   <div class="nc-user-name">{{ user.user_name }}</div>
-                  <div class="nc-user-id">{{ user.internet_id }}</div>
                 </div>
               </div>
             </td>
+            <td><span class="nc-id-badge">{{ user.internet_id || '-' }}</span></td>
             <td><span class="nc-area-tag">{{ user.sublocality || '-' }}</span></td>
+            <td><span class="nc-area-tag" *ngIf="user.sub_area">{{ user.sub_area }}</span><span *ngIf="!user.sub_area">-</span></td>
             <td><span class="nc-pkg">{{ user.package_name || '-' }}</span></td>
             <td><span class="nc-date">{{ user.installation_date | date:'dd MMM yy' }}</span></td>
             <td><span class="nc-amount">{{ user.installation_amount || '-' }}</span></td>

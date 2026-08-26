@@ -40,7 +40,7 @@
             [(ngModel)]="searchTerm" (input)="onFilterChange()">
         </div>
       </div>
-      <div class="rd-select-group">
+      <div class="rd-select-group" *ngIf="role === 'admin'">
         <label class="rd-filter-label"><i class="ri-user-settings-line"></i> Operator</label>
         <select class="rd-select" [(ngModel)]="operatorName" (change)="onFilterChange()">
           <option value="" disabled>Select Operator</option>

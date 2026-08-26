@@ -10,6 +10,7 @@ import {
   getDocs,
   orderBy,
   query,
+  where,
 } from '@angular/fire/firestore';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -42,6 +43,9 @@ export class RecoveryDetailsComponent {
   totalRecovery: number = 0;
   totalExpenses: number = 0;
   remainingAmount: number = 0;
+  role: string = '';
+  loggedInUserName: string = '';
+  loggedInOfficerName: string = '';
   operatorName: string = '';
   internetOperators: any[] = [];
   selectedMsgUser: any = null;
@@ -69,10 +73,34 @@ export class RecoveryDetailsComponent {
     private templateMapper: TemplateMapperService,
   ) {}
 
-  ngOnInit(): void {
+  async ngOnInit() {
+    this.role = localStorage.getItem('role') || '';
+    this.loggedInUserName = localStorage.getItem('username') || '';
+
+    // Recovery records store the officer's display `name` (e.g. "Amir Shah"),
+    // while login stores `user_name` (e.g. "amir1234"). Resolve one to the other.
+    if (this.role === 'operator') {
+      this.loggedInOfficerName = await this.getOfficerName(this.loggedInUserName);
+    }
+
     this.loadExpenses();
     this.loadOperatorName();
     this.loadRecoveryTemplate();
+  }
+
+  async getOfficerName(userName: string): Promise<string> {
+    if (!userName) return '';
+    try {
+      const q = query(
+        collection(this.firestore, 'recoveryOfficer'),
+        where('user_name', '==', userName),
+      );
+      const snap = await getDocs(q);
+      if (!snap.empty) return snap.docs[0].data()['name'] || '';
+    } catch (error) {
+      console.error('Error resolving recovery officer name', error);
+    }
+    return '';
   }
 
   async loadRecoveryTemplate() {
@@ -163,6 +191,14 @@ export class RecoveryDetailsComponent {
           profit,
         };
       });
+
+      // Operators only see records recorded against their own officer name
+      if (this.role === 'operator') {
+        const mine = this.loggedInOfficerName.trim().toLowerCase();
+        this.users = this.users.filter(
+          (u) => (u.operator_name || '').trim().toLowerCase() === mine,
+        );
+      }
 
       this.filteredUsers = this.users;
       this.updateTotalPages();

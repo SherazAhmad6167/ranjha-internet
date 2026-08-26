@@ -43,7 +43,7 @@
                        routerLinkActive="active" class="nav-link-item sub-link" (click)="onMenuClick()">
                         <i class="ri-folders-line"></i><span>User Collections</span>
                     </a>
-                    <a *ngIf="role === 'admin'" routerLink="/new-connection"
+                    <a *ngIf="role === 'admin' || role === 'operator'" routerLink="/new-connection"
                        routerLinkActive="active" class="nav-link-item sub-link" (click)="onMenuClick()">
                         <i class="ri-add-circle-line"></i><span>New Connection</span>
                     </a>
@@ -63,7 +63,7 @@
             </div>
 
             <!-- ── Finance ────────────────────────────────── -->
-            <div class="nav-section" *ngIf="role === 'admin'">
+            <div class="nav-section" *ngIf="role === 'admin' || role === 'operator'">
                 <div class="section-header" (click)="toggleSection('finance')">
                     <div class="section-title">
                         <i class="ri-money-dollar-circle-line"></i>
@@ -73,7 +73,7 @@
                        [class.rotated]="expandedSections['finance']"></i>
                 </div>
                 <div class="section-links" [class.expanded]="expandedSections['finance']">
-                    <a routerLink="/bill-creator" routerLinkActive="active"
+                    <a *ngIf="role === 'admin'" routerLink="/bill-creator" routerLinkActive="active"
                        class="nav-link-item sub-link" (click)="onMenuClick()">
                         <i class="ri-file-text-line"></i><span>Bill Creator</span>
                     </a>
@@ -81,23 +81,23 @@
                        class="nav-link-item sub-link" (click)="onMenuClick()">
                         <i class="ri-refund-2-line"></i><span>Recovery Details</span>
                     </a>
-                    <a routerLink="/recovery-officer" routerLinkActive="active"
+                    <a *ngIf="role === 'admin'" routerLink="/recovery-officer" routerLinkActive="active"
                        class="nav-link-item sub-link" (click)="onMenuClick()">
                         <i class="ri-user-star-line"></i><span>Recovery Officer</span>
                     </a>
-                    <a routerLink="/ro-reports" routerLinkActive="active"
+                    <a *ngIf="role === 'admin'" routerLink="/ro-reports" routerLinkActive="active"
                        class="nav-link-item sub-link" (click)="onMenuClick()">
                         <i class="ri-bar-chart-box-line"></i><span>RO Reports</span>
                     </a>
-                    <a routerLink="/expenses" routerLinkActive="active"
+                    <a *ngIf="role === 'admin'" routerLink="/expenses" routerLinkActive="active"
                        class="nav-link-item sub-link" (click)="onMenuClick()">
                         <i class="ri-wallet-3-line"></i><span>Expenses</span>
                     </a>
-                    <a routerLink="/borrow-details" routerLinkActive="active"
+                    <a *ngIf="role === 'admin'" routerLink="/borrow-details" routerLinkActive="active"
                        class="nav-link-item sub-link" (click)="onMenuClick()">
                         <i class="ri-hand-coin-line"></i><span>Borrow Details</span>
                     </a>
-                    <a routerLink="/payable-details" routerLinkActive="active"
+                    <a *ngIf="role === 'admin'" routerLink="/payable-details" routerLinkActive="active"
                        class="nav-link-item sub-link" (click)="onMenuClick()">
                         <i class="ri-bank-card-line"></i><span>Payable Details</span>
                     </a>
