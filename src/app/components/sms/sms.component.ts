@@ -12,6 +12,7 @@ import {
   getDocs,
   orderBy,
   query,
+  writeBatch,
 } from '@angular/fire/firestore';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
@@ -27,6 +28,7 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class SmsComponent {
   @ViewChild('deleteModal') deleteModal!: TemplateRef<any>;
+  @ViewChild('purgeModal') purgeModal!: TemplateRef<any>;
   @ViewChild('broadcastConfirmModal') broadcastConfirmModal!: TemplateRef<any>;
   @ViewChild('viewModal') viewModal!: TemplateRef<any>;
   selectedSms: any = null;
@@ -194,6 +196,72 @@ export class SmsComponent {
     } finally {
       this.isDeleting = false;
       this.selectedDeleteId = null;
+    }
+  }
+
+  // ── Clear old logs ─────────────────────────────
+  /** How many of the most recent messages the purge always keeps. */
+  readonly KEEP_RECENT = 100;
+  isPurging = false;
+  purgeDeleted = 0;
+  purgeTotal = 0;
+
+  get purgeableCount(): number {
+    return Math.max(0, this.smsList.length - this.KEEP_RECENT);
+  }
+
+  openPurgeModal() {
+    if (this.purgeableCount === 0) return;
+    this.purgeDeleted = 0;
+    this.purgeTotal = this.purgeableCount;
+    this.modalService.open(this.purgeModal, {
+      centered: true,
+      size: 'sm',
+      windowClass: 'delete-confirm-modal',
+      backdrop: 'static',
+    });
+  }
+
+  async confirmPurge(modal: any) {
+    if (this.purgeableCount === 0) return;
+
+    // Unlike the single-row delete, this queues hundreds of writes — doing that
+    // offline would pile up a huge pending batch with no way to review it.
+    if (!navigator.onLine) {
+      this.toastr.error('You are offline. Reconnect to clear old logs.');
+      return;
+    }
+
+    this.isPurging = true;
+    this.purgeDeleted = 0;
+
+    // smsList is ordered createdAt desc, so everything past KEEP_RECENT is older.
+    const doomed = this.smsList.slice(this.KEEP_RECENT);
+    this.purgeTotal = doomed.length;
+
+    try {
+      const CHUNK = 450; // Firestore caps a batch at 500 writes
+      for (let i = 0; i < doomed.length; i += CHUNK) {
+        const slice = doomed.slice(i, i + CHUNK);
+        const batch = writeBatch(this.firestore);
+        for (const sms of slice) {
+          batch.delete(doc(this.firestore, 'sms', sms.id));
+        }
+        await batch.commit();
+        this.purgeDeleted += slice.length;
+      }
+
+      this.smsList = this.smsList.slice(0, this.KEEP_RECENT);
+      this.onSearch();
+      this.toastr.success(`${doomed.length} old SMS deleted`);
+      modal.close();
+    } catch {
+      this.toastr.error('Failed to clear old logs');
+      // Earlier batches may have committed — resync so the table matches the DB.
+      this.loadSms();
+      modal.close();
+    } finally {
+      this.isPurging = false;
     }
   }
 

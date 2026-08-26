@@ -806,3 +806,363 @@ body.dark-mode .gdm-title { color: #e2e8f0; }
 body.dark-mode .gdm-text { color: #94a3b8; }
 body.dark-mode .gdm-btn.gdm-cancel { background: #2a2a40; color: #94a3b8; border-color: #3a3a55; }
 body.dark-mode .gdm-btn.gdm-cancel:hover { background: #3a3a55; color: #e2e8f0; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DARK MODE — custom component classes
+   ─────────────────────────────────────────────────────────────────────────
+   Every list/table page follows a `{prefix}-{element}` convention (ud-, uc-,
+   nc-, rd-, ex-, pd-, bd-, …) with hardcoded light colours in its own SCSS.
+   Rather than repeat overrides per prefix, match on the shared element
+   suffix so any current or future component is covered automatically.
+
+   Palette (matches the Bootstrap overrides above):
+     surface #1a1a2e · raised #1e1e32 · hover #252540
+     border  #2a2a40 · border-2 #3a3a55
+     text    #e2e8f0 · muted #94a3b8 · faint #64748b
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Page headers ── */
+body.dark-mode [class*="-page-header"] [class*="-title"],
+body.dark-mode [class*="-header-left"] [class*="-title"],
+body.dark-mode [class$="-title"],
+body.dark-mode [class*="-section-title"],
+body.dark-mode [class*="-empty-title"],
+body.dark-mode [class*="-card-title"] {
+  color: #e2e8f0 !important;
+}
+body.dark-mode [class$="-sub"],
+body.dark-mode [class*="-subtitle"],
+body.dark-mode [class*="-empty-sub"],
+body.dark-mode [class*="-footer-info"],
+body.dark-mode [class*="-sum-label"],
+body.dark-mode [class*="-desc"] {
+  color: #94a3b8 !important;
+}
+
+/* ── Cards & surfaces ── */
+body.dark-mode [class$="-card"],
+body.dark-mode [class*="-summary-card"],
+body.dark-mode [class*="-sum-card"],
+body.dark-mode [class*="-section-body"],
+body.dark-mode [class*="-msg-card"] {
+  background: #1a1a2e !important;
+  border-color: #2a2a40 !important;
+  color: #e2e8f0 !important;
+}
+body.dark-mode [class*="-card-header"],
+body.dark-mode [class*="-section-head"],
+body.dark-mode [class*="-table-footer"],
+body.dark-mode [class*="-filter-bar"],
+body.dark-mode [class*="-date-row"] {
+  background: #1e1e32 !important;
+  border-color: #2a2a40 !important;
+}
+
+/* ── Filter controls ── */
+body.dark-mode [class*="-filter-label"] {
+  color: #64748b !important;
+}
+body.dark-mode [class$="-select"],
+body.dark-mode [class*="-search-input"],
+body.dark-mode [class*="-date-input"],
+body.dark-mode [class$="-input"] {
+  background: #1e1e32 !important;
+  border-color: #3a3a55 !important;
+  color: #e2e8f0 !important;
+}
+body.dark-mode [class$="-select"] option {
+  background: #1e1e32 !important;
+  color: #e2e8f0 !important;
+}
+body.dark-mode [class*="-search-input"]::placeholder,
+body.dark-mode [class$="-input"]::placeholder {
+  color: #475569 !important;
+}
+body.dark-mode [class*="-search-icon"] {
+  color: #64748b !important;
+}
+/* Native date/time pickers render a black glyph on dark backgrounds */
+body.dark-mode input[type="date"]::-webkit-calendar-picker-indicator,
+body.dark-mode input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(0.8);
+}
+
+/* ── Tables ── */
+body.dark-mode [class$="-table"] thead th {
+  background: #1e1e32 !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #2a2a40 !important;
+
+  i { color: #64748b !important; }
+}
+body.dark-mode [class$="-table"] tbody td {
+  color: #cbd5e1 !important;
+  border-bottom-color: #24243c !important;
+}
+body.dark-mode [class$="-table"] tbody tr:hover {
+  background: #252540 !important;
+}
+body.dark-mode [class*="-row-num"],
+body.dark-mode [class*="-row-index"] {
+  color: #64748b !important;
+}
+
+/* ── Cell text ── */
+body.dark-mode [class*="-user-name"],
+body.dark-mode [class$="-name"],
+body.dark-mode [class$="-amount"],
+body.dark-mode [class*="-sum-amount"],
+body.dark-mode [class$="-fee"] {
+  color: #e2e8f0 !important;
+}
+body.dark-mode [class$="-date"],
+body.dark-mode [class*="-date-cell"],
+body.dark-mode [class$="-phone"],
+body.dark-mode [class*="-user-id"],
+body.dark-mode [class*="-collected-by"],
+body.dark-mode [class$="-period"] {
+  color: #94a3b8 !important;
+}
+
+/* ── Badges & tags ── */
+body.dark-mode [class*="-id-badge"],
+body.dark-mode [class*="-area-tag"],
+body.dark-mode [class$="-pkg"],
+body.dark-mode [class$="-package"],
+body.dark-mode [class*="-stat-pill"],
+body.dark-mode [class*="-amount-badge"] {
+  background: rgba(108, 99, 255, 0.14) !important;
+  border-color: rgba(108, 99, 255, 0.3) !important;
+  color: #a5b4fc !important;
+}
+body.dark-mode [class*="-avatar"] {
+  color: #fff !important;
+}
+
+/* ── Empty states ── */
+body.dark-mode [class$="-empty"],
+body.dark-mode [class*="-empty-state"] {
+  color: #64748b !important;
+
+  i { color: #3a3a55 !important; }
+}
+
+/* ── Status tabs ── */
+body.dark-mode [class*="-status-tabs"] {
+  border-color: #2a2a40 !important;
+}
+body.dark-mode [class$="-tab"] {
+  background: #1e1e32 !important;
+  border-color: #3a3a55 !important;
+  color: #94a3b8 !important;
+}
+body.dark-mode [class$="-tab"]:hover {
+  background: #252540 !important;
+  color: #e2e8f0 !important;
+}
+
+/* ── Action buttons ── */
+body.dark-mode [class*="-action-btn"] {
+  background: #1e1e32 !important;
+  border-color: #3a3a55 !important;
+}
+body.dark-mode [class*="-action-btn"]:hover {
+  background: #252540 !important;
+}
+
+/* ── Loading overlay ── */
+body.dark-mode .loading-overlay {
+  background: rgba(10, 10, 22, 0.78) !important;
+}
+body.dark-mode .lo-box {
+  background: #1a1a2e !important;
+  border-color: #2a2a40 !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
+body.dark-mode .lo-text { color: #94a3b8 !important; }
+
+/* ── Shared search-select dropdown ── */
+body.dark-mode .ss-trigger {
+  background: #1e1e32 !important;
+  border-color: #3a3a55 !important;
+  color: #e2e8f0 !important;
+}
+body.dark-mode .ss-value { color: #e2e8f0 !important; }
+body.dark-mode .ss-chevron { color: #64748b !important; }
+body.dark-mode .ss-panel {
+  background: #1a1a2e !important;
+  border-color: #3a3a55 !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5) !important;
+}
+body.dark-mode .ss-search-row { border-bottom-color: #2a2a40 !important; }
+body.dark-mode .ss-search-input {
+  background: #1e1e32 !important;
+  border-color: #3a3a55 !important;
+  color: #e2e8f0 !important;
+}
+body.dark-mode .ss-search-icon { color: #64748b !important; }
+body.dark-mode .ss-option { color: #cbd5e1 !important; }
+body.dark-mode .ss-option:hover { background: #252540 !important; }
+body.dark-mode .ss-option.ss-disabled { color: #475569 !important; }
+body.dark-mode .ss-no-results { color: #64748b !important; }
+body.dark-mode .ss-opt-label { color: inherit !important; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DARK MODE — modals
+   ─────────────────────────────────────────────────────────────────────────
+   Every modal shares one anatomy, only the prefix changes (ncm-, um-, rdm-,
+   exm-, opm-, pkm-, arm-, csm-, stm-, sam-, rom-, bm-, cim-, cm-, pm-):
+
+     {p}-body    background #f4f6fb   ← page-like backdrop
+     {p}-section / .form-section  #fff card
+     {p}-section-head / .section-head  #f8fafc strip
+     {p}-footer  #fff with #f1f5f9 top border
+
+   Matching on the suffix covers every modal at once. The unprefixed
+   `.section-*` / `.form-section` variants are listed explicitly since they
+   have no leading dash for `[class*=]` to catch.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Modal shell ── */
+body.dark-mode .modal-card,
+body.dark-mode .custom-modal,
+body.dark-mode .modal-content-wrapper {
+  background: #14142a !important;
+  border-color: #2a2a40 !important;
+  color: #e2e8f0 !important;
+}
+
+/* ── Modal body (the light-grey backdrop behind the section cards) ──
+   Bootstrap's own .card-body / .modal-body sit *inside* an already-dark
+   surface, so they stay transparent rather than painting a darker inset. */
+body.dark-mode [class$="-body"]:not(.section-body):not([class*="-section-body"]):not(.card-body):not(.modal-body):not(.content-body) {
+  background: #14142a !important;
+  color: #e2e8f0 !important;
+}
+body.dark-mode .card-body,
+body.dark-mode .modal-body {
+  background: transparent !important;
+  color: #e2e8f0 !important;
+}
+
+/* ── Section cards inside modals ── */
+body.dark-mode [class$="-section"],
+body.dark-mode .form-section {
+  background: #1a1a2e !important;
+  border-color: #2a2a40 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+}
+body.dark-mode [class*="-section-head"],
+body.dark-mode .section-head {
+  background: #1e1e32 !important;
+  border-bottom-color: #2a2a40 !important;
+}
+body.dark-mode [class*="-section-title"],
+body.dark-mode .section-title {
+  color: #e2e8f0 !important;
+}
+body.dark-mode .section-body { background: transparent !important; }
+
+/* Tinted section icons */
+body.dark-mode .section-icon,
+body.dark-mode [class*="-section-icon"] {
+  &.si-blue   { background: rgba(59, 130, 246, 0.16) !important; color: #93c5fd !important; }
+  &.si-green  { background: rgba(34, 197, 94, 0.16)  !important; color: #86efac !important; }
+  &.si-orange { background: rgba(249, 115, 22, 0.16) !important; color: #fdba74 !important; }
+  &.si-purple { background: rgba(139, 92, 246, 0.16) !important; color: #c4b5fd !important; }
+}
+
+/* ── Modal footer ── */
+body.dark-mode [class$="-footer"]:not(.card-footer) {
+  background: #1a1a2e !important;
+  border-top-color: #2a2a40 !important;
+}
+
+/* ── Form labels & helpers ── */
+body.dark-mode .form-label,
+body.dark-mode [class*="-form-label"] {
+  color: #94a3b8 !important;
+}
+body.dark-mode .pkg-divider,
+body.dark-mode [class*="-divider"] {
+  color: #64748b !important;
+  border-bottom-color: #2a2a40 !important;
+}
+body.dark-mode .invalid-feedback,
+body.dark-mode [class*="-err"] { color: #f87171 !important; }
+
+/* ── Input prefix boxes (the "Rs" chip) ── */
+body.dark-mode [class*="-prefix-wrap"],
+body.dark-mode .input-group {
+  border-color: #3a3a55 !important;
+}
+body.dark-mode [class*="-prefix"]:not([class*="-prefix-wrap"]),
+body.dark-mode .input-group-text {
+  background: #252540 !important;
+  border-right-color: #3a3a55 !important;
+  color: #94a3b8 !important;
+}
+
+/* ── Cancel / secondary modal buttons ── */
+body.dark-mode [class*="-cancel-btn"],
+body.dark-mode [class*="-btn-cancel"] {
+  background: #252540 !important;
+  border-color: #3a3a55 !important;
+  color: #cbd5e1 !important;
+}
+body.dark-mode [class*="-cancel-btn"]:hover,
+body.dark-mode [class*="-btn-cancel"]:hover {
+  background: #3a3a55 !important;
+  color: #e2e8f0 !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DARK MODE — polish
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Placeholders: #475569 sat too close to the field background to read */
+body.dark-mode .form-control::placeholder,
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder,
+body.dark-mode [class$="-input"]::placeholder,
+body.dark-mode [class*="-search-input"]::placeholder {
+  color: #6b7a91 !important;
+  opacity: 1 !important;
+}
+
+/* Bare inputs that predate the component classes */
+body.dark-mode input[type="text"],
+body.dark-mode input[type="number"],
+body.dark-mode input[type="date"],
+body.dark-mode input[type="time"],
+body.dark-mode input[type="search"],
+body.dark-mode input[type="tel"],
+body.dark-mode input[type="email"],
+body.dark-mode select,
+body.dark-mode textarea {
+  background-color: #1e1e32;
+  border-color: #3a3a55;
+  color: #e2e8f0;
+}
+body.dark-mode select option { background: #1e1e32; color: #e2e8f0; }
+
+body.dark-mode hr { border-color: #2a2a40 !important; opacity: 1; }
+
+/* Scrollbars — a white track is jarring against the dark surfaces */
+body.dark-mode * {
+  scrollbar-color: #3a3a55 #14142a;
+}
+body.dark-mode ::-webkit-scrollbar { width: 10px; height: 10px; }
+body.dark-mode ::-webkit-scrollbar-track { background: #14142a; }
+body.dark-mode ::-webkit-scrollbar-thumb {
+  background: #3a3a55;
+  border-radius: 6px;
+  border: 2px solid #14142a;
+}
+body.dark-mode ::-webkit-scrollbar-thumb:hover { background: #4a4a6a; }
+
+/* Bootstrap backdrop sits too light over the dark shell */
+body.dark-mode .modal-backdrop.show { opacity: 0.7; }
+
+/* Purge progress bar track inside the global delete modal */
+body.dark-mode .gdm-progress { background: #2a2a40 !important; }

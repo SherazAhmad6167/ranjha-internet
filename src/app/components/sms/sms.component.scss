@@ -1164,3 +1164,30 @@
   .bc-recipient-col { flex-direction: column; }
   .mc-phone-frame { width: 180px; }
 }
+
+/* ── Clear old logs ── */
+.sms-purge-btn {
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.gdm-progress {
+  width: 100%;
+  height: 6px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  overflow: hidden;
+  margin: 4px 0 10px;
+}
+
+.gdm-progress-bar {
+  height: 100%;
+  background: #dc3545;
+  border-radius: 4px;
+  transition: width 0.25s ease;
+}

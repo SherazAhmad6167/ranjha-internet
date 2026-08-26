@@ -342,7 +342,15 @@
                 [(ngModel)]="searchTerm" (input)="onSearch()" />
             </div>
           </div>
-          <div class="col-md-2 ms-auto">
+          <div class="col-md-auto ms-auto" *ngIf="purgeableCount > 0">
+            <label class="form-label mb-1 d-block">&nbsp;</label>
+            <button class="btn btn-outline-danger sms-purge-btn" (click)="openPurgeModal()"
+              [title]="'Delete ' + purgeableCount + ' older messages, keeping the ' + KEEP_RECENT + ' most recent'">
+              <i class="ri-delete-bin-6-line me-1"></i>
+              Clear Old ({{ purgeableCount }})
+            </button>
+          </div>
+          <div class="col-md-2" [class.ms-auto]="purgeableCount === 0">
             <label class="form-label mb-1">Entries</label>
             <select class="form-control" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
               <option [value]="10">10</option>
@@ -503,6 +511,39 @@
 </ng-template>
 
 <!-- Delete Confirm Modal -->
+<ng-template #purgeModal let-modal>
+  <div class="gdm-wrap">
+    <button class="gdm-close" type="button" (click)="modal.dismiss()" [disabled]="isPurging">
+      <i class="ri-close-line"></i>
+    </button>
+    <div class="gdm-icon"><i class="ri-delete-bin-6-line"></i></div>
+    <h5 class="gdm-title">Clear Old SMS Logs?</h5>
+    <p class="gdm-text">
+      This permanently deletes <strong>{{ purgeTotal }}</strong> older
+      {{ purgeTotal === 1 ? 'message' : 'messages' }} from the database.
+      The <strong>{{ KEEP_RECENT }}</strong> most recent are kept.
+      <br>This action cannot be undone.
+    </p>
+    <div class="gdm-progress" *ngIf="isPurging">
+      <div class="gdm-progress-bar"
+        [style.width.%]="purgeTotal ? (purgeDeleted / purgeTotal) * 100 : 0"></div>
+    </div>
+    <p class="gdm-text mb-0" *ngIf="isPurging">
+      Deleted {{ purgeDeleted }} of {{ purgeTotal }}…
+    </p>
+    <div class="gdm-actions">
+      <button class="gdm-btn gdm-cancel" type="button" (click)="modal.dismiss()" [disabled]="isPurging">Cancel</button>
+      <button class="gdm-btn gdm-confirm" type="button" (click)="confirmPurge(modal)" [disabled]="isPurging">
+        <span *ngIf="!isPurging"><i class="ri-delete-bin-6-line"></i> Delete {{ purgeTotal }}</span>
+        <span *ngIf="isPurging" class="d-flex align-items-center gap-2">
+          <span class="spinner-border spinner-border-sm" role="status"></span> Deleting...
+        </span>
+      </button>
+    </div>
+  </div>
+</ng-template>
+
+
 <ng-template #deleteModal let-modal>
   <div class="gdm-wrap">
     <button class="gdm-close" type="button" (click)="modal.dismiss()" [disabled]="isDeleting">

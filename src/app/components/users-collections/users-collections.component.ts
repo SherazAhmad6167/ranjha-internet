@@ -108,6 +108,8 @@ export class UsersCollectionsComponent {
     this.userForm = this.fb.group({
       select_package: [null, [Validators.required]],
       internet_package_fee: [null, [Validators.required]],
+      previous_remaining: [null],
+      previous_remaining_month: [null],
     });
   }
 
@@ -657,6 +659,18 @@ export class UsersCollectionsComponent {
     this.showReceiptModal = true;
   }
 
+  // Arrears settled by the payment being receipted, captured before the bill clears them.
+  arrearsPaid = 0;
+  arrearsMonth: string | null = null;
+
+  captureArrearsForReceipt(bill: any) {
+    const amount = Number(bill.previous_remaining || 0);
+    if (amount > 0) {
+      this.arrearsPaid = amount;
+      this.arrearsMonth = bill.previous_remaining_month || null;
+    }
+  }
+
   prepareReceipt() {
     const bill = this.selectedBill;
 
@@ -674,6 +688,9 @@ export class UsersCollectionsComponent {
       name: bill.user_name,
       month: bill.month,
       year: bill.year,
+      previousAmount: this.arrearsPaid,
+      previousMonth: this.arrearsMonth,
+      currentAmount: totalAmount - this.arrearsPaid,
       address: this.selectedBill.address,
       advance: '',
       totalAmount,
@@ -1079,6 +1096,10 @@ export class UsersCollectionsComponent {
 
     this.isSubmitting = true;
     try {
+      // Reset per-collection so a previous receipt's arrears don't leak into this one
+      this.arrearsPaid = 0;
+      this.arrearsMonth = null;
+
       const collectedNow = Number(this.collectionForm.collected_amount || 0);
       const userDocRef = doc(
         this.firestore,
@@ -1185,6 +1206,10 @@ export class UsersCollectionsComponent {
 
           if (bill.remaining_amount === 0) {
             bill.status = 'paid';
+            // Arrears are settled — keep them on the receipt, clear from the bill
+            this.captureArrearsForReceipt(bill);
+            bill.previous_remaining = null;
+            bill.previous_remaining_month = null;
           }
 
           remainingPayment -= pay;
@@ -1229,6 +1254,11 @@ export class UsersCollectionsComponent {
             bill.remaining_amount = remaining > 0 ? remaining : 0;
 
             bill.status = 'paid';
+
+            // Arrears are settled — keep them on the receipt, clear from the bill
+            this.captureArrearsForReceipt(bill);
+            bill.previous_remaining = null;
+            bill.previous_remaining_month = null;
 
             bill.collected_by = this.userName;
             bill.collected_date = new Date();
@@ -1441,12 +1471,37 @@ export class UsersCollectionsComponent {
   internetPackages: any[] = [];
   selectedRow: any;
 
+  monthsList = [
+    'january', 'february', 'march', 'april', 'may', 'june',
+    'july', 'august', 'september', 'october', 'november', 'december',
+  ];
+
+  get feeDifference(): number {
+    const newFee = Number(this.userForm.value.internet_package_fee) || 0;
+    const oldFee = Number(this.selectedRow?.internet_package_fee) || 0;
+    return newFee - oldFee;
+  }
+
+  /** Bill amount with any previously-added arrears stripped back out. */
+  get baseBillAmount(): number {
+    const bill = this.selectedRow?.bills?.[0];
+    return Number(bill?.amount || 0) - Number(bill?.previous_remaining || 0);
+  }
+
+  get updatedBillPreview(): number {
+    const previous = Number(this.userForm.value.previous_remaining) || 0;
+    return this.baseBillAmount + previous + this.feeDifference;
+  }
+
   openUpdateModal(row: any) {
     console.log('update row data:', row);
     this.selectedRow = row;
+    const bill = row.bills?.[0];
     this.userForm.patchValue({
       select_package: row.select_package,
       internet_package_fee: row.internet_package_fee,
+      previous_remaining: bill?.previous_remaining ?? null,
+      previous_remaining_month: bill?.previous_remaining_month ?? null,
     });
     this.showUpdateModal = true;
   }
@@ -1462,6 +1517,10 @@ export class UsersCollectionsComponent {
     try {
       const newPackage = this.userForm.value.select_package;
       const newFee = Number(this.userForm.value.internet_package_fee);
+      // Arrears carried forward from previous months, added on top of this bill
+      const previousRemaining = Number(this.userForm.value.previous_remaining) || 0;
+      const previousRemainingMonth =
+        this.userForm.value.previous_remaining_month || null;
 
       const userRef = doc(this.firestore, 'users', this.selectedRow.docId);
       const userSnap = await getDoc(userRef);
@@ -1477,12 +1536,21 @@ export class UsersCollectionsComponent {
 
       const updatedBills = bills.map((bill: any) => {
         if (bill.bill_id === this.selectedRow.bills[0].bill_id) {
-          const newAmount = Number(bill.amount) + difference;
-          const newRemaining = Number(bill.remaining_amount ?? bill.amount) + difference;
+          // Strip any arrears added by a previous edit so re-editing replaces
+          // rather than compounds the carried-forward balance.
+          const oldPrevious = Number(bill.previous_remaining || 0);
+          const baseAmount = Number(bill.amount) - oldPrevious;
+          const baseRemaining =
+            Number(bill.remaining_amount ?? bill.amount) - oldPrevious;
+
           return {
             ...bill,
-            amount: newAmount,
-            remaining_amount: newRemaining,
+            amount: baseAmount + difference + previousRemaining,
+            remaining_amount: baseRemaining + difference + previousRemaining,
+            previous_remaining: previousRemaining || null,
+            previous_remaining_month: previousRemaining
+              ? previousRemainingMonth
+              : null,
           };
         }
         return bill;
