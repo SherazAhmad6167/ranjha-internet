@@ -90,7 +90,7 @@
               <label class="form-label">Area <span class="req">*</span></label>
               <app-search-select
                 formControlName="sublocality"
-                [options]="internetAreas"
+                [options]="areaOptions"
                 valueKey="sublocality"
                 displayKey="sublocality"
                 placeholder="Select area"
@@ -348,7 +348,7 @@
               <label class="form-label">Operator</label>
               <select class="form-control" formControlName="operator_name">
                 <option value="" disabled>Select operator</option>
-                <option *ngFor="let op of internetOperators" [value]="op.operator_name">
+                <option *ngFor="let op of operatorOptions" [value]="op.operator_name">
                   {{ op.operator_name | titlecase }}
                 </option>
               </select>

@@ -7,8 +7,11 @@ import {
   doc,
   Firestore,
   getDoc,
+  getDocs,
+  query,
   setDoc,
   updateDoc,
+  where,
 } from '@angular/fire/firestore';
 import {
   FormBuilder,
@@ -61,6 +64,9 @@ export class NewConnectionModalComponent implements OnDestroy {
   internetAreas: any[] = [];
   internetSubAreas: any[] = [];
   internetOperators: any[] = [];
+  role = '';
+  operatorSublocalities: string[] = [];
+  loggedInOperatorName = '';
   recievedByList: string[] = [
     'Saqib Ranjha',
     'Qaisar Abbas',
@@ -177,6 +183,13 @@ export class NewConnectionModalComponent implements OnDestroy {
   }
 
   ngOnInit() {
+    this.role = localStorage.getItem('role') || '';
+    if (this.role === 'operator') {
+      this.operatorSublocalities = JSON.parse(
+        localStorage.getItem('sublocality') || '[]',
+      );
+      this.resolveOperatorName();
+    }
     this.loadInternetAreas();
     this.loadOperatorName();
     this.loadCompanies();
@@ -367,9 +380,84 @@ export class NewConnectionModalComponent implements OnDestroy {
         });
 
         this.editForm();
+        this.applyOperatorDefaults();
       }
     } catch (error) {
       console.error('Error loading internet areas', error);
+    }
+  }
+
+  // An operator may only pick from the areas assigned to him.
+  get areaOptions(): any[] {
+    if (this.role !== 'operator') return this.internetAreas;
+    return this.internetAreas.filter((a) =>
+      this.operatorSublocalities.includes(a.sublocality),
+    );
+  }
+
+  // An operator may only book a connection under his own operator name.
+  get operatorOptions(): any[] {
+    if (this.role !== 'operator') return this.internetOperators;
+
+    const own = this.normalizeName(this.loggedInOperatorName);
+    if (!own) return [];
+
+    const matches = this.internetOperators.filter(
+      (op) => this.normalizeName(op.operator_name) === own,
+    );
+
+    // Fall back to his login name when he is not in the operator list yet.
+    return matches.length
+      ? matches
+      : [{ operator_name: this.loggedInOperatorName }];
+  }
+
+  private normalizeName(name: string): string {
+    return String(name || '').trim().toLowerCase();
+  }
+
+  // Login stores `user_name`, while connections store the operator's display
+  // `name` - resolve it once so the operator dropdown can be scoped to him.
+  private async resolveOperatorName() {
+    this.loggedInOperatorName = localStorage.getItem('name') || '';
+
+    if (!this.loggedInOperatorName) {
+      const userName = localStorage.getItem('username') || '';
+      if (!userName) return;
+
+      try {
+        const snap = await getDocs(
+          query(
+            collection(this.firestore, 'recoveryOfficer'),
+            where('user_name', '==', userName),
+          ),
+        );
+        if (!snap.empty) {
+          this.loggedInOperatorName = snap.docs[0].data()['name'] || '';
+          localStorage.setItem('name', this.loggedInOperatorName);
+        }
+      } catch (error) {
+        console.error('Error resolving recovery officer name', error);
+      }
+    }
+
+    this.applyOperatorDefaults();
+  }
+
+  // With a single choice left there is nothing to pick, so pre-select it.
+  private applyOperatorDefaults() {
+    if (this.role !== 'operator') return;
+
+    const operatorCtrl = this.userForm.get('operator_name');
+    const operators = this.operatorOptions;
+    if (operators.length === 1 && !operatorCtrl?.value) {
+      operatorCtrl?.setValue(operators[0].operator_name);
+    }
+
+    const areaCtrl = this.userForm.get('sublocality');
+    const areas = this.areaOptions;
+    if (areas.length === 1 && !areaCtrl?.value) {
+      areaCtrl?.setValue(areas[0].sublocality);
     }
   }
 
@@ -421,6 +509,8 @@ export class NewConnectionModalComponent implements OnDestroy {
         this.internetOperators.sort((a: any, b: any) => {
           return a.operator_name.localeCompare(b.operator_name);
         });
+
+        this.applyOperatorDefaults();
       }
     } catch (error) {
       console.error('Error loading operators', error);

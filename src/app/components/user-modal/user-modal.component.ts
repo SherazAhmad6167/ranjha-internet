@@ -38,6 +38,8 @@ export class UserModalComponent {
 
   internetAreas: any[] = [];
   internetSubAreas: any[] = [];
+  role = '';
+  operatorSublocalities: string[] = [];
   companies: any[] = [];
   internetPackages: any[] = [];
   cablePackages: any[] = [];
@@ -114,6 +116,12 @@ export class UserModalComponent {
 
   ngOnInit() {
     // this.verifyConfig();
+    this.role = localStorage.getItem('role') || '';
+    if (this.role === 'operator') {
+      this.operatorSublocalities = JSON.parse(
+        localStorage.getItem('sublocality') || '[]',
+      );
+    }
     this.loadInternetAreas();
     // this.loadInternetSubAreas();
     this.loadCompanies();
@@ -323,6 +331,14 @@ export class UserModalComponent {
     } catch (error) {
       console.error('Error loading internet areas', error);
     }
+  }
+
+  // An operator may only pick from the areas assigned to him.
+  get areaOptions(): any[] {
+    if (this.role !== 'operator') return this.internetAreas;
+    return this.internetAreas.filter((a) =>
+      this.operatorSublocalities.includes(a.sublocality),
+    );
   }
 
   onSublocalityChange(selectedSublocality: string) {

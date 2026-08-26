@@ -82,6 +82,7 @@ export class LoginComponent implements OnInit {
       }
 
       localStorage.setItem('username', user['user_name']);
+      localStorage.setItem('name', user['name'] || '');
       localStorage.setItem('role', user['role']);
       localStorage.setItem('userId', snapshot.docs[0].id);
       localStorage.setItem('sublocality', JSON.stringify(user['sublocality'] || []));
