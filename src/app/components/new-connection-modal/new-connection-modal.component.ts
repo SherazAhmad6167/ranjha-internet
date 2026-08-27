@@ -21,6 +21,9 @@ import {
   Validators,
 } from '@angular/forms';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { firstValueFrom } from 'rxjs';
+import { MikrotikService, MikrotikServer } from '../../shared/mikrotik.service';
+import { ZalService } from '../../shared/zal.service';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
 
 @Component({
@@ -67,6 +70,24 @@ export class NewConnectionModalComponent implements OnDestroy {
   role = '';
   operatorSublocalities: string[] = [];
   loggedInOperatorName = '';
+
+  // ── Provisioning (MikroTik + ZalUltra) ──
+  readonly mikrotikServers: { id: MikrotikServer; label: string; ip: string }[] = [
+    { id: 1, label: '194.1002', ip: '103.66.149.194' },
+    { id: 2, label: '195.9998', ip: '103.66.149.195' },
+  ];
+  mtProfiles: string[] = [];
+  mtProfilesLoading = false;
+  mtProfilesError: string | null = null;
+
+  zalPackages: any[] = [];
+  zalAreas: any[] = [];
+  zalNas: any[] = [];
+  zalSalespersons: any[] = [];
+  zalLookupsLoaded = false;
+  zalLookupsLoading = false;
+
+  provisionLog: { target: string; ok: boolean; message: string }[] = [];
   recievedByList: string[] = [
     'Saqib Ranjha',
     'Qaisar Abbas',
@@ -86,6 +107,8 @@ export class NewConnectionModalComponent implements OnDestroy {
     private toastr: ToastrService,
     private firestore: Firestore,
     private modalService: NgbModal,
+    private mikrotikService: MikrotikService,
+    private zalService: ZalService,
   ) {
     this.userForm = this.fb.group({
       installation_date: [''],
@@ -124,6 +147,36 @@ export class NewConnectionModalComponent implements OnDestroy {
       cable_package_fee: [null],
       sub_area: [null],
       createdAt: [new Date()],
+
+      // Pushed to the router / panel after the local record is saved.
+      provisioning: this.fb.group({
+        mikrotik_enabled: [false],
+        mikrotik_server: [1],
+        mikrotik_profile: [''],
+        mikrotik_password: [''],
+
+        zal_enabled: [false],
+        zal_package_id: [''],
+        zal_salesperson_id: [''],
+        zal_area: [''],
+        zal_nas_id: [''],
+        zal_expiry: [''],
+        zal_password: [''],
+        zal_connection_password: [''],
+      }),
+    });
+
+    // Required fields depend on which targets are switched on.
+    this.provisioning.get('mikrotik_enabled')?.valueChanges.subscribe((on) => {
+      this.syncProvisionValidators();
+      if (on) this.loadRouterProfiles();
+    });
+    this.provisioning.get('zal_enabled')?.valueChanges.subscribe((on) => {
+      this.syncProvisionValidators();
+      if (on) this.loadZalLookups();
+    });
+    this.provisioning.get('mikrotik_server')?.valueChanges.subscribe(() => {
+      if (this.provisioning.get('mikrotik_enabled')?.value) this.loadRouterProfiles();
     });
   }
 
@@ -461,6 +514,124 @@ export class NewConnectionModalComponent implements OnDestroy {
     }
   }
 
+  get provisioning(): FormGroup {
+    return this.userForm.get('provisioning') as FormGroup;
+  }
+
+  get provisionMikrotik(): boolean {
+    return !!this.provisioning?.get('mikrotik_enabled')?.value;
+  }
+
+  get provisionZal(): boolean {
+    return !!this.provisioning?.get('zal_enabled')?.value;
+  }
+
+  /** Areas are a hierarchy on the panel; type 4 rows are the pickable ones. */
+  get zalAreaOptions(): any[] {
+    const leaves = this.zalAreas.filter((a) => Number(a?.type) === 4);
+    return (leaves.length ? leaves : this.zalAreas)
+      .slice()
+      .sort((a, b) => String(a?.name || '').localeCompare(String(b?.name || '')));
+  }
+
+  // app-search-select reads {id, name}, so shape the lists once here.
+  get mikrotikServerOptions(): any[] {
+    return this.mikrotikServers.map((srv) => ({
+      id: srv.id,
+      name: `${srv.label} — ${srv.ip}`,
+    }));
+  }
+
+  get zalNasOptions(): any[] {
+    return this.zalNas.map((nas) => ({ id: nas.id, name: this.zalNasName(nas) }));
+  }
+
+  get zalSalespersonOptions(): any[] {
+    return this.zalSalespersons.map((user) => ({
+      id: user.id,
+      name: this.zalSalespersonName(user),
+    }));
+  }
+
+  zalNasName(device: any): string {
+    return (
+      device?.shortname ||
+      device?.nas_details_data?.nas_name ||
+      device?.nasname ||
+      `#${device?.id}`
+    );
+  }
+
+  zalSalespersonName(user: any): string {
+    const label = user?.name || user?.username || `#${user?.id}`;
+    return user?.username && user?.name ? `${user.name} (${user.username})` : label;
+  }
+
+  private syncProvisionValidators() {
+    const group = this.provisioning;
+    if (!group) return;
+
+    const mt = !!group.get('mikrotik_enabled')?.value;
+    const zal = !!group.get('zal_enabled')?.value;
+
+    const setRequired = (name: string, required: boolean) => {
+      const control = group.get(name);
+      if (!control) return;
+      if (required) control.setValidators([Validators.required]);
+      else control.clearValidators();
+      control.updateValueAndValidity({ emitEvent: false });
+    };
+
+    setRequired('mikrotik_profile', mt);
+    setRequired('mikrotik_password', mt);
+    setRequired('zal_package_id', zal);
+    setRequired('zal_salesperson_id', zal);
+    setRequired('zal_password', zal);
+
+    // The panel rejects a create without identity / phone.
+    const cnic = this.userForm.get('cnic');
+    if (zal) cnic?.setValidators([Validators.required]);
+    else cnic?.clearValidators();
+    cnic?.updateValueAndValidity({ emitEvent: false });
+  }
+
+  loadRouterProfiles() {
+    const server = Number(this.provisioning.get('mikrotik_server')?.value || 1) as MikrotikServer;
+    this.mtProfilesLoading = true;
+    this.mtProfilesError = null;
+    this.mtProfiles = [];
+
+    this.mikrotikService.getPppProfiles(server).subscribe({
+      next: (profiles) => {
+        this.mtProfiles = (profiles || [])
+          .map((p: any) => p.name)
+          .filter((name: string) => !!name)
+          .sort();
+        this.mtProfilesLoading = false;
+      },
+      error: (err) => {
+        this.mtProfilesError = err?.message || 'Cannot reach the router';
+        this.mtProfilesLoading = false;
+      },
+    });
+  }
+
+  // Fetched on demand - four calls that most connections never need.
+  loadZalLookups() {
+    if (this.zalLookupsLoaded || this.zalLookupsLoading) return;
+    this.zalLookupsLoading = true;
+
+    const done = () => (this.zalLookupsLoading = false);
+
+    this.zalService.getPackages().subscribe({
+      next: (rows) => { this.zalPackages = rows || []; this.zalLookupsLoaded = true; done(); },
+      error: done,
+    });
+    this.zalService.getAreas().subscribe({ next: (rows) => (this.zalAreas = rows || []), error: () => {} });
+    this.zalService.getNas().subscribe({ next: (rows) => (this.zalNas = rows || []), error: () => {} });
+    this.zalService.getUsers().subscribe({ next: (rows) => (this.zalSalespersons = rows || []), error: () => {} });
+  }
+
   onSublocalityChange(selectedSublocality: string) {
     const selected = this.internetAreas.find(
       (item) => item.sublocality === selectedSublocality,
@@ -534,7 +705,10 @@ export class NewConnectionModalComponent implements OnDestroy {
   if (this.userForm.invalid) {
     this.userForm.markAllAsTouched();
     setTimeout(() => {
-      document.querySelector('.is-invalid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // app-search-select flags itself with .ss-invalid, not .is-invalid
+      document
+        .querySelector('.is-invalid, .ss-invalid')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 50);
     return;
   }
@@ -542,8 +716,11 @@ export class NewConnectionModalComponent implements OnDestroy {
   this.isSaving = true;
 
   try {
+    const raw = this.userForm.getRawValue();
+    if (this.editMode) delete raw.provisioning; // set once, at creation
+
     const payload = {
-      ...this.userForm.getRawValue(),
+      ...raw,
       updatedAt: new Date(),
     };
 
@@ -594,6 +771,10 @@ export class NewConnectionModalComponent implements OnDestroy {
         ...dataToSave,
         connectionId: id,
       });
+
+      // Push to the router / panel. Never blocks the local record - a failure
+      // out there must not lose the customer here.
+      await this.provision(dataToSave, id);
     }
 
     // ✅ TOAST
@@ -625,6 +806,114 @@ export class NewConnectionModalComponent implements OnDestroy {
     this.isSaving = false;
   }
 }
+
+  /**
+   * Creates the same customer on the MikroTik router and/or the ZalUltra
+   * panel. Each target is independent: one failing does not stop the other,
+   * and neither can undo the Firestore write that already happened.
+   */
+  private async provision(data: any, docId: string) {
+    const cfg = data?.provisioning || {};
+    if (!cfg.mikrotik_enabled && !cfg.zal_enabled) return;
+
+    this.provisionLog = [];
+    const username = String(data.internet_id || '').trim();
+
+    if (cfg.mikrotik_enabled) {
+      const server = Number(cfg.mikrotik_server || 1) as MikrotikServer;
+      const label = this.mikrotikServers.find((s) => s.id === server)?.label || `server ${server}`;
+      try {
+        await firstValueFrom(
+          this.mikrotikService.createPppSecret(
+            username,
+            cfg.mikrotik_password,
+            cfg.mikrotik_profile || 'default',
+            'pppoe',
+            server,
+          ),
+        );
+        this.provisionLog.push({ target: 'mikrotik', ok: true, message: `Created on MikroTik ${label}` });
+      } catch (err: any) {
+        this.provisionLog.push({
+          target: 'mikrotik',
+          ok: false,
+          message: `MikroTik ${label}: ${err?.message || 'failed'}`,
+        });
+      }
+    }
+
+    if (cfg.zal_enabled) {
+      try {
+        const result = await firstValueFrom(
+          this.zalService.createSubscriber(this.zalPayload(data, cfg, username)),
+        );
+        const id = result?.data?.id ?? result?.id ?? null;
+        this.provisionLog.push({
+          target: 'zal',
+          ok: true,
+          message: id ? `Created in ZalUltra (id ${id})` : 'Created in ZalUltra',
+        });
+      } catch (err: any) {
+        this.provisionLog.push({
+          target: 'zal',
+          ok: false,
+          message: `ZalUltra: ${err?.message || 'failed'}`,
+        });
+      }
+    }
+
+    for (const entry of this.provisionLog) {
+      if (entry.ok) this.toastr.success(entry.message);
+      else this.toastr.error(entry.message, undefined, { timeOut: 8000 });
+    }
+
+    // Record what happened so a failed push is visible later.
+    try {
+      const stamp = { provisioning_result: this.provisionLog, provisioned_at: new Date() };
+      await Promise.all([
+        updateDoc(doc(this.firestore, 'newConnection', docId), stamp),
+        updateDoc(doc(this.firestore, 'users', docId), stamp),
+      ]);
+    } catch {
+      // The customer is saved; a missing audit stamp is not worth failing over.
+    }
+  }
+
+  /** Maps the connection form onto the panel's create-subscriber fields. */
+  private zalPayload(data: any, cfg: any, username: string): Record<string, any> {
+    const payload: Record<string, any> = {
+      username,
+      fullname: data.user_name,
+      password: cfg.zal_password,
+      connection_password: cfg.zal_connection_password || cfg.mikrotik_password || '',
+      package_id: cfg.zal_package_id,
+      salesperson_id: cfg.zal_salesperson_id,
+      nas_id: cfg.zal_nas_id,
+      area: cfg.zal_area,
+      phone: data.mobile_no,
+      identity: data.cnic,
+      address: data.address,
+      expiration_date: this.toPanelDateTime(cfg.zal_expiry),
+      profile_status: 2,
+    };
+
+    // The panel stores the parent chain alongside the area.
+    const area = this.zalAreas.find((a) => String(a?.id) === String(cfg.zal_area));
+    if (area) {
+      payload['country'] = area.country ?? undefined;
+      payload['province'] = area.province ?? undefined;
+      payload['city'] = area.city ?? undefined;
+    }
+
+    return payload;
+  }
+
+  // The panel wants 'YYYY-MM-DD HH:mm:ss'; datetime-local speaks 'YYYY-MM-DDTHH:mm'.
+  private toPanelDateTime(value: string): string {
+    if (!value) return '';
+    const cleaned = String(value).replace('T', ' ').trim();
+    return cleaned.length === 16 ? `${cleaned}:00` : cleaned;
+  }
 
   ngOnDestroy() {
     this.closeCamera();

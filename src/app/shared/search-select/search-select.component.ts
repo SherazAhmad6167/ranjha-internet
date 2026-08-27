@@ -34,6 +34,8 @@ export class SearchSelectComponent implements ControlValueAccessor {
   @Input() allowEmpty = true;
   @Input() emptyValue: any = '';
   @Input() isInvalid = false;
+  /** Off for technical values (router profiles) that must read verbatim. */
+  @Input() titleCase = true;
   @Output() selectionChange = new EventEmitter<any>();
 
   @ViewChild('searchInput') searchInput!: ElementRef;
@@ -94,6 +96,8 @@ export class SearchSelectComponent implements ControlValueAccessor {
   }
 
   toTitleCase(s: string): string {
+    const text = String(s || '');
+    if (!this.titleCase) return text;
     return String(s || '').replace(/\b\w/g, (c) => c.toUpperCase());
   }
 

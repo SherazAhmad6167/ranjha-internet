@@ -296,13 +296,14 @@
       <div class="row g-3 mb-3">
         <div class="col-6">
           <label class="form-label fw-semibold">Profile / Package <span class="text-danger">*</span></label>
-          <select class="form-select" formControlName="profile"
-            [class.is-invalid]="form.get('profile')?.touched && form.get('profile')?.invalid">
-            <option value="" disabled>
-              {{ profilesLoading ? 'Loading profiles...' : '— Select profile —' }}
-            </option>
-            <option *ngFor="let p of routerProfiles" [value]="p">{{ p }}</option>
-          </select>
+          <app-search-select
+            formControlName="profile"
+            [options]="routerProfiles"
+            [placeholder]="profilesLoading ? 'Loading profiles...' : '— Select profile —'"
+            [allowEmpty]="false"
+            [titleCase]="false"
+            [isInvalid]="!!(form.get('profile')?.touched && form.get('profile')?.invalid)">
+          </app-search-select>
           <div class="invalid-feedback">Profile is required</div>
           <small class="text-muted">Profiles loaded directly from the router</small>
         </div>

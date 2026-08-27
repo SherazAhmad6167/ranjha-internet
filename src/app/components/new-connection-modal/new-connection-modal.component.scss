@@ -771,3 +771,115 @@ textarea.form-control {
   padding: 8px 22px;
   font-size: 13.5px; font-weight: 600;
 }
+
+/* == Provisioning - create on MikroTik / ZalUltra ======================= */
+.prov-hint {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  background: #f1f5f9;
+  border-radius: 20px;
+  padding: 3px 10px;
+}
+
+.prov-note {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0 0 14px;
+  strong { color: #334155; }
+}
+
+.prov-card {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+  transition: border-color 0.18s, box-shadow 0.18s;
+
+  & + .prov-card { margin-top: 12px; }
+  &.prov-on { border-color: #c7d2fe; box-shadow: 0 3px 12px rgba(99, 102, 241, 0.12); }
+}
+
+.prov-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px;
+  background: #fafbfc;
+}
+.prov-card.prov-on .prov-card-head { background: #f8faff; }
+
+.prov-card-title { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.prov-card-icon {
+  width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 19px;
+  &.mt  { background: #eff6ff; color: #2563eb; }
+  &.zal { background: #eef2ff; color: #4f46e5; }
+}
+.prov-card-name { font-size: 13.5px; font-weight: 700; color: #1e293b; }
+.prov-card-desc { font-size: 11.5px; color: #94a3b8; margin-top: 1px; }
+
+.prov-switch {
+  margin: 0;
+  padding-left: 2.6em;
+  flex-shrink: 0;
+
+  .form-check-input {
+    width: 2.4em;
+    height: 1.25em;
+    margin-left: -2.6em;
+    cursor: pointer;
+    &:checked { background-color: #4f46e5; border-color: #4f46e5; }
+    &:focus { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18); border-color: #c7d2fe; }
+  }
+}
+
+.prov-card-body {
+  padding: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.prov-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 5px;
+  font-size: 11.5px;
+  color: #b91c1c;
+  i { font-size: 13px; }
+}
+.prov-retry {
+  padding: 2px 9px;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  &:hover { background: #fee2e2; }
+}
+
+/* -- Dark mode -- */
+body.dark-mode {
+  .prov-hint { background: #252540; color: #64748b; }
+  .prov-note { color: #94a3b8; strong { color: #cbd5e1; } }
+  .prov-card { background: #1a1a2e; border-color: #2a2a40; }
+  .prov-card.prov-on { border-color: #4338ca; box-shadow: 0 3px 12px rgba(99, 102, 241, 0.2); }
+  .prov-card-head { background: #1e1e32; }
+  .prov-card.prov-on .prov-card-head { background: #21213a; }
+  .prov-card-name { color: #e2e8f0; }
+  .prov-card-desc { color: #64748b; }
+  .prov-card-body { border-top-color: #2a2a40; }
+  .prov-card-icon {
+    &.mt  { background: rgba(37, 99, 235, 0.16); color: #93c5fd; }
+    &.zal { background: rgba(99, 102, 241, 0.16); color: #a5b4fc; }
+  }
+  .prov-error { color: #f87171; }
+  .prov-retry { background: rgba(220, 38, 38, 0.14); border-color: rgba(220, 38, 38, 0.3); color: #f87171; }
+}

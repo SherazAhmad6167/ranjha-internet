@@ -4,12 +4,13 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
 import { ZalService, ZalError, ZalStats, ZAL_MAX_LIMIT } from '../../shared/zal.service';
+import { SearchSelectComponent } from '../../shared/search-select/search-select.component';
 
 type NetAction = 'enable' | 'disable';
 
 @Component({
   selector: 'app-zal-subscribers',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, ToastrModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ToastrModule, SearchSelectComponent],
   templateUrl: './zal-subscribers.component.html',
   styleUrl: './zal-subscribers.component.scss',
 })
@@ -179,6 +180,15 @@ export class ZalSubscribersComponent implements OnInit {
   salespersonName(user: any): string {
     const label = user?.name || user?.username || `#${user?.id}`;
     return user?.username && user?.name ? `${user.name} (${user.username})` : label;
+  }
+
+  // app-search-select reads {id, name}, so shape the derived lists once.
+  get nasOptions(): any[] {
+    return this.nasDevices.map((n) => ({ id: n.id, name: this.nasName(n) }));
+  }
+
+  get salespersonOptions(): any[] {
+    return this.salespersons.map((u) => ({ id: u.id, name: this.salespersonName(u) }));
   }
 
   nasName(device: any): string {
