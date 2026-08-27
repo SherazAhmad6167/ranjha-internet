@@ -31,6 +31,7 @@ import { MaterialDetailsComponent } from './components/material-details/material
 import { MikrotikUsersComponent } from './components/mikrotik-users/mikrotik-users.component';
 import { SmsComponent } from './components/sms/sms.component';
 import { RouterComponent } from './components/router/router.component';
+import { ZalSubscribersComponent } from './components/zal-subscribers/zal-subscribers.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -69,6 +70,7 @@ export const routes: Routes = [
       { path: 'mikrotik-users', data: { roles: ['admin'] }, component: MikrotikUsersComponent },
       { path: 'sms', data: { roles: ['admin'] }, component: SmsComponent },
       { path: 'router-details', data: { roles: ['admin'] }, component: RouterComponent },
+      { path: 'zal-subscribers', data: { roles: ['admin'] }, component: ZalSubscribersComponent },
     ],
   },
   { path: 'not-found', component: PageNotFoundComponent },

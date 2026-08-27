@@ -44,6 +44,7 @@ export class ApplayoutComponent {
     '/borrow-details':   { title: 'Borrow Details',    section: 'Finance',       icon: 'ri-hand-coin-line' },
     '/payable-details':  { title: 'Payable Details',   section: 'Finance',       icon: 'ri-bank-card-line' },
     '/mikrotik-users':   { title: 'MikroTik Users',    section: 'Network',       icon: 'ri-router-line' },
+    '/zal-subscribers':  { title: 'ZalUltra Subscribers', section: 'Network',  icon: 'ri-server-line' },
     '/area-details':     { title: 'Area Details',      section: 'Network',       icon: 'ri-map-pin-line' },
     '/sub-area-details': { title: 'Sub-Area Details',  section: 'Network',       icon: 'ri-map-2-line' },
     '/city-details':     { title: 'City Details',      section: 'Network',       icon: 'ri-building-line' },
@@ -172,7 +173,7 @@ export class ApplayoutComponent {
     const sectionMap: Record<string, string[]> = {
       customers: ['/user-details', '/user-collections', '/new-connection', '/customer-status', '/defaulter-users', '/complain-details'],
       finance: ['/bill-creator', '/recovery-details', '/recovery-officer', '/ro-reports', '/expenses', '/borrow-details', '/payable-details'],
-      network: ['/mikrotik-users', '/area-details', '/sub-area-details', '/city-details', '/package-details', '/operator-details', '/router-details'],
+      network: ['/zal-subscribers', '/mikrotik-users', '/area-details', '/sub-area-details', '/city-details', '/package-details', '/operator-details', '/router-details'],
       management: ['/material-details', '/stock-details', '/company-detail'],
       communication: ['/sms'],
       system: ['/logs', '/upload-docs', '/settings'],
