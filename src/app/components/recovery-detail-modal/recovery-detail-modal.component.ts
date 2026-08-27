@@ -7,7 +7,10 @@ import {
   doc,
   Firestore,
   getDoc,
+  getDocs,
+  query,
   updateDoc,
+  where,
 } from '@angular/fire/firestore';
 import {
   FormBuilder,
@@ -17,6 +20,9 @@ import {
 } from '@angular/forms';
 import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
+import { SmsService } from '../../shared/sms.service';
+import { TemplateMapperService } from '../../shared/template-mapper.service';
+import { DEFAULT_RECOVERY_RECEIVED_TEMPLATE } from '../../shared/message-templates';
 
 @Component({
   selector: 'app-recovery-detail-modal',
@@ -32,6 +38,11 @@ export class RecoveryDetailModalComponent {
   isSaving = false;
   internetAreas: any[] = [];
   internetOperators: any[] = [];
+  role = '';
+  operatorSublocalities: string[] = [];
+  loggedInOperatorName = '';
+  recoveryOfficers: any[] = [];
+  receivedByTemplate = '';
   recievedByList: string[] = [
     'Saqib Ranjha',
     'Qaisar Abbas',
@@ -45,6 +56,8 @@ export class RecoveryDetailModalComponent {
     private toastr: ToastrService,
     private firestore: Firestore,
     private modalService: NgbModal,
+    private sms: SmsService,
+    private templateMapper: TemplateMapperService,
   ) {
     this.expenseForm = this.fb.group({
       date: ['', Validators.required],
@@ -74,9 +87,19 @@ export class RecoveryDetailModalComponent {
   }
 
   ngOnInit() {
+    this.role = localStorage.getItem('role') || '';
+    if (this.role === 'operator') {
+      this.operatorSublocalities = JSON.parse(
+        localStorage.getItem('sublocality') || '[]',
+      );
+      this.resolveOperatorName();
+    }
+
     this.editForm();
     this.loadInternetAreas();
     this.loadOperatorName();
+    this.loadRecoveryOfficers();
+    this.loadReceivedByTemplate();
 
     this.expenseForm.get('operator_name')?.valueChanges.subscribe((selectedName) => {
       const op = this.internetOperators.find((o) => o.operator_name === selectedName);
@@ -84,6 +107,80 @@ export class RecoveryDetailModalComponent {
         this.expenseForm.patchValue({ operator_phone: op.operator_phone });
       }
     });
+  }
+
+  // An operator may only pick from the areas assigned to him.
+  get areaOptions(): any[] {
+    if (this.role !== 'operator') return this.internetAreas;
+    return this.internetAreas.filter((a) =>
+      this.operatorSublocalities.includes(a.sublocality),
+    );
+  }
+
+  // An operator may only file a recovery under his own operator name.
+  get operatorOptions(): any[] {
+    if (this.role !== 'operator') return this.internetOperators;
+
+    const own = this.normalizeName(this.loggedInOperatorName);
+    if (!own) return [];
+
+    const matches = this.internetOperators.filter(
+      (op) => this.normalizeName(op.operator_name) === own,
+    );
+
+    // Fall back to his login name when he is not in the operator list yet.
+    return matches.length
+      ? matches
+      : [{ operator_name: this.loggedInOperatorName }];
+  }
+
+  private normalizeName(name: string): string {
+    return String(name || '').trim().toLowerCase();
+  }
+
+  // Login stores `user_name`, while recovery records store the operator's
+  // display `name` - resolve it once so the dropdown can be scoped to him.
+  private async resolveOperatorName() {
+    this.loggedInOperatorName = localStorage.getItem('name') || '';
+
+    if (!this.loggedInOperatorName) {
+      const userName = localStorage.getItem('username') || '';
+      if (!userName) return;
+
+      try {
+        const snap = await getDocs(
+          query(
+            collection(this.firestore, 'recoveryOfficer'),
+            where('user_name', '==', userName),
+          ),
+        );
+        if (!snap.empty) {
+          this.loggedInOperatorName = snap.docs[0].data()['name'] || '';
+          localStorage.setItem('name', this.loggedInOperatorName);
+        }
+      } catch (error) {
+        console.error('Error resolving recovery officer name', error);
+      }
+    }
+
+    this.applyOperatorDefaults();
+  }
+
+  // With a single choice left there is nothing to pick, so pre-select it.
+  private applyOperatorDefaults() {
+    if (this.role !== 'operator') return;
+
+    const operatorCtrl = this.expenseForm.get('operator_name');
+    const operators = this.operatorOptions;
+    if (operators.length === 1 && !operatorCtrl?.value) {
+      operatorCtrl?.setValue(operators[0].operator_name);
+    }
+
+    const areaCtrl = this.expenseForm.get('sublocality');
+    const areas = this.areaOptions;
+    if (areas.length === 1 && !areaCtrl?.value) {
+      areaCtrl?.setValue(areas[0].sublocality);
+    }
   }
 
   async loadOperatorName() {
@@ -97,10 +194,70 @@ export class RecoveryDetailModalComponent {
         this.internetOperators.sort((a: any, b: any) => {
           return a.operator_name.localeCompare(b.operator_name);
         });
+
+        this.applyOperatorDefaults();
       }
     } catch (error) {
       console.error('Error loading operators', error);
     }
+  }
+
+  // Phone numbers of the people cash is handed to live on the officer records.
+  async loadRecoveryOfficers() {
+    try {
+      const snap = await getDocs(collection(this.firestore, 'recoveryOfficer'));
+      this.recoveryOfficers = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+    } catch (error) {
+      console.error('Error loading recovery officers', error);
+    }
+  }
+
+  async loadReceivedByTemplate() {
+    try {
+      const snap = await getDoc(
+        doc(this.firestore, 'messageTemplates/recoveryReceived'),
+      );
+      if (snap.exists()) this.receivedByTemplate = snap.data()['message'] || '';
+    } catch (error) {
+      console.error('Error loading received-by template', error);
+    }
+  }
+
+  // "Saqib Ranjha-Jazz Cash" and "Saqib Ranjha" are the same person - the
+  // suffix only records how the money was handed over.
+  private receivedByPhone(receivedBy: string): string {
+    const base = String(receivedBy || '').split('-')[0].trim().toLowerCase();
+    if (!base) return '';
+
+    const officer =
+      this.recoveryOfficers.find(
+        (o) => this.normalizeName(o.name) === base,
+      ) ||
+      this.recoveryOfficers.find((o) =>
+        this.normalizeName(o.name).startsWith(base),
+      );
+
+    return officer?.phone || '';
+  }
+
+  // Queued on a new entry only - editing an existing one would re-text the
+  // receiver for every correction.
+  private notifyReceivedBy(record: any) {
+    const receivedBy = record?.recieved_by;
+    if (!receivedBy) return;
+
+    const phone = this.sms.format(this.receivedByPhone(receivedBy));
+    if (!phone) {
+      this.toastr.warning(`No valid phone number for ${receivedBy} - SMS not sent`);
+      return;
+    }
+
+    const message = this.templateMapper.map(
+      this.receivedByTemplate || DEFAULT_RECOVERY_RECEIVED_TEMPLATE,
+      record,
+    );
+    this.sms.queue(phone, message);
+    this.toastr.success(`Recovery SMS queued for ${receivedBy}`);
   }
 
   async loadInternetAreas() {
@@ -114,6 +271,8 @@ export class RecoveryDetailModalComponent {
         this.internetAreas.sort((a: any, b: any) => {
           return a.sublocality.localeCompare(b.sublocality);
         });
+
+        this.applyOperatorDefaults();
       }
     } catch (error) {
       console.error('Error loading internet areas', error);
@@ -172,6 +331,7 @@ export class RecoveryDetailModalComponent {
           ...payload,
           createdAt: new Date(),
         });
+        this.notifyReceivedBy(payload);
         if (!navigator.onLine) {
           this.toastr.info(
             'Saved offline. Will sync when connection is restored.',

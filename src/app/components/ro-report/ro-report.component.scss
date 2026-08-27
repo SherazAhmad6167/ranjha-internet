@@ -3,7 +3,7 @@ $accent-dark: #1d4ed8;
 $accent-light: #eff6ff;
 $accent-border: #bfdbfe;
 
-.ror-wrapper { padding-top: 40px; padding-bottom: 40px; }
+.ror-wrapper { padding-top: 16px; padding-bottom: 40px; }
 
 .ror-page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .ror-header-left { display: flex; align-items: center; gap: 14px; }
@@ -61,3 +61,9 @@ $accent-border: #bfdbfe;
 .ror-amount-badge { display: inline-flex; padding: 2px 8px; border-radius: 6px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-size: 12px; font-weight: 700; }
 
 @media (max-width: 767px) { .ror-wrapper { padding-top: 24px; padding-bottom: 24px; } .ror-filter-grid { flex-direction: column; } .ror-summary-grid { grid-template-columns: 1fr 1fr; } }
+
+/* Stacked filter bar: `flex-basis` follows the main axis, so the search
+   group's basis became a HEIGHT once the bar turned into a column. */
+@media (max-width: 767px) {
+  .ror-field-group { flex: 0 0 auto; }
+}

@@ -7,7 +7,7 @@ $accent-dark: #0f766e;
 $accent-light: #f0fdfa;
 $accent-border: #99f6e4;
 
-.sk-wrapper { padding-top: 40px; padding-bottom: 40px; }
+.sk-wrapper { padding-top: 16px; padding-bottom: 40px; }
 
 /* ── Loading ── */
 .loading-overlay {
@@ -187,4 +187,10 @@ $accent-border: #99f6e4;
 }
 @media (max-width: 480px) {
   .sk-summary-row { grid-template-columns: 1fr; }
+}
+
+/* Stacked filter bar: `flex-basis` follows the main axis, so the search
+   group's basis became a HEIGHT once the bar turned into a column. */
+@media (max-width: 991px) {
+  .sk-search-group { flex: 0 0 auto; }
 }

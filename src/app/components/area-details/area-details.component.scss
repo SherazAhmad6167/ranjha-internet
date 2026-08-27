@@ -3,7 +3,7 @@ $accent-dark: #0369a1;
 $accent-light: #f0f9ff;
 $accent-border: #bae6fd;
 
-.ar-wrapper { padding-top: 40px; padding-bottom: 40px; }
+.ar-wrapper { padding-top: 16px; padding-bottom: 40px; }
 
 .loading-overlay {
   position: fixed; inset: 0; background: rgba(255,255,255,0.75);
@@ -87,3 +87,9 @@ $accent-border: #bae6fd;
 .page-item.disabled .page-link { color: #cbd5e1; background: #f8fafc; }
 
 @media (max-width: 767px) { .ar-wrapper { padding-top: 24px; padding-bottom: 24px; } .ar-filter-bar { flex-direction: column; align-items: stretch; } }
+
+/* Stacked filter bar: `flex-basis` follows the main axis, so the search
+   group's basis became a HEIGHT once the bar turned into a column. */
+@media (max-width: 767px) {
+  .ar-search-group { flex: 0 0 auto; }
+}

@@ -47,7 +47,7 @@
                 [class.rdm-invalid]="expenseForm.get('operator_name')?.invalid && expenseForm.get('operator_name')?.touched"
                 formControlName="operator_name">
                 <option value="" disabled>Select operator</option>
-                <option *ngFor="let operator of internetOperators" [value]="operator.operator_name">
+                <option *ngFor="let operator of operatorOptions" [value]="operator.operator_name">
                   {{ operator.operator_name | titlecase }}
                 </option>
               </select>
@@ -63,7 +63,7 @@
               <label class="rdm-label">Area</label>
               <app-search-select
                 formControlName="sublocality"
-                [options]="internetAreas"
+                [options]="areaOptions"
                 valueKey="sublocality"
                 displayKey="sublocality"
                 placeholder="Select area"

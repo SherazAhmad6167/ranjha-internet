@@ -7,7 +7,7 @@ $accent-dark: #c2410c;
 $accent-light: #fff7ed;
 $accent-border: #fed7aa;
 
-.md-wrapper { padding-top: 40px; padding-bottom: 40px; }
+.md-wrapper { padding-top: 16px; padding-bottom: 40px; }
 
 /* ── Loading ── */
 .loading-overlay {
@@ -163,4 +163,10 @@ $accent-border: #fed7aa;
 @media (max-width: 767px) {
   .md-wrapper { padding-top: 24px; padding-bottom: 24px; }
   .md-filter-bar { flex-direction: column; align-items: stretch; }
+}
+
+/* Stacked filter bar: `flex-basis` follows the main axis, so the search
+   group's basis became a HEIGHT once the bar turned into a column. */
+@media (max-width: 767px) {
+  .md-search-group { flex: 0 0 auto; }
 }

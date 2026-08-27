@@ -92,7 +92,7 @@
 
 .splash-screen {
   position: relative;
-  min-height: 100vh;
+  min-height: calc(100vh - var(--topbar-h));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -320,52 +320,14 @@
 /* ===== END Splash Screen ===== */
 
 /* ===== Theme Toggle Button ===== */
+#dashboards { padding-top: 16px; }
+
 .dashboard-title-row {
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 0 16px;
-}
-
-.theme-fab {
-  position: absolute !important;
-  right: 16px;
-  display: inline-flex !important;
-  align-items: center;
-  gap: 6px;
-  background: linear-gradient(135deg, #667eea, #764ba2) !important;
-  color: #fff !important;
-  border: none !important;
-  border-radius: 20px !important;
-  padding: 8px 16px !important;
-  font-size: 0.82rem !important;
-  font-weight: 600 !important;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4) !important;
-  transition: transform 0.2s, box-shadow 0.2s !important;
-
-  i { font-size: 0.9rem; }
-
-  &:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.55) !important;
-  }
-
-  @media (max-width: 576px) {
-    span { display: none; }
-    padding: 8px 10px !important;
-  }
-}
-
-body.dark-mode .theme-fab {
-  background: linear-gradient(135deg, #f7971e, #ffd200) !important;
-  color: #1a1a2e !important;
-  box-shadow: 0 4px 14px rgba(247, 151, 30, 0.4) !important;
-
-  &:hover {
-    box-shadow: 0 6px 20px rgba(247, 151, 30, 0.6) !important;
-  }
 }
 
 .background-color {

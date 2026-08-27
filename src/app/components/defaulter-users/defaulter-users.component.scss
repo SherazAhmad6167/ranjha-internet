@@ -3,7 +3,7 @@ $accent-dark: #b91c1c;
 $accent-light: #fef2f2;
 $accent-border: #fecaca;
 
-.du-wrapper { padding-top: 40px; padding-bottom: 40px; }
+.du-wrapper { padding-top: 16px; padding-bottom: 40px; }
 
 .loading-overlay {
   position: fixed; inset: 0; background: rgba(255,255,255,0.75);
@@ -128,4 +128,10 @@ $accent-border: #fecaca;
   .du-wrapper { padding-top: 24px; padding-bottom: 24px; }
   .du-filter-bar { flex-direction: column; align-items: stretch; }
   .du-select { min-width: unset; width: 100%; }
+}
+
+/* Stacked filter bar: `flex-basis` follows the main axis, so the search
+   group's basis became a HEIGHT once the bar turned into a column. */
+@media (max-width: 767px) {
+  .du-search-group { flex: 0 0 auto; }
 }

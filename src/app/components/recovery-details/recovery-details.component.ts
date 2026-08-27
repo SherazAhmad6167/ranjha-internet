@@ -10,6 +10,7 @@ import {
   getDocs,
   orderBy,
   query,
+  where,
 } from '@angular/fire/firestore';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -45,6 +46,8 @@ export class RecoveryDetailsComponent {
   remainingAmount: number = 0;
   role: string = '';
   loggedInOperator: string = '';
+  loggedInOperatorName: string = '';
+  operatorSublocalities: string[] = [];
   operatorName: string = '';
   internetOperators: any[] = [];
   selectedMsgUser: any = null;
@@ -72,12 +75,58 @@ export class RecoveryDetailsComponent {
     private templateMapper: TemplateMapperService,
   ) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.role = localStorage.getItem('role') || '';
     this.loggedInOperator = localStorage.getItem('username') || '';
+
+    if (this.role === 'operator') {
+      this.operatorSublocalities = JSON.parse(
+        localStorage.getItem('sublocality') || '[]',
+      );
+      // Records are matched on his display name, so resolve it first.
+      await this.resolveOperatorName();
+    }
+
     this.loadExpenses();
     this.loadOperatorName();
     this.loadRecoveryTemplate();
+  }
+
+  // Login stores `user_name`, while recovery records store the operator's
+  // display `name` - resolve it once so his own rows can be matched.
+  private async resolveOperatorName() {
+    this.loggedInOperatorName = localStorage.getItem('name') || '';
+    if (this.loggedInOperatorName || !this.loggedInOperator) return;
+
+    try {
+      const snap = await getDocs(
+        query(
+          collection(this.firestore, 'recoveryOfficer'),
+          where('user_name', '==', this.loggedInOperator),
+        ),
+      );
+      if (!snap.empty) {
+        this.loggedInOperatorName = snap.docs[0].data()['name'] || '';
+        localStorage.setItem('name', this.loggedInOperatorName);
+      }
+    } catch (error) {
+      console.error('Error resolving recovery officer name', error);
+    }
+  }
+
+  private normalizeName(name: string): string {
+    return String(name || '').trim().toLowerCase();
+  }
+
+  // Older rows may carry the login handle instead of the display name.
+  private isOwnRecord(user: any): boolean {
+    const recordName = this.normalizeName(user.operator_name);
+    if (!recordName) return false;
+
+    return (
+      recordName === this.normalizeName(this.loggedInOperatorName) ||
+      recordName === this.normalizeName(this.loggedInOperator)
+    );
   }
 
   async loadRecoveryTemplate() {
@@ -177,9 +226,7 @@ export class RecoveryDetailsComponent {
 
       // Restrict operator to their own records only
       if (this.role === 'operator') {
-        this.users = this.users.filter((u) =>
-          u.operator_name?.toLowerCase() === this.loggedInOperator.toLowerCase()
-        );
+        this.users = this.users.filter((u) => this.isOwnRecord(u));
       }
 
       this.filteredUsers = this.users;

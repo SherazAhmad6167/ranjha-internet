@@ -9,6 +9,7 @@ import {
 } from '@angular/fire/firestore';
 import { FormsModule } from '@angular/forms';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
+import { DEFAULT_RECOVERY_RECEIVED_TEMPLATE } from '../../shared/message-templates';
 
 @Component({
   selector: 'app-settings',
@@ -29,6 +30,12 @@ export class SettingsComponent {
     { id: 'complainResolve', title: 'Complaint Resolved', message: '' },
     { id: 'birthday',  title: 'Birthday Wish',     message: '' },
     { id: 'recovery',  title: 'Recovery Details',  message: '' },
+    {
+      id: 'recoveryReceived',
+      title: 'Recovery Received (Received By)',
+      message: '',
+      default: DEFAULT_RECOVERY_RECEIVED_TEMPLATE,
+    },
   ];
 
   constructor(
@@ -47,6 +54,9 @@ export class SettingsComponent {
 
       if (snap.exists()) {
         item.message = snap.data()['message'];
+      } else if (item.default) {
+        // Show the built-in wording so it can be reviewed and saved as-is.
+        item.message = item.default;
       }
     }
   }
@@ -79,7 +89,8 @@ export class SettingsComponent {
       restoration:     'ri-wifi-line',
       complainResolve: 'ri-checkbox-circle-line',
       birthday:        'ri-cake-line',
-      recovery:        'ri-money-dollar-circle-line',
+      recovery:         'ri-money-dollar-circle-line',
+      recoveryReceived: 'ri-hand-coin-line',
     };
     return map[id] || 'ri-message-2-line';
   }

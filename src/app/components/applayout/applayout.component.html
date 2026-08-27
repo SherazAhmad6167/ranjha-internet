@@ -1,9 +1,52 @@
 <div class="content-body">
 
-    <!-- Sidebar toggle button -->
-    <button #toggleBtn class="sidebar-toggle" (click)="toggleSidebar()" [class.shifted]="sidebarVisible">
-        <i [class]="sidebarVisible ? 'ri-close-line' : 'ri-menu-line'"></i>
-    </button>
+    <!-- ── Top Bar ─────────────────────────────────────────── -->
+    <header class="app-topbar" [class.full-width]="!sidebarVisible">
+
+        <div class="tb-left">
+            <button #toggleBtn class="tb-menu-btn" (click)="toggleSidebar()"
+                    [title]="sidebarVisible ? 'Hide menu' : 'Show menu'">
+                <i [class]="sidebarVisible ? 'ri-menu-fold-line' : 'ri-menu-unfold-line'"></i>
+            </button>
+
+            <div class="tb-page">
+                <span class="tb-page-icon"><i [class]="currentPage.icon"></i></span>
+                <span class="tb-page-text">
+                    <span class="tb-crumb">{{ currentPage.section }}</span>
+                    <span class="tb-page-title">{{ currentPage.title }}</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="tb-right">
+
+            <!-- Theme switch -->
+            <button class="tb-theme" [class.is-dark]="themeService.isDark()"
+                    (click)="themeService.toggle()"
+                    [title]="themeService.isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+                    [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'">
+                <span class="tb-theme-icons">
+                    <i class="ri-sun-fill"></i>
+                    <i class="ri-moon-clear-fill"></i>
+                </span>
+                <span class="tb-theme-knob"></span>
+            </button>
+
+            <!-- Signed-in user -->
+            <div class="tb-user" *ngIf="userName">
+                <span class="tb-avatar">{{ userInitial }}</span>
+                <span class="tb-user-text">
+                    <span class="tb-user-name">{{ userName | titlecase }}</span>
+                    <span class="tb-user-role">{{ role }}</span>
+                </span>
+            </div>
+
+            <button class="tb-logout-btn" (click)="openLogoutModal()" title="Sign out">
+                <i class="ri-logout-box-r-line"></i>
+            </button>
+        </div>
+
+    </header>
 
     <!-- Sidebar -->
     <nav [ngClass]="{'d-none': !sidebarVisible}" #sidebar class="sidebar">
@@ -12,6 +55,9 @@
         <div class="sidebar-brand">
             <img src="assets/ranjha-logo3.jpeg" alt="Ranjha7star Logo" style="width:36px;height:36px;object-fit:contain;border-radius:50%;flex-shrink:0;" />
             <span class="brand-text">Ranjha<span class="brand-highlight">7star</span></span>
+            <button class="sidebar-close" (click)="toggleSidebar()" title="Close menu">
+                <i class="ri-close-line"></i>
+            </button>
         </div>
 
         <!-- Scrollable nav area -->

@@ -1,5 +1,10 @@
  /* --- Styles from v12 (Unchanged) --- */
 
+/* Height of the fixed app top bar - the layout and the dashboard splash
+   both offset themselves by it. */
+:root { --topbar-h: 58px; }
+@media (max-width: 576px) { :root { --topbar-h: 52px; } }
+
         /* Basic Reset & Smooth Scroll */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; font-family: sans-serif; }

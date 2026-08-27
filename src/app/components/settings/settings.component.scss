@@ -3,7 +3,7 @@
    ═══════════════════════════════════════ */
 
 .st-wrapper {
-  padding-top: 40px;
+  padding-top: 16px;
   padding-bottom: 40px;
 }
 
@@ -115,6 +115,7 @@
   &.icon-maintenance      { background: #f5f3ff; color: #7c3aed; }
   &.icon-upgrade          { background: #eef2ff; color: #4338ca; }
   &.icon-restoration      { background: #ecfdf5; color: #059669; }
+  &.icon-recoveryReceived { background: #f5f3ff; color: #6d28d9; }
 }
 
 .st-card-title {

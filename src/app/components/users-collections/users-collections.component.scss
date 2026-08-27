@@ -4,7 +4,7 @@
 
 /* ── Wrapper ── */
 .uc-wrapper {
-  padding-top: 40px;
+  padding-top: 16px;
   padding-bottom: 40px;
 }
 
@@ -796,4 +796,10 @@
 .wa-option-desc {
   font-size: 11px;
   color: #94a3b8;
+}
+
+/* Stacked filter bar: `flex-basis` follows the main axis, so the search
+   group's basis became a HEIGHT once the bar turned into a column. */
+@media (max-width: 1199px) {
+  .uc-search-group { flex: 0 0 auto; }
 }

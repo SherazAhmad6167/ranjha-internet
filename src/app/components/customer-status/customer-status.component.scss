@@ -3,7 +3,7 @@ $accent-dark: #6d28d9;
 $accent-light: #f5f3ff;
 $accent-border: #ddd6fe;
 
-.cs-wrapper { padding-top: 40px; padding-bottom: 40px; }
+.cs-wrapper { padding-top: 16px; padding-bottom: 40px; }
 
 .loading-overlay {
   position: fixed; inset: 0; background: rgba(255,255,255,0.75);
@@ -165,4 +165,10 @@ $accent-border: #ddd6fe;
   .cs-select { min-width: unset; width: 100%; }
   .cs-status-tabs { width: 100%; }
   .cs-tab { flex: 1; justify-content: center; }
+}
+
+/* Stacked filter bar: `flex-basis` follows the main axis, so the search
+   group's basis became a HEIGHT once the bar turned into a column. */
+@media (max-width: 767px) {
+  .cs-search-group { flex: 0 0 auto; }
 }
