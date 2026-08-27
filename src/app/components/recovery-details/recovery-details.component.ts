@@ -10,7 +10,6 @@ import {
   getDocs,
   orderBy,
   query,
-  where,
 } from '@angular/fire/firestore';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -30,6 +29,7 @@ export class RecoveryDetailsComponent {
   isDeleting = false;
   searchTerm = '';
   users: any[] = [];
+  recoveryOfficerList: string[] = [];
   filteredUsers: any[] = [];
   selectedDeleteId: string | null = null;
   currentPage = 1;
@@ -44,8 +44,7 @@ export class RecoveryDetailsComponent {
   totalExpenses: number = 0;
   remainingAmount: number = 0;
   role: string = '';
-  loggedInUserName: string = '';
-  loggedInOfficerName: string = '';
+  loggedInOperator: string = '';
   operatorName: string = '';
   internetOperators: any[] = [];
   selectedMsgUser: any = null;
@@ -73,34 +72,12 @@ export class RecoveryDetailsComponent {
     private templateMapper: TemplateMapperService,
   ) {}
 
-  async ngOnInit() {
+  ngOnInit(): void {
     this.role = localStorage.getItem('role') || '';
-    this.loggedInUserName = localStorage.getItem('username') || '';
-
-    // Recovery records store the officer's display `name` (e.g. "Amir Shah"),
-    // while login stores `user_name` (e.g. "amir1234"). Resolve one to the other.
-    if (this.role === 'operator') {
-      this.loggedInOfficerName = await this.getOfficerName(this.loggedInUserName);
-    }
-
+    this.loggedInOperator = localStorage.getItem('username') || '';
     this.loadExpenses();
     this.loadOperatorName();
     this.loadRecoveryTemplate();
-  }
-
-  async getOfficerName(userName: string): Promise<string> {
-    if (!userName) return '';
-    try {
-      const q = query(
-        collection(this.firestore, 'recoveryOfficer'),
-        where('user_name', '==', userName),
-      );
-      const snap = await getDocs(q);
-      if (!snap.empty) return snap.docs[0].data()['name'] || '';
-    } catch (error) {
-      console.error('Error resolving recovery officer name', error);
-    }
-    return '';
   }
 
   async loadRecoveryTemplate() {
@@ -169,16 +146,22 @@ export class RecoveryDetailsComponent {
     }
   }
 
+
   async loadExpenses() {
     this.isLoading = true;
 
     try {
       const usersRef = collection(this.firestore, 'recoveryDetails');
+      const recoveryOfficerRef = collection(this.firestore, 'recoveryOfficer');
 
       // ✅ Order by createdAt descending
       const q = query(usersRef, orderBy('createdAt', 'desc'));
+      const rq = query(recoveryOfficerRef, orderBy('createdAt', 'desc'));
 
       const snapshot = await getDocs(q);
+      const recoveryOfficerSnapshot = await getDocs(rq);
+
+      this.recoveryOfficerList = recoveryOfficerSnapshot.docs.map((docSnap) => docSnap.data()['user_name']);
 
       this.users = snapshot.docs.map((docSnap) => {
         const data: any = docSnap.data();
@@ -192,11 +175,10 @@ export class RecoveryDetailsComponent {
         };
       });
 
-      // Operators only see records recorded against their own officer name
+      // Restrict operator to their own records only
       if (this.role === 'operator') {
-        const mine = this.loggedInOfficerName.trim().toLowerCase();
-        this.users = this.users.filter(
-          (u) => (u.operator_name || '').trim().toLowerCase() === mine,
+        this.users = this.users.filter((u) =>
+          u.operator_name?.toLowerCase() === this.loggedInOperator.toLowerCase()
         );
       }
 
