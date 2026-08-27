@@ -19,6 +19,7 @@ import { AreaModalComponent } from '../area-modal/area-modal.component';
 import { CustomerStatusModalComponent } from '../customer-status-modal/customer-status-modal.component';
 import { RouterLink } from '@angular/router';
 import { MikrotikService, MikrotikServer } from '../../shared/mikrotik.service';
+import { ZalService, ZalStats } from '../../shared/zal.service';
 
 export interface MikrotikServerStat {
   id: MikrotikServer;
@@ -50,6 +51,12 @@ export class DashboardComponent {
   expandedChartId: string | null = null;
   charts: Record<string, ChartState> = {};
 
+  zal: { loading: boolean; error: string | null; stats: ZalStats | null } = {
+    loading: true,
+    error: null,
+    stats: null,
+  };
+
   mikrotikServers: MikrotikServerStat[] = [
     { id: 1, label: '194.1002', ip: '103.66.149.194', loading: true, error: null, total: 0, active: 0, disabled: 0 },
     { id: 2, label: '195.9998', ip: '103.66.149.195', loading: true, error: null, total: 0, active: 0, disabled: 0 },
@@ -59,12 +66,14 @@ export class DashboardComponent {
     private firestore: Firestore,
     private modalService: NgbModal,
     private mikrotikService: MikrotikService,
+    private zalService: ZalService,
   ) {}
 
   async ngOnInit() {
     this.loadRecoveryDetails();
     this.loadNewConnections();
     this.loadMikrotikStats();
+    this.loadZalStats();
     await this.loadAreaUsersChart();
     await this.loadPackageUsersChart();
     await this.loadBillCollectionChart();
@@ -92,6 +101,33 @@ export class DashboardComponent {
 
   activePercent(srv: MikrotikServerStat): number {
     return srv.total ? Math.round((srv.active / srv.total) * 100) : 0;
+  }
+
+  loadZalStats() {
+    this.zal.loading = true;
+    this.zal.error = null;
+
+    this.zalService.getStats().subscribe({
+      next: (stats) => {
+        this.zal.stats = stats;
+        this.zal.loading = false;
+      },
+      error: (err) => {
+        this.zal.error = err?.message || 'Cannot reach the ZalUltra panel';
+        this.zal.loading = false;
+      },
+    });
+  }
+
+  /** Share of the branch total, for the bar widths. */
+  zalPercent(value: any): number {
+    const total = Number(this.zal.stats?.total || 0);
+    if (!total) return 0;
+    return Math.round((Number(value || 0) / total) * 1000) / 10;
+  }
+
+  zalNum(value: any): number {
+    return Number(value || 0);
   }
 
   /* ================================
