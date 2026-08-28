@@ -458,17 +458,47 @@
               </div>
 
               <div class="col-md-6">
-                <label class="zlm-label">Payment Method</label>
-                <select class="zlm-input zlm-select" formControlName="payment_method">
-                  <option [ngValue]="1">Cash</option>
-                  <option [ngValue]="4">Subscriber Balance</option>
-                </select>
+                <label class="zlm-label d-block">Payment</label>
+                <div class="d-flex align-items-center gap-3">
+                  <div class="form-check form-switch mb-0">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      id="takePaymentToggle"
+                      formControlName="take_payment"
+                      style="width: 2.5rem; height: 1.25rem; cursor: pointer;"
+                    />
+                  </div>
+                  <span class="badge rounded-pill px-3 py-2"
+                    [ngClass]="renewForm.get('take_payment')?.value ? 'bg-success' : 'bg-secondary'">
+                    <i class="ri-circle-fill me-1" style="font-size: 0.45rem; vertical-align: middle;"></i>
+                    {{ renewForm.get('take_payment')?.value ? 'Collecting payment' : 'No payment' }}
+                  </span>
+                </div>
+                <span class="zlm-hint" *ngIf="!renewForm.get('take_payment')?.value">
+                  Charged to the subscriber&apos;s existing balance
+                </span>
               </div>
 
-              <div class="col-md-6">
-                <label class="zlm-label">Payment Amount</label>
-                <input type="number" class="zlm-input" formControlName="payment_amount" placeholder="0">
-              </div>
+              <ng-container *ngIf="renewForm.get('take_payment')?.value">
+                <div class="col-md-6">
+                  <label class="zlm-label">Payment Method</label>
+                  <select class="zlm-input zlm-select" formControlName="payment_method">
+                    <option [ngValue]="1">Cash</option>
+                    <option [ngValue]="4">Subscriber Balance</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="zlm-label">Payment Amount</label>
+                  <input type="number" class="zlm-input" formControlName="payment_amount" placeholder="0"
+                    [class.is-invalid]="renewForm.get('payment_amount')?.invalid && renewForm.get('payment_amount')?.touched">
+                  <span class="zlm-hint" *ngIf="renewPreview?.required_payment">
+                    Panel is asking for Rs. {{ renewPreview.required_payment }}
+                  </span>
+                </div>
+              </ng-container>
 
               <div class="col-md-6">
                 <label class="zlm-label">Custom Expiry</label>

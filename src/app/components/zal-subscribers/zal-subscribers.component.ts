@@ -85,13 +85,23 @@ export class ZalSubscribersComponent implements OnInit {
       nas_id:              [''],
       expiration_date:     [''],
       profile_status:      [2],
+      // 1 = PPPoE, 0 = Hotspot on this panel (5556 of 5565 subscribers are 1).
+      connection_type:     [1],
+      // 1 = internet enabled, 2 = disabled (what enable-net / disable-net set).
+      connection_status:   [1],
     });
 
     this.renewForm = this.fb.group({
       package_id:             [''],
-      payment_amount:         [0],
-      payment_method:         [1],
+      // Off means "no cash now" - the fee comes out of the subscriber's balance
+      take_payment:           [true],
+      payment_amount:         [0, [Validators.required, Validators.min(1)]],
+      payment_method:         [1, [Validators.required]],
       custom_expiry_datetime: [''],
+    });
+
+    this.renewForm.get('take_payment')?.valueChanges.subscribe(() => {
+      this.syncPaymentValidators();
     });
 
     this.loadStats();
@@ -207,6 +217,8 @@ export class ZalSubscribersComponent implements OnInit {
     this.editingId = null;
     this.form.reset({
       profile_status: 2,
+      connection_type: 1,
+      connection_status: 1,
       package_id: '',
       salesperson_id: '',
       nas_id: '',
@@ -239,6 +251,9 @@ export class ZalSubscribersComponent implements OnInit {
       nas_id:              s?.nas_id || '',
       expiration_date:     this.toInputDateTime(s?.expiration_date),
       profile_status:      s?.profile_status ?? 2,
+      // Keep whatever the subscriber already is - an edit must not retype him
+      connection_type:     s?.connection_type ?? 1,
+      connection_status:   s?.connection_status ?? 1,
     });
     // Blank password means "keep the existing one".
     this.form.get('password')?.clearValidators();
@@ -323,10 +338,12 @@ export class ZalSubscribersComponent implements OnInit {
     this.renewPreview = null;
     this.renewForm.reset({
       package_id: s?.package_id || '',
+      take_payment: true,
       payment_amount: 0,
       payment_method: 1,
       custom_expiry_datetime: '',
     });
+    this.syncPaymentValidators();
     this.renewRef = this.modalService.open(this.renewModal, {
       size: 'lg',
       backdrop: 'static',
@@ -345,6 +362,18 @@ export class ZalSubscribersComponent implements OnInit {
       .subscribe({
         next: (res) => {
           this.renewPreview = res?.data ?? res;
+
+          // Save a round of guesswork - the panel just told us the shortfall.
+          const due = Number(this.renewPreview?.required_payment);
+          const amount = this.renewForm.get('payment_amount');
+          if (
+            this.renewForm.get('take_payment')?.value &&
+            due > 0 &&
+            !Number(amount?.value)
+          ) {
+            amount?.setValue(due);
+          }
+
           this.isPreviewing = false;
         },
         error: (err: ZalError) => {
@@ -357,6 +386,12 @@ export class ZalSubscribersComponent implements OnInit {
   confirmRenew() {
     const id = this.subscriberId(this.selectedSubscriber);
     if (!id) return;
+
+    if (this.renewForm.invalid) {
+      this.renewForm.markAllAsTouched();
+      this.toastr.error('Enter the payment amount, or switch payment off');
+      return;
+    }
 
     this.isActing = true;
     this.zal.activate({ ...this.renewPayload(), subscriber_id: id }).subscribe({
@@ -373,9 +408,45 @@ export class ZalSubscribersComponent implements OnInit {
     });
   }
 
+  /**
+   * With payment on, the amount is credited to the subscriber and the fee is
+   * taken from it. With payment off, nothing is collected and the panel pays
+   * the fee from the balance he already has - which it refuses when that
+   * balance is short ("Insufficient Subscriber Balance").
+   */
   private renewPayload(): Record<string, any> {
     const raw = this.renewForm.getRawValue();
-    return { ...raw, custom_expiry_datetime: this.toApiDateTime(raw.custom_expiry_datetime) };
+
+    const payload: Record<string, any> = {
+      package_id: raw.package_id,
+      custom_expiry_datetime: this.toApiDateTime(raw.custom_expiry_datetime),
+    };
+
+    if (raw.take_payment) {
+      payload['payment_amount'] = raw.payment_amount;
+      payload['payment_method'] = raw.payment_method;
+    } else {
+      payload['cut_subscriber_balance'] = 1;
+    }
+
+    return payload;
+  }
+
+  private syncPaymentValidators() {
+    const on = !!this.renewForm.get('take_payment')?.value;
+    const amount = this.renewForm.get('payment_amount');
+    const method = this.renewForm.get('payment_method');
+
+    if (on) {
+      amount?.setValidators([Validators.required, Validators.min(1)]);
+      method?.setValidators([Validators.required]);
+    } else {
+      amount?.clearValidators();
+      method?.clearValidators();
+    }
+
+    amount?.updateValueAndValidity({ emitEvent: false });
+    method?.updateValueAndValidity({ emitEvent: false });
   }
 
   // The panel wants 'YYYY-MM-DD HH:mm:ss'; datetime-local speaks 'YYYY-MM-DDTHH:mm'.

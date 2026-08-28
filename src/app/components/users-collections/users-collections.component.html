@@ -140,6 +140,13 @@
 
     <!-- Filter Toolbar -->
     <div class="uc-filter-bar">
+      <div class="uc-filter-group" *ngIf="role === 'admin'">
+        <label class="uc-filter-label"><i class="ri-user-star-line"></i> Recovery Officer</label>
+        <select class="uc-select" [(ngModel)]="selectedOfficer" (change)="onOfficerChange()">
+          <option value="">All Officers</option>
+          <option *ngFor="let op of recoveryOfficers" [value]="op.user_name">{{ op.name || op.user_name }}</option>
+        </select>
+      </div>
       <div class="uc-filter-group">
         <label class="uc-filter-label"><i class="ri-map-pin-line"></i> Area</label>
         <app-search-select

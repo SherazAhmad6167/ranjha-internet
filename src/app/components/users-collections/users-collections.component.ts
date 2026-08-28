@@ -62,10 +62,19 @@ export class UsersCollectionsComponent {
   selectedStatus: 'paid' | 'unpaid' | 'advance' | 'remaining' = 'paid';
   nextMonths: { month: string; year: string }[] = [];
   operatorSublocalities: string[] = [];
+  recoveryOfficers: any[] = [];
+  selectedOfficer = '';
+  officerSublocalities: string[] = [];
 
   get areaOptions(): { sublocality: string }[] {
-    if (this.role === 'admin') return this.internetAreas;
-    return this.operatorSublocalities.map((s) => ({ sublocality: s }));
+    if (this.role !== 'admin') {
+      return this.operatorSublocalities.map((s) => ({ sublocality: s }));
+    }
+    // Admin picked a recovery officer - offer only his assigned areas
+    if (this.selectedOfficer) {
+      return this.officerSublocalities.map((s) => ({ sublocality: s }));
+    }
+    return this.internetAreas;
   }
   summary = {
     totalUsers: 0,
@@ -125,6 +134,7 @@ export class UsersCollectionsComponent {
 
     this.loadInternetAreas();
     this.loadSubInternetAreas();
+    this.loadRecoveryOfficers();
     this.loadUsers();
     this.loadCompanyDetails();
     this.loadInternetPackages();
@@ -206,6 +216,24 @@ export class UsersCollectionsComponent {
     }
   }
 
+  // Only field operators are listed - admins are not assigned collection areas
+  async loadRecoveryOfficers() {
+    try {
+      const snap = await getDocs(collection(this.firestore, 'recoveryOfficer'));
+
+      this.recoveryOfficers = snap.docs
+        .map((d) => ({ ...d.data(), id: d.id }) as any)
+        .filter((o) => o.role === 'operator')
+        .sort((a, b) =>
+          String(a.name || a.user_name).localeCompare(
+            String(b.name || b.user_name),
+          ),
+        );
+    } catch (error) {
+      console.error('Error loading recovery officers', error);
+    }
+  }
+
   get filteredSubAreas(): { sub_area: string }[] {
     if (!this.sublocality) return this.subInternetArea;
 
@@ -220,6 +248,27 @@ export class UsersCollectionsComponent {
 
   onAreaChange() {
     this.subArea = '';
+    this.onFilterChange();
+  }
+
+  onOfficerChange() {
+    const officer = this.recoveryOfficers.find(
+      (o) => o.user_name === this.selectedOfficer,
+    );
+
+    this.officerSublocalities = [...(officer?.sublocality || [])].sort(
+      (a: string, b: string) => a.localeCompare(b),
+    );
+
+    // The area list is now scoped to him - drop a selection he does not cover
+    if (
+      this.sublocality &&
+      !this.officerSublocalities.includes(this.sublocality)
+    ) {
+      this.sublocality = '';
+    }
+    this.subArea = '';
+    this.currentPage = 1;
     this.onFilterChange();
   }
 
@@ -474,6 +523,14 @@ export class UsersCollectionsComponent {
         : user.sublocality
           ? [user.sublocality]
           : [];
+
+      // Recovery officer selected - keep only users in his assigned areas
+      if (this.selectedOfficer) {
+        const inOfficerAreas = userSublocalities.some((sub) =>
+          this.officerSublocalities.includes(sub),
+        );
+        if (!inOfficerAreas) return false;
+      }
 
       const matchesMonth =
         !this.selectedMonth || user.month?.toLowerCase().includes(this.selectedMonth);

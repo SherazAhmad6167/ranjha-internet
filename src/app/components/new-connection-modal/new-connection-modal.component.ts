@@ -80,6 +80,9 @@ export class NewConnectionModalComponent implements OnDestroy {
   mtProfilesLoading = false;
   mtProfilesError: string | null = null;
 
+  // Set once the operator picks a NAS himself - the auto-fill then backs off.
+  private nasPickedByHand = false;
+
   zalPackages: any[] = [];
   zalAreas: any[] = [];
   zalNas: any[] = [];
@@ -154,6 +157,9 @@ export class NewConnectionModalComponent implements OnDestroy {
         mikrotik_server: [1],
         mikrotik_profile: [''],
         mikrotik_password: [''],
+        // Every working customer on both routers carries a disabled secret:
+        // PPPoE then falls through to RADIUS and the panel sees the session.
+        mikrotik_disabled: [true],
 
         zal_enabled: [false],
         zal_package_id: [''],
@@ -177,6 +183,11 @@ export class NewConnectionModalComponent implements OnDestroy {
     });
     this.provisioning.get('mikrotik_server')?.valueChanges.subscribe(() => {
       if (this.provisioning.get('mikrotik_enabled')?.value) this.loadRouterProfiles();
+      this.syncZalNas();
+    });
+    // Our own writes are silent, so this only fires when the operator picks one.
+    this.provisioning.get('zal_nas_id')?.valueChanges.subscribe(() => {
+      this.nasPickedByHand = true;
     });
   }
 
@@ -542,6 +553,26 @@ export class NewConnectionModalComponent implements OnDestroy {
     }));
   }
 
+  /**
+   * The panel only counts a session reported by the NAS recorded on the
+   * subscriber, so the NAS has to be the router the secret was created on.
+   * Matched on IP, and never over an operator's own choice.
+   */
+  private syncZalNas() {
+    if (this.nasPickedByHand || !this.zalNas.length) return;
+
+    const server = Number(this.provisioning.get('mikrotik_server')?.value || 1);
+    const ip = this.mikrotikServers.find((s) => s.id === server)?.ip;
+    if (!ip) return;
+
+    const nas = this.zalNas.find(
+      (device) => String(device?.nasname || '').trim() === ip,
+    );
+    if (!nas) return;
+
+    this.provisioning.get('zal_nas_id')?.setValue(nas.id, { emitEvent: false });
+  }
+
   get zalNasOptions(): any[] {
     return this.zalNas.map((nas) => ({ id: nas.id, name: this.zalNasName(nas) }));
   }
@@ -628,7 +659,13 @@ export class NewConnectionModalComponent implements OnDestroy {
       error: done,
     });
     this.zalService.getAreas().subscribe({ next: (rows) => (this.zalAreas = rows || []), error: () => {} });
-    this.zalService.getNas().subscribe({ next: (rows) => (this.zalNas = rows || []), error: () => {} });
+    this.zalService.getNas().subscribe({
+      next: (rows) => {
+        this.zalNas = rows || [];
+        this.syncZalNas();
+      },
+      error: () => {},
+    });
     this.zalService.getUsers().subscribe({ next: (rows) => (this.zalSalespersons = rows || []), error: () => {} });
   }
 
@@ -830,6 +867,7 @@ export class NewConnectionModalComponent implements OnDestroy {
             cfg.mikrotik_profile || 'default',
             'pppoe',
             server,
+            cfg.mikrotik_disabled ? 'yes' : 'no',
           ),
         );
         this.provisionLog.push({ target: 'mikrotik', ok: true, message: `Created on MikroTik ${label}` });
@@ -894,7 +932,13 @@ export class NewConnectionModalComponent implements OnDestroy {
       identity: data.cnic,
       address: data.address,
       expiration_date: this.toPanelDateTime(cfg.zal_expiry),
+      // profile_status 2 = Active, connection_type 1 = PPPoE (0 is Hotspot on
+      // this panel - 5556 of 5565 subscribers are 1), connection_status 1 =
+      // internet enabled. Sent explicitly so a new subscriber never lands on a
+      // panel default that cannot dial in.
       profile_status: 2,
+      connection_type: 1,
+      connection_status: 1,
     };
 
     // The panel stores the parent chain alongside the area.

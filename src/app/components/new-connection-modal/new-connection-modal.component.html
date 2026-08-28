@@ -465,6 +465,29 @@
                     [class.is-invalid]="provisioning.get('mikrotik_password')?.invalid && provisioning.get('mikrotik_password')?.touched">
                 </div>
 
+                <!-- Status toggle -->
+                <div class="col-md-4">
+                  <label class="form-label d-block">Status</label>
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="form-check form-switch mb-0">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        role="switch"
+                        id="mtStatusToggle"
+                        formControlName="mikrotik_disabled"
+                        style="width: 2.5rem; height: 1.25rem; cursor: pointer;"
+                      />
+                    </div>
+                    <span class="badge rounded-pill px-3 py-2"
+                      [ngClass]="provisioning.get('mikrotik_disabled')?.value ? 'bg-danger' : 'bg-success'">
+                      <i class="ri-circle-fill me-1" style="font-size: 0.45rem; vertical-align: middle;"></i>
+                      {{ provisioning.get('mikrotik_disabled')?.value ? 'Disabled' : 'Active' }}
+                    </span>
+                  </div>
+                  <small class="text-muted">Toggle to create this PPP secret enabled or disabled</small>
+                </div>
+
               </div>
             </div>
           </div>

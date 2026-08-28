@@ -128,57 +128,30 @@ export class RoReportComponent {
         );
       }
 
-      if (this.filters.operator) {
+      const start = this.filters.startDate
+        ? new Date(this.filters.startDate)
+        : null;
+      start?.setHours(0, 0, 0, 0);
+
+      const end = this.filters.endDate ? new Date(this.filters.endDate) : null;
+      // Include the whole end day
+      end?.setHours(23, 59, 59, 999);
+
+      // Officer, connection type and date range must all hold for the *same*
+      // bill / advance - otherwise a user with an old bill and a new one would
+      // pass a range that neither of them falls inside.
+      const hasRecordFilter =
+        !!this.filters.operator ||
+        !!this.filters.connectionType ||
+        !!start ||
+        !!end;
+
+      if (hasRecordFilter) {
         filteredUsers = filteredUsers.filter(
           (u) =>
-            u.bills?.some(
-              (b: any) => b.collected_by === this.filters.operator,
-            ) ||
-            u.advancePayments?.some(
-              (a: any) => a.collected_by === this.filters.operator,
-            ),
-        );
-      }
-
-      if (this.filters.connectionType && this.filters.connectionType !== '') {
-        filteredUsers = filteredUsers.filter((u) =>
-          u.bills?.some((b: any) => b.type === this.filters.connectionType),
-        );
-      }
-
-      if (this.filters.startDate) {
-        const start = new Date(this.filters.startDate);
-        start.setHours(0, 0, 0, 0);
-        filteredUsers = filteredUsers.filter(
-          (u) =>
-            u.bills?.some((b: any) => b.collected_date?.toDate() >= start) ||
-            u.advancePayments?.some(
-              (a: any) => a.collected_date?.toDate() >= start,
-            ),
-        );
-      }
-
-      // if (this.filters.endDate) {
-      //   const end = new Date(this.filters.endDate);
-      //   filteredUsers = filteredUsers.filter(
-      //     (u) =>
-      //       u.bills?.some((b: any) => b.collected_date?.toDate() <= end) ||
-      //       u.advancePayments?.some(
-      //         (a: any) => a.collected_date?.toDate() <= end,
-      //       ),
-      //   );
-      // }
-
-      if (this.filters.endDate) {
-        const end = new Date(this.filters.endDate);
-        // Set to the end of the day
-        end.setHours(23, 59, 59, 999);
-
-        filteredUsers = filteredUsers.filter(
-          (u) =>
-            u.bills?.some((b: any) => b.collected_date?.toDate() <= end) ||
-            u.advancePayments?.some(
-              (a: any) => a.collected_date?.toDate() <= end,
+            u.bills?.some((b: any) => this.matchesRecord(b, start, end)) ||
+            u.advancePayments?.some((a: any) =>
+              this.matchesRecord(a, start, end),
             ),
         );
       }
@@ -242,5 +215,54 @@ export class RoReportComponent {
     } finally {
       this.isLoading = false;
     }
+  }
+
+  private normalizeName(name: any): string {
+    return String(name || '')
+      .trim()
+      .toLowerCase();
+  }
+
+  // Bills store the officer's login handle (`user_name`), but older rows may
+  // carry his display `name` instead - accept either spelling.
+  private matchesOperator(collectedBy: any): boolean {
+    const recordName = this.normalizeName(collectedBy);
+    if (!recordName) return false;
+
+    const selected = this.normalizeName(this.filters.operator);
+    const officer = this.operators.find(
+      (o: any) => this.normalizeName(o.user_name) === selected,
+    );
+
+    return (
+      recordName === selected ||
+      (!!officer?.name && recordName === this.normalizeName(officer.name))
+    );
+  }
+
+  // A bill / advance payment that satisfies every active record-level filter.
+  private matchesRecord(rec: any, start: Date | null, end: Date | null): boolean {
+    if (this.filters.operator && !this.matchesOperator(rec.collected_by)) {
+      return false;
+    }
+
+    if (
+      this.filters.connectionType &&
+      rec.type !== this.filters.connectionType
+    ) {
+      return false;
+    }
+
+    if (start || end) {
+      // Pending offline writes are still plain Dates
+      const collected = rec.collected_date?.toDate?.() ?? rec.collected_date;
+      if (!(collected instanceof Date) || isNaN(collected.getTime())) {
+        return false;
+      }
+      if (start && collected < start) return false;
+      if (end && collected > end) return false;
+    }
+
+    return true;
   }
 }
